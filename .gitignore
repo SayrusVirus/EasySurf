@@ -1,0 +1,57 @@
+﻿# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Databases
+*.db
+*.db-shm
+*.db-wal
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# Logs
+*.log
+
+# Local backups
+*_backup.db
+*_before_*.db
+main_before_*.py
+
+# Old local projects
+EasySurf_MVP/
+EasySurf_v04_temp/
+
+# Local reports / discovery files
+email_discovery.txt
+security_v5_targeted_report.txt
+
+# Migration / maintenance scripts
+backend/add_*.py
+backend/apply_*.py
+backend/fix_*.py
+backend/install_*.py
+backend/upgrade_*.py
+
+# Deprecated services
+backend/services/rewards.py
+backend/services/offerwall_gg_failed_v1.py
+
+# Old backend documentation
+backend/EasySurf_main_v02_README.txt
+backend/README.txt
+
+# Temporary / local files
+*.tmp
+*.bak
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
