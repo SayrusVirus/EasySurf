@@ -39,7 +39,6 @@ backend/install_*.py
 backend/upgrade_*.py
 
 # Deprecated services
-backend/services/rewards.py
 backend/services/offerwall_gg_failed_v1.py
 
 # Old backend documentation
@@ -55,3 +54,11 @@ backend/README.txt
 Thumbs.db
 .vscode/
 .idea/
+
+
+# Local main.py recovery copies
+backend/main.py.before_*.py
+backend/main_corrupted_*.py
+
+# Database path migration recovery copies
+backend/services/*.before_db_path_*.py

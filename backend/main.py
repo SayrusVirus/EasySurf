@@ -1,4 +1,5 @@
-from fastapi import FastAPI, Request, Form
+from fastapi import FastAPI, Request, Form, UploadFile, File
+from fastapi.staticfiles import StaticFiles
 from services.provider_core import (
     get_apps,
     get_offers,
@@ -13,6 +14,8 @@ from starlette.middleware.sessions import SessionMiddleware
 import os
 import sqlite3, hashlib, secrets, time
 import threading
+from contextvars import ContextVar
+
 from pathlib import Path
 from html import escape
 from urllib.parse import urlparse
@@ -25,8 +28,13 @@ from services.email_verification import (
     send_verification_email,
 )
 
-BASE_DIR=Path(__file__).resolve().parent.parent; DB_PATH=BASE_DIR/'easysurf.db'
+BASE_DIR=Path(__file__).resolve().parent.parent; from services.db_config import DB_PATH
 app=FastAPI(title='EasySurf',version='0.5.0')
+CURRENT_LANGUAGE = ContextVar('current_language', default='en')
+app.mount("/static", StaticFiles(directory=BASE_DIR / "backend" / "static"), name="static")
+AVATAR_DIR = BASE_DIR / "backend" / "static" / "uploads" / "avatars"
+AVATAR_DIR.mkdir(parents=True, exist_ok=True)
+
 APP_ENV = os.getenv("EASYSURF_ENV", "development").strip().lower()
 SESSION_SECRET = os.getenv("EASYSURF_SESSION_SECRET", "").strip()
 
@@ -36,13 +44,7 @@ if APP_ENV == "production" and len(SESSION_SECRET) < 32:
 if not SESSION_SECRET:
     SESSION_SECRET = "LOCAL-DEVELOPMENT-ONLY-" + secrets.token_urlsafe(32)
 
-app.add_middleware(
-    SessionMiddleware,
-    secret_key=SESSION_SECRET,
-    max_age=604800,
-    same_site="lax",
-    https_only=(APP_ENV == "production"),
-)
+
 
 class EasySurfSecurityHeadersMiddleware:
     def __init__(self, app):
@@ -87,6 +89,36 @@ class EasySurfSecurityHeadersMiddleware:
         await self.app(scope, receive, send_with_headers)
 
 
+class EasySurfLanguageMiddleware:
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        request = Request(scope, receive=receive)
+        language = request.session.get("language", "en")
+
+        if language not in SUPPORTED_LANGUAGES:
+            language = "en"
+
+        token = CURRENT_LANGUAGE.set(language)
+
+        try:
+            await self.app(scope, receive, send)
+        finally:
+            CURRENT_LANGUAGE.reset(token)
+
+app.add_middleware(EasySurfLanguageMiddleware)
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=SESSION_SECRET,
+    max_age=604800,
+    same_site="lax",
+    https_only=(APP_ENV == "production"),
+)
 app.add_middleware(EasySurfSecurityHeadersMiddleware)
 
 def db():
@@ -176,37 +208,1203 @@ def init():
 
 def startup():init()
 
+
+# =========================================================
+# EasySurf language system
+# =========================================================
+
+LANGUAGE_TRANSLATIONS = {
+    "en": {
+        "Dashboard": "Dashboard",
+        "Profile": "Profile",
+        "Earn": "Earn",
+        "Rewards": "Rewards",
+        "Activity": "Activity",
+        "Leaderboard": "Leaderboard",
+        "Referrals": "Referrals",
+        "Withdraw": "Withdraw",
+        "Payouts": "Payouts",
+        "Offers": "Offers",
+        "Games": "Games",
+        "Apps": "Apps",
+        "Tasks": "Tasks",
+        "Microtasks": "Microtasks",
+        "Login": "Login",
+        "Register": "Register",
+        "Get Started": "Get Started",
+        "Logout": "Logout",
+
+        "My Profile": "My Profile",
+        "Personal information": "Personal information",
+        "Display name": "Display name",
+        "Username": "Username",
+        "Email": "Email",
+        "Language": "Language",
+        "Notifications": "Notifications",
+        "Receive notifications": "Receive notifications",
+        "Avatar": "Avatar",
+        "Save profile": "Save profile",
+        "Save changes": "Save changes",
+
+        "Account": "Account",
+        "Balance": "Balance",
+        "Total earned": "Total earned",
+        "Total paid": "Total paid",
+        "Referrals": "Referrals",
+        "Referral code": "Referral code",
+        "Account ID": "Account ID",
+        "Admin": "Admin",
+        "Yes": "Yes",
+        "No": "No",
+
+        "English": "English",
+        "Russian": "Russian",
+        "Italian": "Italian",
+        "German": "German",
+        "Japanese": "Japanese",
+        "Turkish": "Turkish",
+
+        "Р СѓСЃСЃРєРёР№": "Russian",
+        "Italiano": "Italian",
+        "Deutsch": "German",
+        "ж—Ґжњ¬иЄћ": "Japanese",
+        "TГјrkГ§e": "Turkish",
+
+        "Profile updated successfully.": "Profile updated successfully.",
+        "Choose an earning method and get started.": "Choose an earning method and get started.",
+        "Available offers from connected providers.": "Available offers from connected providers.",
+        "Available games from connected providers.": "Available games from connected providers.",
+        "Available apps from connected providers.": "Available apps from connected providers.",
+
+        "Save": "Save",
+        "Cancel": "Cancel",
+        "Back": "Back",
+        "Continue": "Continue",
+        "Submit": "Submit",
+        "Search": "Search",
+        "Loading": "Loading",
+        "Completed": "Completed",
+        "Pending": "Pending",
+        "Available": "Available",
+        "Total": "Total",
+        "Today": "Today",
+        "Yesterday": "Yesterday",
+        "This week": "This week",
+        "This month": "This month",
+
+        "Welcome": "Welcome",
+        "Welcome back": "Welcome back",
+        "Your balance": "Your balance",
+        "Start earning": "Start earning",
+        "Earn money": "Earn money",
+        "Earn more": "Earn more",
+        "Your rewards": "Your rewards",
+        "Your activity": "Your activity",
+        "Your referrals": "Your referrals",
+
+        "Your EasySurf Dashboard": "Your EasySurf Dashboard",
+        "Earn now": "Earn now",
+        "Available balance": "Available balance",
+        "Earned today": "Earned today",
+        "Pending rewards": "Pending rewards",
+        "Tasks completed": "Tasks completed",
+        "Daily target": "Daily target",
+        "Today's earning goal": "Р”РЅРµРІРЅР°СЏ С†РµР»СЊ Р·Р°СЂР°Р±РѕС‚РєР°",
+        "Keep completing available activities to grow your balance.": "Keep completing available activities to grow your balance.",
+        "Quick access": "Quick access",
+        "View all": "View all",
+        "Surveys": "Surveys",
+        "Paid research surveys when inventory is available.": "Paid research surveys when inventory is available.",
+        "View surveys": "View surveys",
+        "Offers": "Offers",
+        "Advertiser offers and tracked activities.": "Advertiser offers and tracked activities.",
+        "View offers": "View offers",
+        "Games": "Games",
+        "Play approved games and reach milestones.": "Play approved games and reach milestones.",
+        "View games": "View games",
+        "Apps": "Apps",
+        "Discover tracked app opportunities.": "Discover tracked app opportunities.",
+        "View apps": "View apps",
+        "Available now": "Available now",
+        "Website Tasks": "Website Tasks",
+        "Browse earning options": "Browse earning options",
+        "Your account": "Your account",
+        "Recent Activity": "Recent Activity",
+        "No activity yet. Start earning to see your transactions here.": "No activity yet. Start earning to see your transactions here.",
+        "Activity": "Activity",
+        "Amount": "Amount",
+        "Goal": "Goal",
+        "earned today": "earned today",
+
+        "No data available": "No data available",
+        "No offers available": "No offers available",
+        "No games available": "No games available",
+        "No apps available": "No apps available",
+        "No tasks available": "No tasks available",
+
+        "Sign in": "Sign in",
+        "Sign up": "Sign up",
+        "Password": "Password",
+        "Confirm password": "Confirm password",
+        "Remember me": "Remember me",
+        "Forgot password?": "Forgot password?",
+        "Don't have an account?": "Don't have an account?",
+        "Already have an account?": "Already have an account?",
+
+        "Invite friends": "Invite friends",
+        "Referral program": "Referral program",
+        "Your referral link": "Your referral link",
+        "Copy": "Copy",
+        "Copied": "Copied",
+
+        "Request payout": "Request payout",
+        "Payout history": "Payout history",
+        "Minimum payout": "Minimum payout",
+        "Payment method": "Payment method",
+
+        "Home": "Home",
+        "About": "About",
+        "Contact": "Contact",
+        "Privacy": "Privacy",
+        "Terms": "Terms",
+        "Help": "Help",
+    },
+
+    "ru": {
+        "Dashboard": "РџР°РЅРµР»СЊ СѓРїСЂР°РІР»РµРЅРёСЏ",
+        "Profile": "РџСЂРѕС„РёР»СЊ",
+        "Earn": "Р—Р°СЂР°Р±РѕС‚РѕРє",
+        "Rewards": "РќР°РіСЂР°РґС‹",
+        "Activity": "РђРєС‚РёРІРЅРѕСЃС‚СЊ",
+        "Leaderboard": "РўР°Р±Р»РёС†Р° Р»РёРґРµСЂРѕРІ",
+"View activity": "РџРѕСЃРјРѕС‚СЂРµС‚СЊ Р°РєС‚РёРІРЅРѕСЃС‚СЊ",
+"Today's reward": "РќР°РіСЂР°РґР° Р·Р° СЃРµРіРѕРґРЅСЏ",
+"Daily Bonus": "Р•Р¶РµРґРЅРµРІРЅС‹Р№ Р±РѕРЅСѓСЃ",
+"One claim per day": "РћРґРЅР° РЅР°РіСЂР°РґР° РІ РґРµРЅСЊ",
+"Bonus claimed today": "Р‘РѕРЅСѓСЃ СѓР¶Рµ РїРѕР»СѓС‡РµРЅ СЃРµРіРѕРґРЅСЏ",
+"Come back tomorrow to continue your streak and claim the next daily bonus.": "Р’РµСЂРЅРёС‚РµСЃСЊ Р·Р°РІС‚СЂР°, С‡С‚РѕР±С‹ РїСЂРѕРґРѕР»Р¶РёС‚СЊ СЃРµСЂРёСЋ Рё РїРѕР»СѓС‡РёС‚СЊ СЃР»РµРґСѓСЋС‰РёР№ РµР¶РµРґРЅРµРІРЅС‹Р№ Р±РѕРЅСѓСЃ.",
+"Your daily bonus is ready": "Р’Р°С€ РµР¶РµРґРЅРµРІРЅС‹Р№ Р±РѕРЅСѓСЃ РіРѕС‚РѕРІ",
+"Claim your bonus once today and keep your earning streak alive.": "РџРѕР»СѓС‡РёС‚Рµ Р±РѕРЅСѓСЃ СЃРµРіРѕРґРЅСЏ Рё РїСЂРѕРґРѕР»Р¶Р°Р№С‚Рµ СЃРІРѕСЋ СЃРµСЂРёСЋ Р·Р°СЂР°Р±РѕС‚РєР°.",
+"Claim Daily Bonus": "РџРѕР»СѓС‡РёС‚СЊ РµР¶РµРґРЅРµРІРЅС‹Р№ Р±РѕРЅСѓСЃ",
+"Rewards & Bonuses": "РќР°РіСЂР°РґС‹ Рё Р±РѕРЅСѓСЃС‹",
+"Daily Goal": "Р”РЅРµРІРЅР°СЏ С†РµР»СЊ",
+"Reach today's target": "Р”РѕСЃС‚РёРіРЅРёС‚Рµ СЃРµРіРѕРґРЅСЏС€РЅРµР№ С†РµР»Рё",
+"progress": "РїСЂРѕРіСЂРµСЃСЃ",
+"Your progress": "Р’Р°С€ РїСЂРѕРіСЂРµСЃСЃ",
+"Keep the momentum": "РџСЂРѕРґРѕР»Р¶Р°Р№С‚Рµ РІ С‚РѕРј Р¶Рµ РґСѓС…Рµ",
+"Earn every day to build your progress": "Р—Р°СЂР°Р±Р°С‚С‹РІР°Р№С‚Рµ РєР°Р¶РґС‹Р№ РґРµРЅСЊ, С‡С‚РѕР±С‹ СѓРІРµР»РёС‡РёРІР°С‚СЊ СЃРІРѕР№ РїСЂРѕРіСЂРµСЃСЃ",
+"Daily streak": "Р•Р¶РµРґРЅРµРІРЅР°СЏ СЃРµСЂРёСЏ",
+"Streak": "РЎРµСЂРёСЏ",
+"Keep earning every day to maintain your reward streak.": "Р—Р°СЂР°Р±Р°С‚С‹РІР°Р№С‚Рµ РєР°Р¶РґС‹Р№ РґРµРЅСЊ, С‡С‚РѕР±С‹ РїРѕРґРґРµСЂР¶РёРІР°С‚СЊ СЃРµСЂРёСЋ РЅР°РіСЂР°Рґ.",
+"View progress": "РџРѕСЃРјРѕС‚СЂРµС‚СЊ РїСЂРѕРіСЂРµСЃСЃ",
+"Milestones": "Р”РѕСЃС‚РёР¶РµРЅРёСЏ",
+"Achievements": "Р”РѕСЃС‚РёР¶РµРЅРёСЏ",
+"Complete milestones and keep building your account progress.": "Р’С‹РїРѕР»РЅСЏР№С‚Рµ С†РµР»Рё Рё РїСЂРѕРґРѕР»Р¶Р°Р№С‚Рµ СЂР°Р·РІРёРІР°С‚СЊ СЃРІРѕР№ Р°РєРєР°СѓРЅС‚.",
+"Community": "РЎРѕРѕР±С‰РµСЃС‚РІРѕ",
+"Open leaderboard": "РћС‚РєСЂС‹С‚СЊ С‚Р°Р±Р»РёС†Сѓ Р»РёРґРµСЂРѕРІ",
+"More ways to earn": "Р‘РѕР»СЊС€Рµ СЃРїРѕСЃРѕР±РѕРІ Р·Р°СЂР°Р±РѕС‚Р°С‚СЊ",
+"Turn activity into rewards": "РџСЂРµРІСЂР°С‰Р°Р№С‚Рµ Р°РєС‚РёРІРЅРѕСЃС‚СЊ РІ РЅР°РіСЂР°РґС‹",
+"Surveys": "РћРїСЂРѕСЃС‹",
+"Offers": "РџСЂРµРґР»РѕР¶РµРЅРёСЏ",
+"Games": "РРіСЂС‹",
+"Apps": "РџСЂРёР»РѕР¶РµРЅРёСЏ",
+"Videos": "Р’РёРґРµРѕ",
+"No surveys available right now": "РЎРµР№С‡Р°СЃ РЅРµС‚ РґРѕСЃС‚СѓРїРЅС‹С… РѕРїСЂРѕСЃРѕРІ",
+"There are currently no active survey offers from connected providers.": "Р’ РЅР°СЃС‚РѕСЏС‰РµРµ РІСЂРµРјСЏ РЅРµС‚ Р°РєС‚РёРІРЅС‹С… РїСЂРµРґР»РѕР¶РµРЅРёР№ РѕРїСЂРѕСЃРѕРІ РѕС‚ РїРѕРґРєР»СЋС‡С‘РЅРЅС‹С… РїСЂРѕРІР°Р№РґРµСЂРѕРІ.",
+"No offers available right now": "РЎРµР№С‡Р°СЃ РЅРµС‚ РґРѕСЃС‚СѓРїРЅС‹С… РїСЂРµРґР»РѕР¶РµРЅРёР№",
+"There are currently no active offers from connected providers.": "Р’ РЅР°СЃС‚РѕСЏС‰РµРµ РІСЂРµРјСЏ РЅРµС‚ Р°РєС‚РёРІРЅС‹С… РїСЂРµРґР»РѕР¶РµРЅРёР№ РѕС‚ РїРѕРґРєР»СЋС‡С‘РЅРЅС‹С… РїСЂРѕРІР°Р№РґРµСЂРѕРІ.",
+"No games available right now": "РЎРµР№С‡Р°СЃ РЅРµС‚ РґРѕСЃС‚СѓРїРЅС‹С… РёРіСЂ",
+"There are currently no active game offers from connected providers.": "Р’ РЅР°СЃС‚РѕСЏС‰РµРµ РІСЂРµРјСЏ РЅРµС‚ Р°РєС‚РёРІРЅС‹С… РїСЂРµРґР»РѕР¶РµРЅРёР№ РёРіСЂ РѕС‚ РїРѕРґРєР»СЋС‡С‘РЅРЅС‹С… РїСЂРѕРІР°Р№РґРµСЂРѕРІ.",
+"No apps available right now": "РЎРµР№С‡Р°СЃ РЅРµС‚ РґРѕСЃС‚СѓРїРЅС‹С… РїСЂРёР»РѕР¶РµРЅРёР№",
+"There are currently no active app offers from connected providers.": "Р’ РЅР°СЃС‚РѕСЏС‰РµРµ РІСЂРµРјСЏ РЅРµС‚ Р°РєС‚РёРІРЅС‹С… РїСЂРµРґР»РѕР¶РµРЅРёР№ РїСЂРёР»РѕР¶РµРЅРёР№ РѕС‚ РїРѕРґРєР»СЋС‡С‘РЅРЅС‹С… РїСЂРѕРІР°Р№РґРµСЂРѕРІ.",
+"Today's reward": "РќР°РіСЂР°РґР° Р·Р° СЃРµРіРѕРґРЅСЏ",
+"Daily Bonus": "Р•Р¶РµРґРЅРµРІРЅС‹Р№ Р±РѕРЅСѓСЃ",
+"One claim per day": "РћРґРЅР° РЅР°РіСЂР°РґР° РІ РґРµРЅСЊ",
+"Bonus claimed today": "Р‘РѕРЅСѓСЃ СѓР¶Рµ РїРѕР»СѓС‡РµРЅ СЃРµРіРѕРґРЅСЏ",
+"Come back tomorrow to continue your streak and claim the next daily bonus.": "Р’РµСЂРЅРёС‚РµСЃСЊ Р·Р°РІС‚СЂР°, С‡С‚РѕР±С‹ РїСЂРѕРґРѕР»Р¶РёС‚СЊ СЃРµСЂРёСЋ Рё РїРѕР»СѓС‡РёС‚СЊ СЃР»РµРґСѓСЋС‰РёР№ РµР¶РµРґРЅРµРІРЅС‹Р№ Р±РѕРЅСѓСЃ.",
+"Daily Goal": "Р”РЅРµРІРЅР°СЏ С†РµР»СЊ",
+"Reach today's target": "Р”РѕСЃС‚РёРіРЅРёС‚Рµ СЃРµРіРѕРґРЅСЏС€РЅРµР№ С†РµР»Рё",
+"progress": "РїСЂРѕРіСЂРµСЃСЃ",
+"Your progress": "Р’Р°С€ РїСЂРѕРіСЂРµСЃСЃ",
+"Keep the momentum": "РџСЂРѕРґРѕР»Р¶Р°Р№С‚Рµ РІ С‚РѕРј Р¶Рµ РґСѓС…Рµ",
+"Earn every day to build your progress": "Р—Р°СЂР°Р±Р°С‚С‹РІР°Р№С‚Рµ РєР°Р¶РґС‹Р№ РґРµРЅСЊ, С‡С‚РѕР±С‹ СѓРІРµР»РёС‡РёРІР°С‚СЊ СЃРІРѕР№ РїСЂРѕРіСЂРµСЃСЃ",
+"Daily streak": "Р•Р¶РµРґРЅРµРІРЅР°СЏ СЃРµСЂРёСЏ",
+"Streak": "РЎРµСЂРёСЏ",
+"Keep earning every day to maintain your reward streak.": "Р—Р°СЂР°Р±Р°С‚С‹РІР°Р№С‚Рµ РєР°Р¶РґС‹Р№ РґРµРЅСЊ, С‡С‚РѕР±С‹ РїРѕРґРґРµСЂР¶РёРІР°С‚СЊ СЃРµСЂРёСЋ РЅР°РіСЂР°Рґ.",
+"View activity в†’": "РџРѕСЃРјРѕС‚СЂРµС‚СЊ Р°РєС‚РёРІРЅРѕСЃС‚СЊ в†’",
+"View progress в†’": "РџРѕСЃРјРѕС‚СЂРµС‚СЊ РїСЂРѕРіСЂРµСЃСЃ в†’",
+"Milestones": "Р”РѕСЃС‚РёР¶РµРЅРёСЏ",
+"Achievements": "Р”РѕСЃС‚РёР¶РµРЅРёСЏ",
+"Complete milestones and keep building your account progress.": "Р’С‹РїРѕР»РЅСЏР№С‚Рµ С†РµР»Рё Рё РїСЂРѕРґРѕР»Р¶Р°Р№С‚Рµ СЂР°Р·РІРёРІР°С‚СЊ СЃРІРѕР№ Р°РєРєР°СѓРЅС‚.",
+"Community": "РЎРѕРѕР±С‰РµСЃС‚РІРѕ",
+"Leaderboard": "РўР°Р±Р»РёС†Р° Р»РёРґРµСЂРѕРІ",
+"See how your total earnings compare with other EasySurf users.": "РЎСЂР°РІРЅРёС‚Рµ СЃРІРѕР№ РѕР±С‰РёР№ Р·Р°СЂР°Р±РѕС‚РѕРє СЃ РґСЂСѓРіРёРјРё РїРѕР»СЊР·РѕРІР°С‚РµР»СЏРјРё EasySurf.",
+"Open leaderboard в†’": "РћС‚РєСЂС‹С‚СЊ С‚Р°Р±Р»РёС†Сѓ Р»РёРґРµСЂРѕРІ в†’",
+"More ways to earn": "Р‘РѕР»СЊС€Рµ СЃРїРѕСЃРѕР±РѕРІ Р·Р°СЂР°Р±РѕС‚Р°С‚СЊ",
+"Turn activity into rewards": "РџСЂРµРІСЂР°С‰Р°Р№С‚Рµ Р°РєС‚РёРІРЅРѕСЃС‚СЊ РІ РЅР°РіСЂР°РґС‹",
+"Explore available tasks, surveys, offers, games and other earning sections.": "РР·СѓС‡Р°Р№С‚Рµ РґРѕСЃС‚СѓРїРЅС‹Рµ Р·Р°РґР°РЅРёСЏ, РѕРїСЂРѕСЃС‹, РїСЂРµРґР»РѕР¶РµРЅРёСЏ, РёРіСЂС‹ Рё РґСЂСѓРіРёРµ СЂР°Р·РґРµР»С‹ Р·Р°СЂР°Р±РѕС‚РєР°.",
+"My Profile": "РњРѕР№ РїСЂРѕС„РёР»СЊ",
+"Personal information": "Р›РёС‡РЅР°СЏ РёРЅС„РѕСЂРјР°С†РёСЏ",
+"Display name": "РћС‚РѕР±СЂР°Р¶Р°РµРјРѕРµ РёРјСЏ",
+"Username": "РРјСЏ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ",
+"3вЂ“30 characters: letters, numbers and underscore.": "РћС‚ 3 РґРѕ 30 СЃРёРјРІРѕР»РѕРІ: Р±СѓРєРІС‹, С†РёС„СЂС‹ Рё СЃРёРјРІРѕР» РїРѕРґС‡С‘СЂРєРёРІР°РЅРёСЏ.",
+"Email": "Р­Р»РµРєС‚СЂРѕРЅРЅР°СЏ РїРѕС‡С‚Р°",
+"Language": "РЇР·С‹Рє",
+"Receive notifications": "РџРѕР»СѓС‡Р°С‚СЊ СѓРІРµРґРѕРјР»РµРЅРёСЏ",
+"Avatar": "РђРІР°С‚Р°СЂ",
+"JPG, PNG or WEBP. Maximum 2 MB.": "JPG, PNG РёР»Рё WEBP. РњР°РєСЃРёРјР°Р»СЊРЅС‹Р№ СЂР°Р·РјРµСЂ вЂ” 2 РњР‘.",
+"Save profile": "РЎРѕС…СЂР°РЅРёС‚СЊ РїСЂРѕС„РёР»СЊ",
+"Account": "РђРєРєР°СѓРЅС‚",
+"Balance": "Р‘Р°Р»Р°РЅСЃ",
+"Referral code": "Р РµС„РµСЂР°Р»СЊРЅС‹Р№ РєРѕРґ",
+"Account ID": "ID Р°РєРєР°СѓРЅС‚Р°",
+"Admin": "РђРґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂ",
+"Pending Rewards": "РћР¶РёРґР°СЋС‰РёРµ РЅР°РіСЂР°РґС‹",
+"No pending rewards.": "РќРµС‚ РѕР¶РёРґР°СЋС‰РёС… РЅР°РіСЂР°Рґ.",
+"Transaction History": "РСЃС‚РѕСЂРёСЏ С‚СЂР°РЅР·Р°РєС†РёР№",
+"Description": "РћРїРёСЃР°РЅРёРµ",
+"Type": "РўРёРї",
+"Amount": "РЎСѓРјРјР°",
+"Top EasySurf earners.": "Р›РёРґРµСЂС‹ РїРѕ Р·Р°СЂР°Р±РѕС‚РєСѓ EasySurf.",
+"Rank": "РњРµСЃС‚Рѕ",
+"User": "РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ",
+"Total earned": "Р’СЃРµРіРѕ Р·Р°СЂР°Р±РѕС‚Р°РЅРѕ",
+"Your referral code": "Р’Р°С€ СЂРµС„РµСЂР°Р»СЊРЅС‹Р№ РєРѕРґ",
+"Copy code": "РЎРєРѕРїРёСЂРѕРІР°С‚СЊ РєРѕРґ",
+"Give this code to a friend during registration.": "РџРµСЂРµРґР°Р№С‚Рµ СЌС‚РѕС‚ РєРѕРґ РґСЂСѓРіСѓ РїСЂРё СЂРµРіРёСЃС‚СЂР°С†РёРё.",
+"Referrals": "Р РµС„РµСЂР°Р»С‹",
+"registered users": "Р·Р°СЂРµРіРёСЃС‚СЂРёСЂРѕРІР°РЅРЅС‹С… РїРѕР»СЊР·РѕРІР°С‚РµР»РµР№",
+"Referral earnings": "Р РµС„РµСЂР°Р»СЊРЅС‹Р№ Р·Р°СЂР°Р±РѕС‚РѕРє",
+"total referral bonuses": "РѕР±С‰Р°СЏ СЃСѓРјРјР° СЂРµС„РµСЂР°Р»СЊРЅС‹С… Р±РѕРЅСѓСЃРѕРІ",
+"Referral reward": "Р РµС„РµСЂР°Р»СЊРЅР°СЏ РЅР°РіСЂР°РґР°",
+"per successful signup": "Р·Р° СѓСЃРїРµС€РЅСѓСЋ СЂРµРіРёСЃС‚СЂР°С†РёСЋ",
+"Referral activity": "Р РµС„РµСЂР°Р»СЊРЅР°СЏ Р°РєС‚РёРІРЅРѕСЃС‚СЊ",
+"Your referrals": "Р’Р°С€Рё СЂРµС„РµСЂР°Р»С‹",
+"0 total": "Р’СЃРµРіРѕ: 0",
+"No referrals yet": "РџРѕРєР° РЅРµС‚ СЂРµС„РµСЂР°Р»РѕРІ",
+"Share your referral code to start building your network.": "РџРѕРґРµР»РёС‚РµСЃСЊ СЃРІРѕРёРј СЂРµС„РµСЂР°Р»СЊРЅС‹Рј РєРѕРґРѕРј, С‡С‚РѕР±С‹ РЅР°С‡Р°С‚СЊ СЂР°Р·РІРёРІР°С‚СЊ СЃРІРѕСЋ СЃРµС‚СЊ.",
+"Grow your network": "Р Р°Р·РІРёРІР°Р№С‚Рµ СЃРІРѕСЋ СЃРµС‚СЊ",
+"Invite more friends": "РџСЂРёРіР»Р°С€Р°Р№С‚Рµ Р±РѕР»СЊС€Рµ РґСЂСѓР·РµР№",
+"Share your referral code with people you know and earn the available referral bonus for successful registrations.": "РџРѕРґРµР»РёС‚РµСЃСЊ СЃРІРѕРёРј СЂРµС„РµСЂР°Р»СЊРЅС‹Рј РєРѕРґРѕРј СЃРѕ Р·РЅР°РєРѕРјС‹РјРё Рё РїРѕР»СѓС‡Р°Р№С‚Рµ РґРѕСЃС‚СѓРїРЅС‹Р№ СЂРµС„РµСЂР°Р»СЊРЅС‹Р№ Р±РѕРЅСѓСЃ Р·Р° СѓСЃРїРµС€РЅС‹Рµ СЂРµРіРёСЃС‚СЂР°С†РёРё.",
+        "Referrals": "Р РµС„РµСЂР°Р»С‹",
+        "Withdraw": "Р’С‹РІРѕРґ СЃСЂРµРґСЃС‚РІ",
+        "Payouts": "Р’С‹РїР»Р°С‚С‹",
+        "Offers": "РџСЂРµРґР»РѕР¶РµРЅРёСЏ",
+        "Games": "РРіСЂС‹",
+        "Apps": "РџСЂРёР»РѕР¶РµРЅРёСЏ",
+        "Tasks": "Р—Р°РґР°РЅРёСЏ",
+        "Microtasks": "РњРёРєСЂРѕР·Р°РґР°РЅРёСЏ",
+        "Login": "Р’РѕР№С‚Рё",
+        "Register": "Р РµРіРёСЃС‚СЂР°С†РёСЏ",
+        "Get Started": "РќР°С‡Р°С‚СЊ",
+        "Logout": "Р’С‹Р№С‚Рё",
+
+        "My Profile": "РњРѕР№ РїСЂРѕС„РёР»СЊ",
+        "Personal information": "Р›РёС‡РЅР°СЏ РёРЅС„РѕСЂРјР°С†РёСЏ",
+        "Display name": "РћС‚РѕР±СЂР°Р¶Р°РµРјРѕРµ РёРјСЏ",
+        "Username": "РРјСЏ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ",
+        "Email": "Р­Р»РµРєС‚СЂРѕРЅРЅР°СЏ РїРѕС‡С‚Р°",
+        "Language": "РЇР·С‹Рє",
+        "Notifications": "РЈРІРµРґРѕРјР»РµРЅРёСЏ",
+        "Receive notifications": "РџРѕР»СѓС‡Р°С‚СЊ СѓРІРµРґРѕРјР»РµРЅРёСЏ",
+        "Avatar": "РђРІР°С‚Р°СЂ",
+        "Save profile": "РЎРѕС…СЂР°РЅРёС‚СЊ РїСЂРѕС„РёР»СЊ",
+        "Save changes": "РЎРѕС…СЂР°РЅРёС‚СЊ РёР·РјРµРЅРµРЅРёСЏ",
+
+        "Account": "РђРєРєР°СѓРЅС‚",
+        "Balance": "Р‘Р°Р»Р°РЅСЃ",
+        "Total earned": "Р’СЃРµРіРѕ Р·Р°СЂР°Р±РѕС‚Р°РЅРѕ",
+        "Total paid": "Р’СЃРµРіРѕ РІС‹РїР»Р°С‡РµРЅРѕ",
+        "Referral code": "Р РµС„РµСЂР°Р»СЊРЅС‹Р№ РєРѕРґ",
+        "Account ID": "ID Р°РєРєР°СѓРЅС‚Р°",
+        "Admin": "РђРґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂ",
+        "Yes": "Р”Р°",
+        "No": "РќРµС‚",
+
+        "English": "РђРЅРіР»РёР№СЃРєРёР№",
+        "Russian": "Р СѓСЃСЃРєРёР№",
+        "Italian": "РС‚Р°Р»СЊСЏРЅСЃРєРёР№",
+        "German": "РќРµРјРµС†РєРёР№",
+        "Japanese": "РЇРїРѕРЅСЃРєРёР№",
+        "Turkish": "РўСѓСЂРµС†РєРёР№",
+
+        "Р СѓСЃСЃРєРёР№": "Р СѓСЃСЃРєРёР№",
+        "Italiano": "РС‚Р°Р»СЊСЏРЅСЃРєРёР№",
+        "Deutsch": "РќРµРјРµС†РєРёР№",
+        "ж—Ґжњ¬иЄћ": "РЇРїРѕРЅСЃРєРёР№",
+        "TГјrkГ§e": "РўСѓСЂРµС†РєРёР№",
+
+        "Profile updated successfully.": "РџСЂРѕС„РёР»СЊ СѓСЃРїРµС€РЅРѕ РѕР±РЅРѕРІР»С‘РЅ.",
+        "Choose an earning method and get started.": "Р’С‹Р±РµСЂРёС‚Рµ СЃРїРѕСЃРѕР± Р·Р°СЂР°Р±РѕС‚РєР° Рё РЅР°С‡РЅРёС‚Рµ.",
+        "Available offers from connected providers.": "Р”РѕСЃС‚СѓРїРЅС‹Рµ РїСЂРµРґР»РѕР¶РµРЅРёСЏ РѕС‚ РїРѕРґРєР»СЋС‡С‘РЅРЅС‹С… РїСЂРѕРІР°Р№РґРµСЂРѕРІ.",
+        "Available games from connected providers.": "Р”РѕСЃС‚СѓРїРЅС‹Рµ РёРіСЂС‹ РѕС‚ РїРѕРґРєР»СЋС‡С‘РЅРЅС‹С… РїСЂРѕРІР°Р№РґРµСЂРѕРІ.",
+        "Available apps from connected providers.": "Р”РѕСЃС‚СѓРїРЅС‹Рµ РїСЂРёР»РѕР¶РµРЅРёСЏ РѕС‚ РїРѕРґРєР»СЋС‡С‘РЅРЅС‹С… РїСЂРѕРІР°Р№РґРµСЂРѕРІ.",
+
+        "Save": "РЎРѕС…СЂР°РЅРёС‚СЊ",
+        "Cancel": "РћС‚РјРµРЅР°",
+        "Back": "РќР°Р·Р°Рґ",
+        "Continue": "РџСЂРѕРґРѕР»Р¶РёС‚СЊ",
+        "Submit": "РћС‚РїСЂР°РІРёС‚СЊ",
+        "Search": "РџРѕРёСЃРє",
+        "Loading": "Р—Р°РіСЂСѓР·РєР°",
+        "Completed": "Р—Р°РІРµСЂС€РµРЅРѕ",
+        "Pending": "Р’ РѕР¶РёРґР°РЅРёРё",
+    "No transactions yet.": "РўСЂР°РЅР·Р°РєС†РёР№ РїРѕРєР° РЅРµС‚.",
+    "Track your completed and pending rewards.": "РћС‚СЃР»РµР¶РёРІР°Р№С‚Рµ РІС‹РїРѕР»РЅРµРЅРЅС‹Рµ Рё РѕР¶РёРґР°СЋС‰РёРµ РЅР°РіСЂР°РґС‹.",
+    "Status": "РЎС‚Р°С‚СѓСЃ",
+        "Available": "Р”РѕСЃС‚СѓРїРЅРѕ",
+"available": "РґРѕСЃС‚СѓРїРЅРѕ",
+        "currently available": "РґРѕСЃС‚СѓРїРЅРѕ СЃРµР№С‡Р°СЃ",
+"Choose from available surveys, offers, games, apps, videos": "Р’С‹Р±РёСЂР°Р№С‚Рµ РґРѕСЃС‚СѓРїРЅС‹Рµ РѕРїСЂРѕСЃС‹, РїСЂРµРґР»РѕР¶РµРЅРёСЏ, РёРіСЂС‹, РїСЂРёР»РѕР¶РµРЅРёСЏ Рё РІРёРґРµРѕ",
+"and verified website tasks.": "Рё РїСЂРѕРІРµСЂРµРЅРЅС‹Рµ Р·Р°РґР°РЅРёСЏ РЅР° СЃР°Р№С‚Р°С….",
+"Browse tasks": "РџРѕСЃРјРѕС‚СЂРµС‚СЊ Р·Р°РґР°РЅРёСЏ",
+"View rewards": "РџРѕСЃРјРѕС‚СЂРµС‚СЊ РЅР°РіСЂР°РґС‹",
+"Share your opinion through paid research surveys when inventory is available.": "Р”РµР»РёС‚РµСЃСЊ СЃРІРѕРёРј РјРЅРµРЅРёРµРј РІ РѕРїР»Р°С‡РёРІР°РµРјС‹С… РёСЃСЃР»РµРґРѕРІР°С‚РµР»СЊСЃРєРёС… РѕРїСЂРѕСЃР°С… РїСЂРё РЅР°Р»РёС‡РёРё РґРѕСЃС‚СѓРїРЅС‹С… РїСЂРµРґР»РѕР¶РµРЅРёР№.",
+"Explore surveys": "РџРѕСЃРјРѕС‚СЂРµС‚СЊ РѕРїСЂРѕСЃС‹",
+"Complete advertiser-approved activities and tracked offers.": "Р’С‹РїРѕР»РЅСЏР№С‚Рµ РѕРґРѕР±СЂРµРЅРЅС‹Рµ СЂРµРєР»Р°РјРѕРґР°С‚РµР»СЏРјРё Р°РєС‚РёРІРЅРѕСЃС‚Рё Рё РѕС‚СЃР»РµР¶РёРІР°РµРјС‹Рµ РїСЂРµРґР»РѕР¶РµРЅРёСЏ.",
+"Explore offers": "РџРѕСЃРјРѕС‚СЂРµС‚СЊ РїСЂРµРґР»РѕР¶РµРЅРёСЏ",
+"Explore games": "РџРѕСЃРјРѕС‚СЂРµС‚СЊ РёРіСЂС‹",
+"Explore apps": "РџРѕСЃРјРѕС‚СЂРµС‚СЊ РїСЂРёР»РѕР¶РµРЅРёСЏ",
+"Watch approved video activities when available.": "РЎРјРѕС‚СЂРёС‚Рµ РѕРґРѕР±СЂРµРЅРЅС‹Рµ РІРёРґРµРѕ РїСЂРё РЅР°Р»РёС‡РёРё РґРѕСЃС‚СѓРїРЅС‹С… Р°РєС‚РёРІРЅРѕСЃС‚РµР№.",
+"Explore videos": "РџРѕСЃРјРѕС‚СЂРµС‚СЊ РІРёРґРµРѕ",
+"Micro Tasks": "РњРёРєСЂРѕР·Р°РґР°РЅРёСЏ",
+"Explore rewards, referrals and other earning sections to see what is currently available.": "РР·СѓС‡Р°Р№С‚Рµ РЅР°РіСЂР°РґС‹, СЂРµС„РµСЂР°Р»СЊРЅСѓСЋ РїСЂРѕРіСЂР°РјРјСѓ Рё РґСЂСѓРіРёРµ СЂР°Р·РґРµР»С‹ Р·Р°СЂР°Р±РѕС‚РєР°, С‡С‚РѕР±С‹ РІРёРґРµС‚СЊ РґРѕСЃС‚СѓРїРЅС‹Рµ РІРѕР·РјРѕР¶РЅРѕСЃС‚Рё.",
+        "Total": "Р’СЃРµРіРѕ",
+        "Today": "РЎРµРіРѕРґРЅСЏ",
+        "Yesterday": "Р’С‡РµСЂР°",
+        "This week": "РќР° СЌС‚РѕР№ РЅРµРґРµР»Рµ",
+        "This month": "Р’ СЌС‚РѕРј РјРµСЃСЏС†Рµ",
+
+        "Welcome": "Р”РѕР±СЂРѕ РїРѕР¶Р°Р»РѕРІР°С‚СЊ",
+        "Welcome back": "РЎ РІРѕР·РІСЂР°С‰РµРЅРёРµРј",
+        "Your balance": "Р’Р°С€ Р±Р°Р»Р°РЅСЃ",
+        "Start earning": "РќР°С‡Р°С‚СЊ Р·Р°СЂР°Р±Р°С‚С‹РІР°С‚СЊ",
+        "Earn money": "Р—Р°СЂР°Р±Р°С‚С‹РІР°С‚СЊ РґРµРЅСЊРіРё",
+        "Earn more": "Р—Р°СЂР°Р±Р°С‚С‹РІР°С‚СЊ Р±РѕР»СЊС€Рµ",
+        "Your rewards": "Р’Р°С€Рё РЅР°РіСЂР°РґС‹",
+        "Your activity": "Р’Р°С€Р° Р°РєС‚РёРІРЅРѕСЃС‚СЊ",
+        "Your referrals": "Р’Р°С€Рё СЂРµС„РµСЂР°Р»С‹",
+
+        "Your EasySurf Dashboard": "Р’Р°С€Р° РїР°РЅРµР»СЊ EasySurf",
+        "Earn now": "Р—Р°СЂР°Р±РѕС‚Р°С‚СЊ СЃРµР№С‡Р°СЃ",
+        "Available balance": "Р”РѕСЃС‚СѓРїРЅС‹Р№ Р±Р°Р»Р°РЅСЃ",
+        "Earned today": "Р—Р°СЂР°Р±РѕС‚Р°РЅРѕ СЃРµРіРѕРґРЅСЏ",
+        "Pending rewards": "РћР¶РёРґР°СЋС‰РёРµ РЅР°РіСЂР°РґС‹",
+        "Tasks completed": "Р’С‹РїРѕР»РЅРµРЅРѕ Р·Р°РґР°РЅРёР№",
+        "Daily target": "Р”РЅРµРІРЅР°СЏ С†РµР»СЊ",
+        "Today's earning goal": "Р”РЅРµРІРЅР°СЏ С†РµР»СЊ Р·Р°СЂР°Р±РѕС‚РєР°",
+        "Keep completing available activities to grow your balance.": "РџСЂРѕРґРѕР»Р¶Р°Р№С‚Рµ РІС‹РїРѕР»РЅСЏС‚СЊ РґРѕСЃС‚СѓРїРЅС‹Рµ Р·Р°РґР°РЅРёСЏ, С‡С‚РѕР±С‹ СѓРІРµР»РёС‡РёС‚СЊ Р±Р°Р»Р°РЅСЃ.",
+        "Quick access": "Р‘С‹СЃС‚СЂС‹Р№ РґРѕСЃС‚СѓРї",
+        "View all": "РџРѕСЃРјРѕС‚СЂРµС‚СЊ РІСЃРµ",
+        "Surveys": "РћРїСЂРѕСЃС‹",
+        "Paid research surveys when inventory is available.": "РћРїР»Р°С‡РёРІР°РµРјС‹Рµ РёСЃСЃР»РµРґРѕРІР°С‚РµР»СЊСЃРєРёРµ РѕРїСЂРѕСЃС‹ РїСЂРё РЅР°Р»РёС‡РёРё РґРѕСЃС‚СѓРїРЅС‹С… РїСЂРµРґР»РѕР¶РµРЅРёР№.",
+        "View surveys": "РџРѕСЃРјРѕС‚СЂРµС‚СЊ РѕРїСЂРѕСЃС‹",
+        "Offers": "РџСЂРµРґР»РѕР¶РµРЅРёСЏ",
+        "Advertiser offers and tracked activities.": "РџСЂРµРґР»РѕР¶РµРЅРёСЏ СЂРµРєР»Р°РјРѕРґР°С‚РµР»РµР№ Рё РѕС‚СЃР»РµР¶РёРІР°РµРјС‹Рµ Р°РєС‚РёРІРЅРѕСЃС‚Рё.",
+        "View offers": "РџРѕСЃРјРѕС‚СЂРµС‚СЊ РїСЂРµРґР»РѕР¶РµРЅРёСЏ",
+        "Games": "РРіСЂС‹",
+        "Play approved games and reach milestones.": "РРіСЂР°Р№С‚Рµ РІ РѕРґРѕР±СЂРµРЅРЅС‹Рµ РёРіСЂС‹ Рё РІС‹РїРѕР»РЅСЏР№С‚Рµ С†РµР»Рё.",
+        "View games": "РџРѕСЃРјРѕС‚СЂРµС‚СЊ РёРіСЂС‹",
+        "Apps": "РџСЂРёР»РѕР¶РµРЅРёСЏ",
+        "Discover tracked app opportunities.": "РќР°С…РѕРґРёС‚Рµ РґРѕСЃС‚СѓРїРЅС‹Рµ РїСЂРµРґР»РѕР¶РµРЅРёСЏ СЃ РѕС‚СЃР»РµР¶РёРІР°РЅРёРµРј РїСЂРёР»РѕР¶РµРЅРёР№.",
+        "View apps": "РџРѕСЃРјРѕС‚СЂРµС‚СЊ РїСЂРёР»РѕР¶РµРЅРёСЏ",
+        "Available now": "Р”РѕСЃС‚СѓРїРЅРѕ СЃРµР№С‡Р°СЃ",
+        "Website Tasks": "Р—Р°РґР°РЅРёСЏ РЅР° СЃР°Р№С‚Р°С…",
+        "Browse earning options": "РџСЂРѕСЃРјРѕС‚СЂРµС‚СЊ РІР°СЂРёР°РЅС‚С‹ Р·Р°СЂР°Р±РѕС‚РєР°",
+        "Your account": "Р’Р°С€ Р°РєРєР°СѓРЅС‚",
+        "Recent Activity": "РџРѕСЃР»РµРґРЅСЏСЏ Р°РєС‚РёРІРЅРѕСЃС‚СЊ",
+        "No activity yet. Start earning to see your transactions here.": "РђРєС‚РёРІРЅРѕСЃС‚Рё РїРѕРєР° РЅРµС‚. РќР°С‡РЅРёС‚Рµ Р·Р°СЂР°Р±Р°С‚С‹РІР°С‚СЊ, С‡С‚РѕР±С‹ СѓРІРёРґРµС‚СЊ Р·РґРµСЃСЊ СЃРІРѕРё РѕРїРµСЂР°С†РёРё.",
+        "Activity": "РђРєС‚РёРІРЅРѕСЃС‚СЊ",
+        "Amount": "РЎСѓРјРјР°",
+        "Goal": "Р¦РµР»СЊ",
+        "earned today": "Р·Р°СЂР°Р±РѕС‚Р°РЅРѕ СЃРµРіРѕРґРЅСЏ",
+"Today's earning goal": "Р”РЅРµРІРЅР°СЏ С†РµР»СЊ Р·Р°СЂР°Р±РѕС‚РєР°",
+"No website tasks available": "Р—Р°РґР°РЅРёР№ РЅР° СЃР°Р№С‚Р°С… РїРѕРєР° РЅРµС‚",
+"New tasks may appear later. Explore other earning categories in the meantime.": "РќРѕРІС‹Рµ Р·Р°РґР°РЅРёСЏ РјРѕРіСѓС‚ РїРѕСЏРІРёС‚СЊСЃСЏ РїРѕР·Р¶Рµ. Рђ РїРѕРєР° РёР·СѓС‡РёС‚Рµ РґСЂСѓРіРёРµ РєР°С‚РµРіРѕСЂРёРё Р·Р°СЂР°Р±РѕС‚РєР°.",
+"Explore Earn в†’": "РџРµСЂРµР№С‚Рё Рє Р·Р°СЂР°Р±РѕС‚РєСѓ в†’",
+"Keep going": "РџСЂРѕРґРѕР»Р¶Р°Р№С‚Рµ",
+"There are more ways to earn": "Р•СЃС‚СЊ Рё РґСЂСѓРіРёРµ СЃРїРѕСЃРѕР±С‹ Р·Р°СЂР°Р±РѕС‚РєР°",
+"Explore all available earning categories and keep your activity growing.": "РР·СѓС‡РёС‚Рµ РІСЃРµ РґРѕСЃС‚СѓРїРЅС‹Рµ РєР°С‚РµРіРѕСЂРёРё Р·Р°СЂР°Р±РѕС‚РєР° Рё РїСЂРѕРґРѕР»Р¶Р°Р№С‚Рµ СѓРІРµР»РёС‡РёРІР°С‚СЊ СЃРІРѕСЋ Р°РєС‚РёРІРЅРѕСЃС‚СЊ.",
+"Explore earning": "РџРµСЂРµР№С‚Рё Рє Р·Р°СЂР°Р±РѕС‚РєСѓ",
+"No website tasks available right now": "Р—Р°РґР°РЅРёР№ РЅР° СЃР°Р№С‚Р°С… СЃРµР№С‡Р°СЃ РЅРµС‚",
+"There are currently no available website tasks for your account.": "Р’ РЅР°СЃС‚РѕСЏС‰РµРµ РІСЂРµРјСЏ РґР»СЏ РІР°С€РµРіРѕ Р°РєРєР°СѓРЅС‚Р° РЅРµС‚ РґРѕСЃС‚СѓРїРЅС‹С… Р·Р°РґР°РЅРёР№ РЅР° СЃР°Р№С‚Р°С….",
+"reach your daily goal and unlock more rewards.": "РґРѕСЃС‚РёРіР°Р№С‚Рµ РґРЅРµРІРЅРѕР№ С†РµР»Рё Рё РѕС‚РєСЂС‹РІР°Р№С‚Рµ РґРѕРїРѕР»РЅРёС‚РµР»СЊРЅС‹Рµ РЅР°РіСЂР°РґС‹.",
+"Daily Goal": "Р”РЅРµРІРЅР°СЏ С†РµР»СЊ",
+"Keep completing eligible activities to increase your progress toward the daily earning goal.": "РџСЂРѕРґРѕР»Р¶Р°Р№С‚Рµ РІС‹РїРѕР»РЅСЏС‚СЊ РґРѕСЃС‚СѓРїРЅС‹Рµ Р·Р°РґР°РЅРёСЏ, С‡С‚РѕР±С‹ СѓРІРµР»РёС‡РёРІР°С‚СЊ РїСЂРѕРіСЂРµСЃСЃ Рє РґРЅРµРІРЅРѕР№ С†РµР»Рё Р·Р°СЂР°Р±РѕС‚РєР°.",
+
+        "No data available": "РќРµС‚ РґРѕСЃС‚СѓРїРЅС‹С… РґР°РЅРЅС‹С…",
+        "No offers available": "РќРµС‚ РґРѕСЃС‚СѓРїРЅС‹С… РїСЂРµРґР»РѕР¶РµРЅРёР№",
+        "Earn online. Your way.": "Р—Р°СЂР°Р±Р°С‚С‹РІР°Р№С‚Рµ РѕРЅР»Р°Р№РЅ. РџРѕ-СЃРІРѕРµРјСѓ.",
+        "Complete surveys, offers, games, app activities and simple tasks from one modern rewards platform.": "РџСЂРѕС…РѕРґРёС‚Рµ РѕРїСЂРѕСЃС‹, РІС‹РїРѕР»РЅСЏР№С‚Рµ РїСЂРµРґР»РѕР¶РµРЅРёСЏ, РёРіСЂР°Р№С‚Рµ, РёСЃРїРѕР»СЊР·СѓР№С‚Рµ РїСЂРёР»РѕР¶РµРЅРёСЏ Рё РІС‹РїРѕР»РЅСЏР№С‚Рµ РїСЂРѕСЃС‚С‹Рµ Р·Р°РґР°РЅРёСЏ РЅР° РѕРґРЅРѕР№ СЃРѕРІСЂРµРјРµРЅРЅРѕР№ РїР»Р°С‚С„РѕСЂРјРµ.",
+        "Simple tasks": "РџСЂРѕСЃС‚С‹Рµ Р·Р°РґР°РЅРёСЏ",
+        "Daily rewards": "Р•Р¶РµРґРЅРµРІРЅС‹Рµ РЅР°РіСЂР°РґС‹",
+        "Referral bonuses": "Р РµС„РµСЂР°Р»СЊРЅС‹Рµ Р±РѕРЅСѓСЃС‹",
+        "Platform": "РџР»Р°С‚С„РѕСЂРјР°",
+        "Everything in one place": "Р’СЃС‘ РІ РѕРґРЅРѕРј РјРµСЃС‚Рµ",
+        "Choose an earning method and get started.": "Р’С‹Р±РµСЂРёС‚Рµ СЃРїРѕСЃРѕР± Р·Р°СЂР°Р±РѕС‚РєР° Рё РЅР°С‡РЅРёС‚Рµ.",
+        "Paid research surveys when real inventory is available.": "РћРїР»Р°С‡РёРІР°РµРјС‹Рµ РёСЃСЃР»РµРґРѕРІР°С‚РµР»СЊСЃРєРёРµ РѕРїСЂРѕСЃС‹ РїСЂРё РЅР°Р»РёС‡РёРё РґРѕСЃС‚СѓРїРЅС‹С… РїСЂРµРґР»РѕР¶РµРЅРёР№.",
+        "Advertiser-approved offers and tracked activities.": "РџСЂРµРґР»РѕР¶РµРЅРёСЏ РѕС‚ СЂРµРєР»Р°РјРѕРґР°С‚РµР»РµР№ Рё РѕС‚СЃР»РµР¶РёРІР°РµРјС‹Рµ Р°РєС‚РёРІРЅРѕСЃС‚Рё.",
+        "Game-based rewards through approved providers.": "РќР°РіСЂР°РґС‹ Р·Р° РёРіСЂС‹ С‡РµСЂРµР· РїСЂРѕРІРµСЂРµРЅРЅС‹С… РїСЂРѕРІР°Р№РґРµСЂРѕРІ.",
+        "App-based earning opportunities.": "Р’РѕР·РјРѕР¶РЅРѕСЃС‚Рё Р·Р°СЂР°Р±РѕС‚РєР° С‡РµСЂРµР· РїСЂРёР»РѕР¶РµРЅРёСЏ.",
+        "Watch approved video tasks and activities.": "РЎРјРѕС‚СЂРёС‚Рµ РѕРґРѕР±СЂРµРЅРЅС‹Рµ РІРёРґРµРѕ Рё РІС‹РїРѕР»РЅСЏР№С‚Рµ РґРѕСЃС‚СѓРїРЅС‹Рµ Р°РєС‚РёРІРЅРѕСЃС‚Рё.",
+        "Complete verified website and microtasks.": "Р’С‹РїРѕР»РЅСЏР№С‚Рµ РїСЂРѕРІРµСЂРµРЅРЅС‹Рµ Р·Р°РґР°РЅРёСЏ РЅР° СЃР°Р№С‚Р°С… Рё РјРёРєСЂРѕР·Р°РґР°РЅРёСЏ.",
+        "Ready when you are": "Р“РѕС‚РѕРІС‹ РЅР°С‡Р°С‚СЊ?",
+        "Start building your rewards balance": "РќР°С‡РЅРёС‚Рµ СѓРІРµР»РёС‡РёРІР°С‚СЊ СЃРІРѕР№ Р±Р°Р»Р°РЅСЃ РЅР°РіСЂР°Рґ",
+        "Create free account в†’": "РЎРѕР·РґР°С‚СЊ Р±РµСЃРїР»Р°С‚РЅС‹Р№ Р°РєРєР°СѓРЅС‚ в†’",
+        "Explore в†’": "РџРµСЂРµР№С‚Рё в†’",
+        "Start в†’": "РќР°С‡Р°С‚СЊ в†’",
+        "Videos": "Р’РёРґРµРѕ",
+        "Tasks": "Р—Р°РґР°РЅРёСЏ",
+        "Watch approved video tasks and activities.": "РЎРјРѕС‚СЂРёС‚Рµ РѕРґРѕР±СЂРµРЅРЅС‹Рµ РІРёРґРµРѕ Рё РІС‹РїРѕР»РЅСЏР№С‚Рµ РґРѕСЃС‚СѓРїРЅС‹Рµ Р°РєС‚РёРІРЅРѕСЃС‚Рё.",
+        "Complete verified website and microtasks.": "Р’С‹РїРѕР»РЅСЏР№С‚Рµ РїСЂРѕРІРµСЂРµРЅРЅС‹Рµ Р·Р°РґР°РЅРёСЏ РЅР° СЃР°Р№С‚Р°С… Рё РјРёРєСЂРѕР·Р°РґР°РЅРёСЏ.",
+        "Home": "Р“Р»Р°РІРЅР°СЏ",
+        "Dashboard": "РџР°РЅРµР»СЊ СѓРїСЂР°РІР»РµРЅРёСЏ",
+        "Earn": "Р—Р°СЂР°Р±РѕС‚РѕРє",
+        "Rewards": "РќР°РіСЂР°РґС‹",
+        "Offers": "РџСЂРµРґР»РѕР¶РµРЅРёСЏ",
+        "Surveys": "РћРїСЂРѕСЃС‹",
+        "Videos": "Р’РёРґРµРѕ",
+        "Company": "РљРѕРјРїР°РЅРёСЏ",
+        "Support": "РџРѕРґРґРµСЂР¶РєР°",
+        "About Us": "Рћ РЅР°СЃ",
+        "Contact": "РљРѕРЅС‚Р°РєС‚С‹",
+        "Referrals": "Р РµС„РµСЂР°Р»С‹",
+        "Payouts": "Р’С‹РІРѕРґ СЃСЂРµРґСЃС‚РІ",
+        "FAQ": "Р§Р°СЃС‚С‹Рµ РІРѕРїСЂРѕСЃС‹",
+        "Help Center": "Р¦РµРЅС‚СЂ РїРѕРјРѕС‰Рё",
+        "Contact Support": "РЎРІСЏР·Р°С‚СЊСЃСЏ СЃ РїРѕРґРґРµСЂР¶РєРѕР№",
+        "Terms of Service": "РЈСЃР»РѕРІРёСЏ РёСЃРїРѕР»СЊР·РѕРІР°РЅРёСЏ",
+        "Terms": "РЈСЃР»РѕРІРёСЏ",
+        "All rights reserved.": "Р’СЃРµ РїСЂР°РІР° Р·Р°С‰РёС‰РµРЅС‹.",
+        "Earn online by completing verified activities, offers, surveys, games and other available tasks.": "Р—Р°СЂР°Р±Р°С‚С‹РІР°Р№С‚Рµ РѕРЅР»Р°Р№РЅ, РІС‹РїРѕР»РЅСЏСЏ РїСЂРѕРІРµСЂРµРЅРЅС‹Рµ Р°РєС‚РёРІРЅРѕСЃС‚Рё, РїСЂРµРґР»РѕР¶РµРЅРёСЏ, РѕРїСЂРѕСЃС‹, РёРіСЂС‹ Рё РґСЂСѓРіРёРµ РґРѕСЃС‚СѓРїРЅС‹Рµ Р·Р°РґР°РЅРёСЏ.",
+        "No games available": "РќРµС‚ РґРѕСЃС‚СѓРїРЅС‹С… РёРіСЂ",
+        "No apps available": "РќРµС‚ РґРѕСЃС‚СѓРїРЅС‹С… РїСЂРёР»РѕР¶РµРЅРёР№",
+        "No tasks available": "РќРµС‚ РґРѕСЃС‚СѓРїРЅС‹С… Р·Р°РґР°РЅРёР№",
+
+        "Sign in": "Р’РѕР№С‚Рё",
+        "Sign up": "Р—Р°СЂРµРіРёСЃС‚СЂРёСЂРѕРІР°С‚СЊСЃСЏ",
+        "Password": "РџР°СЂРѕР»СЊ",
+        "Confirm password": "РџРѕРґС‚РІРµСЂРґРёС‚Рµ РїР°СЂРѕР»СЊ",
+        "Remember me": "Р—Р°РїРѕРјРЅРёС‚СЊ РјРµРЅСЏ",
+        "Forgot password?": "Р—Р°Р±С‹Р»Рё РїР°СЂРѕР»СЊ?",
+        "Don't have an account?": "РќРµС‚ Р°РєРєР°СѓРЅС‚Р°?",
+        "Already have an account?": "РЈР¶Рµ РµСЃС‚СЊ Р°РєРєР°СѓРЅС‚?",
+
+        "Invite friends": "РџСЂРёРіР»Р°СЃРёС‚СЊ РґСЂСѓР·РµР№",
+        "Referral program": "Р РµС„РµСЂР°Р»СЊРЅР°СЏ РїСЂРѕРіСЂР°РјРјР°",
+        "Your referral link": "Р’Р°С€Р° СЂРµС„РµСЂР°Р»СЊРЅР°СЏ СЃСЃС‹Р»РєР°",
+        "Copy": "РљРѕРїРёСЂРѕРІР°С‚СЊ",
+        "Copied": "РЎРєРѕРїРёСЂРѕРІР°РЅРѕ",
+
+        "Request payout": "Р—Р°РїСЂРѕСЃРёС‚СЊ РІС‹РїР»Р°С‚Сѓ",
+        "Payout history": "РСЃС‚РѕСЂРёСЏ РІС‹РїР»Р°С‚",
+        "Minimum payout": "РњРёРЅРёРјР°Р»СЊРЅР°СЏ СЃСѓРјРјР° РІС‹РїР»Р°С‚С‹",
+        "Payment method": "РЎРїРѕСЃРѕР± РѕРїР»Р°С‚С‹",
+
+        "Home": "Р“Р»Р°РІРЅР°СЏ",
+        "About": "Рћ РЅР°СЃ",
+        "Contact": "РљРѕРЅС‚Р°РєС‚С‹",
+        "Privacy": "РљРѕРЅС„РёРґРµРЅС†РёР°Р»СЊРЅРѕСЃС‚СЊ",
+        "Terms": "РЈСЃР»РѕРІРёСЏ",
+        "Help": "РџРѕРјРѕС‰СЊ",
+    },
+
+    "it": {
+        "Total earned": "Totale guadagnato",
+        "Total paid": "Totale pagato",
+        "Your EasySurf Dashboard": "La tua Dashboard EasySurf",
+        "Earn now": "Guadagna ora",
+        "Available balance": "Saldo disponibile",
+        "Earned today": "Guadagnato oggi",
+        "Pending rewards": "Ricompense in sospeso",
+        "Tasks completed": "AttivitГ  completate",
+        "Daily target": "Obiettivo giornaliero",
+        "Today's earning goal": "Obiettivo di guadagno di oggi",
+        "Keep completing available activities to grow your balance.": "Continua a completare le attivitГ  disponibili per aumentare il tuo saldo.",
+        "Quick access": "Accesso rapido",
+        "View all": "Visualizza tutto",
+        "Surveys": "Sondaggi",
+        "Paid research surveys when inventory is available.": "Sondaggi di ricerca retribuiti quando sono disponibili.",
+        "View surveys": "Visualizza sondaggi",
+        "Advertiser offers and tracked activities.": "Offerte degli inserzionisti e attivitГ  monitorate.",
+        "View offers": "Visualizza offerte",
+        "Play approved games and reach milestones.": "Gioca ai giochi approvati e raggiungi gli obiettivi.",
+        "View games": "Visualizza giochi",
+        "Discover tracked app opportunities.": "Scopri le opportunitГ  delle app monitorate.",
+        "View apps": "Visualizza app",
+        "Available now": "Disponibile ora",
+        "Website Tasks": "AttivitГ  sul sito web",
+        "Browse earning options": "Sfoglia le opzioni di guadagno",
+        "Your account": "Il tuo account",
+        "Recent Activity": "AttivitГ  recente",
+        "No activity yet. Start earning to see your transactions here.": "Nessuna attivitГ  ancora. Inizia a guadagnare per vedere qui le tue transazioni.",
+        "Amount": "Importo",
+        "Goal": "Obiettivo",
+        "earned today": "guadagnato oggi",
+        "Dashboard": "Dashboard",
+        "Profile": "Profilo",
+        "Earn": "Guadagna",
+        "Rewards": "Ricompense",
+        "Activity": "AttivitГ ",
+        "Leaderboard": "Classifica",
+        "Referrals": "Referral",
+        "Withdraw": "Prelievo",
+        "Payouts": "Pagamenti",
+        "Offers": "Offerte",
+        "Games": "Giochi",
+        "Apps": "App",
+        "Tasks": "AttivitГ ",
+        "Microtasks": "MicroattivitГ ",
+        "Login": "Accedi",
+        "Register": "Registrati",
+        "Get Started": "Inizia",
+        "Logout": "Esci",
+
+        "My Profile": "Il mio profilo",
+        "Personal information": "Informazioni personali",
+        "Display name": "Nome visualizzato",
+        "Username": "Nome utente",
+        "Email": "Email",
+        "Language": "Lingua",
+        "Notifications": "Notifiche",
+        "Receive notifications": "Ricevi notifiche",
+        "Avatar": "Avatar",
+        "Save profile": "Salva profilo",
+        "Save changes": "Salva modifiche",
+
+        "Account": "Account",
+        "Balance": "Saldo",
+        "Referral code": "Codice referral",
+        "Account ID": "ID account",
+        "Admin": "Amministratore",
+        "Yes": "SГ¬",
+        "No": "No",
+
+        "English": "Inglese",
+        "Russian": "Russo",
+        "Italian": "Italiano",
+        "German": "Tedesco",
+        "Japanese": "Giapponese",
+        "Turkish": "Turco",
+
+        "Р СѓСЃСЃРєРёР№": "Russo",
+        "Italiano": "Italiano",
+        "Deutsch": "Tedesco",
+        "ж—Ґжњ¬иЄћ": "Giapponese",
+        "TГјrkГ§e": "Turco",
+
+        "Profile updated successfully.": "Profilo aggiornato con successo.",
+        "Choose an earning method and get started.": "Scegli un metodo per guadagnare e inizia.",
+        "Available offers from connected providers.": "Offerte disponibili dai provider collegati.",
+        "Available games from connected providers.": "Giochi disponibili dai provider collegati.",
+        "Available apps from connected providers.": "App disponibili dai provider collegati.",
+
+        "Save": "Salva",
+        "Cancel": "Annulla",
+        "Back": "Indietro",
+        "Continue": "Continua",
+        "Submit": "Invia",
+        "Search": "Cerca",
+        "Loading": "Caricamento",
+        "Completed": "Completato",
+        "Pending": "In attesa",
+        "Available": "Disponibile",
+        "Total": "Totale",
+        "Today": "Oggi",
+        "Yesterday": "Ieri",
+        "This week": "Questa settimana",
+        "This month": "Questo mese",
+
+        "Welcome": "Benvenuto",
+        "Welcome back": "Bentornato",
+        "Your balance": "Il tuo saldo",
+        "Start earning": "Inizia a guadagnare",
+        "Earn money": "Guadagna denaro",
+        "Earn more": "Guadagna di piГ№",
+        "Your rewards": "Le tue ricompense",
+        "Your activity": "La tua attivitГ ",
+        "Your referrals": "I tuoi referral",
+
+        "No data available": "Nessun dato disponibile",
+        "No offers available": "Nessuna offerta disponibile",
+        "No games available": "Nessun gioco disponibile",
+        "No apps available": "Nessuna app disponibile",
+        "No tasks available": "Nessuna attivitГ  disponibile",
+
+        "Sign in": "Accedi",
+        "Sign up": "Registrati",
+        "Password": "Password",
+        "Confirm password": "Conferma password",
+        "Remember me": "Ricordami",
+        "Forgot password?": "Password dimenticata?",
+        "Don't have an account?": "Non hai un account?",
+        "Already have an account?": "Hai giГ  un account?",
+
+        "Invite friends": "Invita amici",
+        "Referral program": "Programma referral",
+        "Your referral link": "Il tuo link referral",
+        "Copy": "Copia",
+        "Copied": "Copiato",
+
+        "Request payout": "Richiedi pagamento",
+        "Payout history": "Cronologia pagamenti",
+        "Minimum payout": "Pagamento minimo",
+        "Payment method": "Metodo di pagamento",
+
+        "Home": "Home",
+        "About": "Chi siamo",
+        "Contact": "Contatti",
+        "Privacy": "Privacy",
+        "Terms": "Termini",
+        "Help": "Aiuto",
+    },
+
+    "de": {
+        "Total earned": "Insgesamt verdient",
+        "Total paid": "Insgesamt ausgezahlt",
+        "Your EasySurf Dashboard": "Dein EasySurf-Dashboard",
+        "Earn now": "Jetzt verdienen",
+        "Available balance": "VerfГјgbares Guthaben",
+        "Earned today": "Heute verdient",
+        "Pending rewards": "Ausstehende PrГ¤mien",
+        "Tasks completed": "Aufgaben abgeschlossen",
+        "Daily target": "Tagesziel",
+        "Today's earning goal": "Heutiges Verdienstziel",
+        "Keep completing available activities to grow your balance.": "SchlieГџe weiterhin verfГјgbare AktivitГ¤ten ab, um dein Guthaben zu erhГ¶hen.",
+        "Quick access": "Schnellzugriff",
+        "View all": "Alle anzeigen",
+        "Surveys": "Umfragen",
+        "Paid research surveys when inventory is available.": "Bezahlte Forschungsumfragen, wenn verfГјgbar.",
+        "View surveys": "Umfragen anzeigen",
+        "Advertiser offers and tracked activities.": "Werbeangebote und erfasste AktivitГ¤ten.",
+        "View offers": "Angebote anzeigen",
+        "Play approved games and reach milestones.": "Spiele genehmigte Spiele und erreiche Meilensteine.",
+        "View games": "Spiele anzeigen",
+        "Discover tracked app opportunities.": "Entdecke erfasste App-MГ¶glichkeiten.",
+        "View apps": "Apps anzeigen",
+        "Available now": "Jetzt verfГјgbar",
+        "Website Tasks": "Website-Aufgaben",
+        "Browse earning options": "VerdienstmГ¶glichkeiten durchsuchen",
+        "Your account": "Dein Konto",
+        "Recent Activity": "Letzte AktivitГ¤ten",
+        "No activity yet. Start earning to see your transactions here.": "Noch keine AktivitГ¤ten. Beginne zu verdienen, um deine Transaktionen hier zu sehen.",
+        "Amount": "Betrag",
+        "Goal": "Ziel",
+        "earned today": "heute verdient",
+        "Dashboard": "Dashboard",
+        "Profile": "Profil",
+        "Earn": "Verdienen",
+        "Rewards": "Belohnungen",
+        "Activity": "AktivitГ¤t",
+        "Leaderboard": "Rangliste",
+        "Referrals": "Empfehlungen",
+        "Withdraw": "Auszahlung",
+        "Payouts": "Zahlungen",
+        "Offers": "Angebote",
+        "Games": "Spiele",
+        "Apps": "Apps",
+        "Tasks": "Aufgaben",
+        "Microtasks": "Mikroaufgaben",
+        "Login": "Anmelden",
+        "Register": "Registrieren",
+        "Get Started": "Loslegen",
+        "Logout": "Abmelden",
+
+        "My Profile": "Mein Profil",
+        "Personal information": "PersГ¶nliche Informationen",
+        "Display name": "Anzeigename",
+        "Username": "Benutzername",
+        "Email": "E-Mail",
+        "Language": "Sprache",
+        "Notifications": "Benachrichtigungen",
+        "Receive notifications": "Benachrichtigungen erhalten",
+        "Avatar": "Avatar",
+        "Save profile": "Profil speichern",
+        "Save changes": "Г„nderungen speichern",
+
+        "Account": "Konto",
+        "Balance": "Guthaben",
+        "Referral code": "Empfehlungscode",
+        "Account ID": "Konto-ID",
+        "Admin": "Administrator",
+        "Yes": "Ja",
+        "No": "Nein",
+
+        "English": "Englisch",
+        "Russian": "Russisch",
+        "Italian": "Italienisch",
+        "German": "Deutsch",
+        "Japanese": "Japanisch",
+        "Turkish": "TГјrkisch",
+
+        "Р СѓСЃСЃРєРёР№": "Russisch",
+        "Italiano": "Italienisch",
+        "Deutsch": "Deutsch",
+        "ж—Ґжњ¬иЄћ": "Japanisch",
+        "TГјrkГ§e": "TГјrkisch",
+
+        "Profile updated successfully.": "Profil erfolgreich aktualisiert.",
+        "Choose an earning method and get started.": "WГ¤hle eine Verdienstmethode und beginne.",
+        "Available offers from connected providers.": "VerfГјgbare Angebote von verbundenen Anbietern.",
+        "Available games from connected providers.": "VerfГјgbare Spiele von verbundenen Anbietern.",
+        "Available apps from connected providers.": "VerfГјgbare Apps von verbundenen Anbietern.",
+
+        "Save": "Speichern",
+        "Cancel": "Abbrechen",
+        "Back": "ZurГјck",
+        "Continue": "Weiter",
+        "Submit": "Absenden",
+        "Search": "Suchen",
+        "Loading": "Wird geladen",
+        "Completed": "Abgeschlossen",
+        "Pending": "Ausstehend",
+        "Available": "VerfГјgbar",
+        "Total": "Gesamt",
+        "Today": "Heute",
+        "Yesterday": "Gestern",
+        "This week": "Diese Woche",
+        "This month": "Diesen Monat",
+
+        "Welcome": "Willkommen",
+        "Welcome back": "Willkommen zurГјck",
+        "Your balance": "Dein Guthaben",
+        "Start earning": "Verdienen starten",
+        "Earn money": "Geld verdienen",
+        "Earn more": "Mehr verdienen",
+        "Your rewards": "Deine Belohnungen",
+        "Your activity": "Deine AktivitГ¤t",
+        "Your referrals": "Deine Empfehlungen",
+
+        "No data available": "Keine Daten verfГјgbar",
+        "No offers available": "Keine Angebote verfГјgbar",
+        "No games available": "Keine Spiele verfГјgbar",
+        "No apps available": "Keine Apps verfГјgbar",
+        "No tasks available": "Keine Aufgaben verfГјgbar",
+
+        "Sign in": "Anmelden",
+        "Sign up": "Registrieren",
+        "Password": "Passwort",
+        "Confirm password": "Passwort bestГ¤tigen",
+        "Remember me": "Angemeldet bleiben",
+        "Forgot password?": "Passwort vergessen?",
+        "Don't have an account?": "Noch kein Konto?",
+        "Already have an account?": "Bereits ein Konto?",
+
+        "Invite friends": "Freunde einladen",
+        "Referral program": "Empfehlungsprogramm",
+        "Your referral link": "Dein Empfehlungslink",
+        "Copy": "Kopieren",
+        "Copied": "Kopiert",
+
+        "Request payout": "Auszahlung anfordern",
+        "Payout history": "Auszahlungsverlauf",
+        "Minimum payout": "Mindestauszahlung",
+        "Payment method": "Zahlungsmethode",
+
+        "Home": "Startseite",
+        "About": "Гњber uns",
+        "Contact": "Kontakt",
+        "Privacy": "Datenschutz",
+        "Terms": "Bedingungen",
+        "Help": "Hilfe",
+    },
+
+    "ja": {
+        "Total earned": "зЌІеѕ—з·ЏйЎЌ",
+        "Total paid": "ж”Їж‰•з·ЏйЎЌ",
+        "Your EasySurf Dashboard": "гЃ‚гЃЄгЃџгЃ®EasySurfгѓЂгѓѓг‚·гѓҐгѓњгѓјгѓ‰",
+        "Earn now": "д»ЉгЃ™гЃђзЁјгЃђ",
+        "Available balance": "е€©з”ЁеЏЇиѓЅж®‹й«",
+        "Earned today": "д»Љж—ҐгЃ®зЌІеѕ—йЎЌ",
+        "Pending rewards": "дїќз•™дё­гЃ®е ±й…¬",
+        "Tasks completed": "е®Њдє†гЃ—гЃџг‚їг‚№г‚Ї",
+        "Daily target": "1ж—ҐгЃ®з›®жЁ™",
+        "Today's earning goal": "д»Љж—ҐгЃ®еЏЋз›Љз›®жЁ™",
+        "Keep completing available activities to grow your balance.": "е€©з”ЁеЏЇиѓЅгЃЄг‚ўг‚Їгѓ†г‚Јгѓ“гѓ†г‚Јг‚’з¶љгЃ‘гЃ¦е®Њдє†гЃ—гЂЃж®‹й«г‚’еў—г‚„гЃ—гЃѕгЃ—г‚‡гЃ†гЂ‚",
+        "Quick access": "г‚Їг‚¤гѓѓг‚Їг‚ўг‚Їг‚»г‚№",
+        "View all": "гЃ™гЃ№гЃ¦иЎЁз¤є",
+        "Surveys": "г‚ўгѓіг‚±гѓјгѓ€",
+        "Paid research surveys when inventory is available.": "е€©з”ЁеЏЇиѓЅгЃЄе ґеђ€гЃ«еЏ‚еЉ гЃ§гЃЌг‚‹жњ‰ж–™гѓЄг‚µгѓјгѓЃг‚ўгѓіг‚±гѓјгѓ€гЃ§гЃ™гЂ‚",
+        "View surveys": "г‚ўгѓіг‚±гѓјгѓ€г‚’и¦‹г‚‹",
+        "Advertiser offers and tracked activities.": "еєѓе‘Љдё»гЃ®г‚Єгѓ•г‚ЎгѓјгЃЁиїЅи·ЎеЇѕи±ЎгЃ®г‚ўг‚Їгѓ†г‚Јгѓ“гѓ†г‚ЈгЂ‚",
+        "View offers": "г‚Єгѓ•г‚Ўгѓјг‚’и¦‹г‚‹",
+        "Play approved games and reach milestones.": "ж‰їиЄЌгЃ•г‚ЊгЃџг‚Ігѓјгѓ г‚’гѓ—гѓ¬г‚¤гЃ—гЃ¦гѓћг‚¤гѓ«г‚№гѓ€гѓјгѓіг‚’йЃ”ж€ђгЃ—гЃѕгЃ—г‚‡гЃ†гЂ‚",
+        "View games": "г‚Ігѓјгѓ г‚’и¦‹г‚‹",
+        "Discover tracked app opportunities.": "иїЅи·ЎеЇѕи±ЎгЃ®г‚ўгѓ—гѓЄжЎ€д»¶г‚’и¦‹гЃ¤гЃ‘гЃѕгЃ—г‚‡гЃ†гЂ‚",
+        "View apps": "г‚ўгѓ—гѓЄг‚’и¦‹г‚‹",
+        "Available now": "зЏѕењЁе€©з”ЁеЏЇиѓЅ",
+        "Website Tasks": "г‚¦г‚§гѓ–г‚µг‚¤гѓ€г‚їг‚№г‚Ї",
+        "Browse earning options": "еЏЋз›Љг‚Єгѓ—г‚·гѓ§гѓіг‚’и¦‹г‚‹",
+        "Your account": "гЃ‚гЃЄгЃџгЃ®г‚ўг‚«г‚¦гѓігѓ€",
+        "Recent Activity": "жњЂиї‘гЃ®г‚ўг‚Їгѓ†г‚Јгѓ“гѓ†г‚Ј",
+        "No activity yet. Start earning to see your transactions here.": "гЃѕгЃ г‚ўг‚Їгѓ†г‚Јгѓ“гѓ†г‚ЈгЃЇгЃ‚г‚ЉгЃѕгЃ›г‚“гЂ‚зЁјгЃЋе§‹г‚Ѓг‚‹гЃЁгЃ“гЃ“гЃ«еЏ–еј•гЃЊиЎЁз¤єгЃ•г‚ЊгЃѕгЃ™гЂ‚",
+        "Amount": "й‡‘йЎЌ",
+        "Goal": "з›®жЁ™",
+        "earned today": "д»Љж—ҐгЃ®зЌІеѕ—йЎЌ",
+        "Dashboard": "гѓЂгѓѓг‚·гѓҐгѓњгѓјгѓ‰",
+        "Profile": "гѓ—гѓ­гѓ•г‚Јгѓјгѓ«",
+        "Earn": "зЁјгЃђ",
+        "Rewards": "е ±й…¬",
+        "Activity": "г‚ўг‚Їгѓ†г‚Јгѓ“гѓ†г‚Ј",
+        "Leaderboard": "гѓ©гѓіг‚­гѓіг‚°",
+        "Referrals": "зґ№д»‹",
+        "Withdraw": "е‡єй‡‘",
+        "Payouts": "ж”Їж‰•гЃ„",
+        "Offers": "г‚Єгѓ•г‚Ўгѓј",
+        "Games": "г‚Ігѓјгѓ ",
+        "Apps": "г‚ўгѓ—гѓЄ",
+        "Tasks": "г‚їг‚№г‚Ї",
+        "Microtasks": "гѓћг‚¤г‚Їгѓ­г‚їг‚№г‚Ї",
+        "Login": "гѓ­г‚°г‚¤гѓі",
+        "Register": "з™»йЊІ",
+        "Get Started": "е§‹г‚Ѓг‚‹",
+        "Logout": "гѓ­г‚°г‚ўг‚¦гѓ€",
+
+        "My Profile": "гѓћг‚¤гѓ—гѓ­гѓ•г‚Јгѓјгѓ«",
+        "Personal information": "еЂ‹дєєжѓ…е ±",
+        "Display name": "иЎЁз¤єеђЌ",
+        "Username": "гѓ¦гѓјг‚¶гѓјеђЌ",
+        "Email": "гѓЎгѓјгѓ«г‚ўгѓ‰гѓ¬г‚№",
+        "Language": "иЁЂиЄћ",
+        "Notifications": "йЂљзџҐ",
+        "Receive notifications": "йЂљзџҐг‚’еЏ—гЃ‘еЏ–г‚‹",
+        "Avatar": "г‚ўгѓђг‚їгѓј",
+        "Save profile": "гѓ—гѓ­гѓ•г‚Јгѓјгѓ«г‚’дїќе­",
+        "Save changes": "е¤‰ж›ґг‚’дїќе­",
+
+        "Account": "г‚ўг‚«г‚¦гѓігѓ€",
+        "Balance": "ж®‹й«",
+        "Referral code": "зґ№д»‹г‚ігѓјгѓ‰",
+        "Account ID": "г‚ўг‚«г‚¦гѓігѓ€ID",
+        "Admin": "з®Ўзђ†иЂ…",
+        "Yes": "гЃЇгЃ„",
+        "No": "гЃ„гЃ„гЃ€",
+
+        "English": "и‹±иЄћ",
+        "Russian": "гѓ­г‚·г‚ўиЄћ",
+        "Italian": "г‚¤г‚їгѓЄг‚ўиЄћ",
+        "German": "гѓ‰г‚¤гѓ„иЄћ",
+        "Japanese": "ж—Ґжњ¬иЄћ",
+        "Turkish": "гѓ€гѓ«г‚іиЄћ",
+
+        "Р СѓСЃСЃРєРёР№": "гѓ­г‚·г‚ўиЄћ",
+        "Italiano": "г‚¤г‚їгѓЄг‚ўиЄћ",
+        "Deutsch": "гѓ‰г‚¤гѓ„иЄћ",
+        "ж—Ґжњ¬иЄћ": "ж—Ґжњ¬иЄћ",
+        "TГјrkГ§e": "гѓ€гѓ«г‚іиЄћ",
+
+        "Profile updated successfully.": "гѓ—гѓ­гѓ•г‚Јгѓјгѓ«г‚’ж­ЈеёёгЃ«ж›ґж–°гЃ—гЃѕгЃ—гЃџгЂ‚",
+        "Choose an earning method and get started.": "еЏЋз›Љж–№жі•г‚’йЃёжЉћгЃ—гЃ¦е§‹г‚ЃгЃѕгЃ—г‚‡гЃ†гЂ‚",
+        "Available offers from connected providers.": "жЋҐз¶љгЃ•г‚ЊгЃџгѓ—гѓ­гѓђг‚¤гѓЂгѓјгЃ‹г‚‰е€©з”ЁеЏЇиѓЅгЃЄг‚Єгѓ•г‚ЎгѓјгЂ‚",
+        "Available games from connected providers.": "жЋҐз¶љгЃ•г‚ЊгЃџгѓ—гѓ­гѓђг‚¤гѓЂгѓјгЃ‹г‚‰е€©з”ЁеЏЇиѓЅгЃЄг‚Ігѓјгѓ гЂ‚",
+        "Available apps from connected providers.": "жЋҐз¶љгЃ•г‚ЊгЃџгѓ—гѓ­гѓђг‚¤гѓЂгѓјгЃ‹г‚‰е€©з”ЁеЏЇиѓЅгЃЄг‚ўгѓ—гѓЄгЂ‚",
+
+        "Save": "дїќе­",
+        "Cancel": "г‚­гѓЈгѓіг‚»гѓ«",
+        "Back": "ж€»г‚‹",
+        "Continue": "з¶љиЎЊ",
+        "Submit": "йЂЃдїЎ",
+        "Search": "ж¤њзґў",
+        "Loading": "иЄ­гЃїиѕјгЃїдё­",
+        "Completed": "е®Њдє†",
+        "Pending": "дїќз•™дё­",
+        "Available": "е€©з”ЁеЏЇиѓЅ",
+        "Total": "еђ€иЁ€",
+        "Today": "д»Љж—Ґ",
+        "Yesterday": "жЁж—Ґ",
+        "This week": "д»ЉйЂ±",
+        "This month": "д»Љжњ€",
+
+        "Welcome": "г‚€гЃ†гЃ“гЃќ",
+        "Welcome back": "гЃЉгЃ‹гЃ€г‚ЉгЃЄгЃ•гЃ„",
+        "Your balance": "гЃ‚гЃЄгЃџгЃ®ж®‹й«",
+        "Start earning": "еЏЋз›Љг‚’й–‹е§‹",
+        "Earn money": "гЃЉй‡‘г‚’зЁјгЃђ",
+        "Earn more": "г‚‚гЃЈгЃЁзЁјгЃђ",
+        "Your rewards": "гЃ‚гЃЄгЃџгЃ®е ±й…¬",
+        "Your activity": "гЃ‚гЃЄгЃџгЃ®г‚ўг‚Їгѓ†г‚Јгѓ“гѓ†г‚Ј",
+        "Your referrals": "гЃ‚гЃЄгЃџгЃ®зґ№д»‹",
+
+        "No data available": "е€©з”ЁеЏЇиѓЅгЃЄгѓ‡гѓјг‚їгЃЇгЃ‚г‚ЉгЃѕгЃ›г‚“",
+        "No offers available": "е€©з”ЁеЏЇиѓЅгЃЄг‚Єгѓ•г‚ЎгѓјгЃЇгЃ‚г‚ЉгЃѕгЃ›г‚“",
+        "No games available": "е€©з”ЁеЏЇиѓЅгЃЄг‚Ігѓјгѓ гЃЇгЃ‚г‚ЉгЃѕгЃ›г‚“",
+        "No apps available": "е€©з”ЁеЏЇиѓЅгЃЄг‚ўгѓ—гѓЄгЃЇгЃ‚г‚ЉгЃѕгЃ›г‚“",
+        "No tasks available": "е€©з”ЁеЏЇиѓЅгЃЄг‚їг‚№г‚ЇгЃЇгЃ‚г‚ЉгЃѕгЃ›г‚“",
+
+        "Sign in": "гѓ­г‚°г‚¤гѓі",
+        "Sign up": "з™»йЊІгЃ™г‚‹",
+        "Password": "гѓ‘г‚№гѓЇгѓјгѓ‰",
+        "Confirm password": "гѓ‘г‚№гѓЇгѓјгѓ‰г‚’зўєиЄЌ",
+        "Remember me": "гѓ­г‚°г‚¤гѓізЉ¶ж…‹г‚’дїќжЊЃ",
+        "Forgot password?": "гѓ‘г‚№гѓЇгѓјгѓ‰г‚’еїг‚ЊгЃѕгЃ—гЃџгЃ‹пјџ",
+        "Don't have an account?": "г‚ўг‚«г‚¦гѓігѓ€г‚’гЃЉжЊЃгЃЎгЃ§гЃЄгЃ„гЃ§гЃ™гЃ‹пјџ",
+        "Already have an account?": "гЃ™гЃ§гЃ«г‚ўг‚«г‚¦гѓігѓ€г‚’гЃЉжЊЃгЃЎгЃ§гЃ™гЃ‹пјџ",
+
+        "Invite friends": "еЏ‹йЃ”г‚’ж‹›еѕ…",
+        "Referral program": "зґ№д»‹гѓ—гѓ­г‚°гѓ©гѓ ",
+        "Your referral link": "гЃ‚гЃЄгЃџгЃ®зґ№д»‹гѓЄгѓіг‚Ї",
+        "Copy": "г‚ігѓ”гѓј",
+        "Copied": "г‚ігѓ”гѓјгЃ—гЃѕгЃ—гЃџ",
+
+        "Request payout": "ж”Їж‰•гЃ„г‚’з”іи«‹",
+        "Payout history": "ж”Їж‰•гЃ„е±Ґж­ґ",
+        "Minimum payout": "жњЂдЅЋж”Їж‰•йЎЌ",
+        "Payment method": "ж”Їж‰•гЃ„ж–№жі•",
+
+        "Home": "гѓ›гѓјгѓ ",
+        "About": "ж¦‚и¦Ѓ",
+        "Contact": "гЃЉе•ЏгЃ„еђ€г‚ЏгЃ›",
+        "Privacy": "гѓ—гѓ©г‚¤гѓђг‚·гѓј",
+        "Terms": "е€©з”Ёи¦Џзґ„",
+        "Help": "гѓгѓ«гѓ—",
+    },
+
+    "tr": {
+        "Total earned": "Toplam kazanГ§",
+        "Total paid": "Toplam Г¶deme",
+        "Your EasySurf Dashboard": "EasySurf Kontrol Paneliniz",
+        "Earn now": "Ећimdi kazan",
+        "Available balance": "KullanД±labilir bakiye",
+        "Earned today": "BugГјn kazanД±lan",
+        "Pending rewards": "Bekleyen Г¶dГјller",
+        "Tasks completed": "Tamamlanan gГ¶revler",
+        "Daily target": "GГјnlГјk hedef",
+        "Today's earning goal": "BugГјnГјn kazanГ§ hedefi",
+        "Keep completing available activities to grow your balance.": "Bakiyenizi artД±rmak iГ§in mevcut etkinlikleri tamamlamaya devam edin.",
+        "Quick access": "HД±zlД± eriЕџim",
+        "View all": "TГјmГјnГј gГ¶rГјntГјle",
+        "Surveys": "Anketler",
+        "Paid research surveys when inventory is available.": "Kontenjan olduДџunda Гјcretli araЕџtД±rma anketleri.",
+        "View surveys": "Anketleri gГ¶rГјntГјle",
+        "Advertiser offers and tracked activities.": "Reklamveren teklifleri ve takip edilen etkinlikler.",
+        "View offers": "Teklifleri gГ¶rГјntГјle",
+        "Play approved games and reach milestones.": "OnaylД± oyunlarД± oynayД±n ve kilometre taЕџlarД±na ulaЕџД±n.",
+        "View games": "OyunlarД± gГ¶rГјntГјle",
+        "Discover tracked app opportunities.": "Takip edilen uygulama fД±rsatlarД±nД± keЕџfedin.",
+        "View apps": "UygulamalarД± gГ¶rГјntГјle",
+        "Available now": "Ећimdi mevcut",
+        "Website Tasks": "Web Sitesi GГ¶revleri",
+        "Browse earning options": "KazanГ§ seГ§eneklerine gГ¶z at",
+        "Your account": "HesabД±nД±z",
+        "Recent Activity": "Son Etkinlikler",
+        "No activity yet. Start earning to see your transactions here.": "HenГјz etkinlik yok. Д°Еџlem geГ§miЕџinizi burada gГ¶rmek iГ§in kazanmaya baЕџlayД±n.",
+        "Amount": "Tutar",
+        "Goal": "Hedef",
+        "earned today": "bugГјn kazanД±lan",
+        "Dashboard": "Kontrol Paneli",
+        "Profile": "Profil",
+        "Earn": "Kazan",
+        "Rewards": "Г–dГјller",
+        "Activity": "Aktivite",
+        "Leaderboard": "Liderlik Tablosu",
+        "Referrals": "Referanslar",
+        "Withdraw": "Para Г‡ekme",
+        "Payouts": "Г–demeler",
+        "Offers": "Teklifler",
+        "Games": "Oyunlar",
+        "Apps": "Uygulamalar",
+        "Tasks": "GГ¶revler",
+        "Microtasks": "Mikro GГ¶revler",
+        "Login": "GiriЕџ Yap",
+        "Register": "KayД±t Ol",
+        "Get Started": "BaЕџla",
+        "Logout": "Г‡Д±kД±Еџ Yap",
+
+        "My Profile": "Profilim",
+        "Personal information": "KiЕџisel bilgiler",
+        "Display name": "GГ¶rГјnen ad",
+        "Username": "KullanД±cД± adД±",
+        "Email": "E-posta",
+        "Language": "Dil",
+        "Notifications": "Bildirimler",
+        "Receive notifications": "Bildirimleri al",
+        "Avatar": "Avatar",
+        "Save profile": "Profili kaydet",
+        "Save changes": "DeДџiЕџiklikleri kaydet",
+
+        "Account": "Hesap",
+        "Balance": "Bakiye",
+        "Referral code": "Referans kodu",
+        "Account ID": "Hesap ID",
+        "Admin": "YГ¶netici",
+        "Yes": "Evet",
+        "No": "HayД±r",
+
+        "English": "Д°ngilizce",
+        "Russian": "RusГ§a",
+        "Italian": "Д°talyanca",
+        "German": "Almanca",
+        "Japanese": "Japonca",
+        "Turkish": "TГјrkГ§e",
+
+        "Р СѓСЃСЃРєРёР№": "RusГ§a",
+        "Italiano": "Д°talyanca",
+        "Deutsch": "Almanca",
+        "ж—Ґжњ¬иЄћ": "Japonca",
+        "TГјrkГ§e": "TГјrkГ§e",
+
+        "Profile updated successfully.": "Profil baЕџarД±yla gГјncellendi.",
+        "Choose an earning method and get started.": "Bir kazanГ§ yГ¶ntemi seГ§in ve baЕџlayД±n.",
+        "Available offers from connected providers.": "BaДџlД± saДџlayД±cД±lardan mevcut teklifler.",
+        "Available games from connected providers.": "BaДџlД± saДџlayД±cД±lardan mevcut oyunlar.",
+        "Available apps from connected providers.": "BaДџlД± saДџlayД±cД±lardan mevcut uygulamalar.",
+
+        "Save": "Kaydet",
+        "Cancel": "Д°ptal",
+        "Back": "Geri",
+        "Continue": "Devam Et",
+        "Submit": "GГ¶nder",
+        "Search": "Ara",
+        "Loading": "YГјkleniyor",
+        "Completed": "TamamlandД±",
+        "Pending": "Beklemede",
+        "Available": "Mevcut",
+        "Total": "Toplam",
+        "Today": "BugГјn",
+        "Yesterday": "DГјn",
+        "This week": "Bu hafta",
+        "This month": "Bu ay",
+
+        "Welcome": "HoЕџ geldiniz",
+        "Welcome back": "Tekrar hoЕџ geldiniz",
+        "Your balance": "Bakiyeniz",
+        "Start earning": "Kazanmaya baЕџla",
+        "Earn money": "Para kazan",
+        "Earn more": "Daha fazla kazan",
+        "Your rewards": "Г–dГјlleriniz",
+        "Your activity": "Aktiviteleriniz",
+        "Your referrals": "ReferanslarД±nД±z",
+
+        "No data available": "Veri bulunamadД±",
+        "No offers available": "Teklif bulunamadД±",
+        "No games available": "Oyun bulunamadД±",
+        "No apps available": "Uygulama bulunamadД±",
+        "No tasks available": "GГ¶rev bulunamadД±",
+
+        "Sign in": "GiriЕџ Yap",
+        "Sign up": "KayД±t Ol",
+        "Password": "Ећifre",
+        "Confirm password": "Ећifreyi onayla",
+        "Remember me": "Beni hatД±rla",
+        "Forgot password?": "Ећifrenizi mi unuttunuz?",
+        "Don't have an account?": "HesabД±nД±z yok mu?",
+        "Already have an account?": "Zaten hesabД±nД±z var mД±?",
+
+        "Invite friends": "ArkadaЕџlarД±nД± davet et",
+        "Referral program": "Referans programД±",
+        "Your referral link": "Referans baДџlantД±nД±z",
+        "Copy": "Kopyala",
+        "Copied": "KopyalandД±",
+
+        "Request payout": "Г–deme talep et",
+        "Payout history": "Г–deme geГ§miЕџi",
+        "Minimum payout": "Minimum Г¶deme",
+        "Payment method": "Г–deme yГ¶ntemi",
+
+        "Home": "Ana Sayfa",
+        "About": "HakkД±mД±zda",
+        "Contact": "Д°letiЕџim",
+        "Privacy": "Gizlilik",
+        "Terms": "KoЕџullar",
+        "Help": "YardД±m",
+    },
+}
+
+
+SUPPORTED_LANGUAGES = {
+    "en": "English",
+    "ru": "Р СѓСЃСЃРєРёР№",
+    "it": "Italiano",
+    "de": "Deutsch",
+    "ja": "ж—Ґжњ¬иЄћ",
+    "tr": "TГјrkГ§e",
+}
+
+
+def get_language(u=None):
+    language = CURRENT_LANGUAGE.get()
+
+    if language in SUPPORTED_LANGUAGES:
+        return language
+
+    try:
+        if u is not None:
+            language = u["language"]
+            if language in SUPPORTED_LANGUAGES:
+                return language
+    except Exception:
+        pass
+
+    return "en"
+
+def tr(text, u=None):
+    language = get_language(u)
+
+    translations = LANGUAGE_TRANSLATIONS.get(language, {})
+
+    if text in translations:
+        return translations[text]
+
+    english = LANGUAGE_TRANSLATIONS.get("en", {})
+
+    if text in english:
+        return english[text]
+
+    return text
+
+def esc_attr(value):
+    return str(value).replace("&", "&amp;").replace('"', "&quot;").replace("<", "&lt;").replace(">", "&gt;")
+
+
+
 def layout(title, body, u=None):
+    language = get_language(u)
+    language_options = "".join(
+        '<option value="' + code + '"' + (' selected' if code == language else '') + '>' + label + '</option>'
+        for code, label in SUPPORTED_LANGUAGES.items()
+    )
+    current_path = "/"
+    if u is not None:
+        current_path = "/dashboard"
+
+    language_form = (
+        '<div class="language-switcher" style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;position:relative;z-index:1000;">'
+        '<a href="/language?language=en&amp;next=' + current_path + '" style="display:inline-block;position:relative;z-index:1001;padding:4px 2px;color:' + ('#ffffff' if language == 'en' else '#94a3b8') + ';text-decoration:none;cursor:pointer;">English</a>'
+        '<span style="opacity:.45;position:relative;z-index:1001;">|</span>'
+        '<a href="/language?language=ru&amp;next=' + current_path + '" style="display:inline-block;position:relative;z-index:1001;padding:4px 2px;color:' + ('#ffffff' if language == 'ru' else '#94a3b8') + ';text-decoration:none;cursor:pointer;">Р СѓСЃСЃРєРёР№</a>'
+        '</div>'
+    )
     if not u:
         nav = (
-            '<a href="/">Home</a>'
-            '<a href="/login">Login</a>'
-            '<a class="nav-btn" href="/register">Get Started</a>'
+            '<a href="/">' + tr('Home', u) + '</a>'
+            '<a href="/login">' + tr('Login', u) + '</a>'
+            '<a class="nav-btn" href="/register">' + tr('Get Started', u) + '</a>'
         )
     else:
-        admin_link = '<a href="/admin">Admin</a>' if u["is_admin"] else ''
+        admin_link = '<a href="/admin">' + tr('Admin', u) + '</a>' if u["is_admin"] else ''
         nav = (
-            '<a href="/dashboard">Dashboard</a>'
-            '<a href="/earn">Earn</a>'
-            '<a href="/rewards">Rewards</a>'
-            '<a href="/activity">Activity</a>'
-            '<a href="/leaderboard">Leaderboard</a>'
-            '<a href="/referrals">Referrals</a>'
-            '<a href="/payouts">Withdraw</a>'
+            '<a href="/dashboard">' + tr('Dashboard', u) + '</a>'
+            '<a href="/profile">' + tr('Profile', u) + '</a>'
+            '<a href="/earn">' + tr('Earn', u) + '</a>'
+            '<a href="/rewards">' + tr('Rewards', u) + '</a>'
+            '<a href="/activity">' + tr('Activity', u) + '</a>'
+            '<a href="/leaderboard">' + tr('Leaderboard', u) + '</a>'
+            '<a href="/referrals">' + tr('Referrals', u) + '</a>'
+            '<a href="/payouts">' + tr('Withdraw', u) + '</a>'
             + admin_link +
-            '<span class="balance-pill">💰 ' + money(u["balance"]) + '</span>'
-            '<a href="/logout">Logout</a>'
+            '<span class="balance-pill">&#128176; ' + money(u["balance"]) + '</span>'
+            '<a href="/logout">' + tr('Logout', u) + '</a>' + language_form
         )
-
     return f"""<!doctype html>
-<html lang="en">
-<head>
+
+<html lang="{language}">
+<head><link rel="icon" type="image/png" href="/static/images/favicon.png">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>{escape(title)} · EasySurf</title>
+<title>{escape(title)} В· EasySurf</title>
 
 <style>
-*{{box-sizing:border-box}}
+*{{box-sizing:border-box}}.language-form{{display:inline-flex;align-items:center;margin:0 8px 0 0}}.language-form select{{display:block}}.language-selector{{appearance:none;-webkit-appearance:none;background:#111f33;color:#fff;border:1px solid rgba(255,255,255,.16);border-radius:10px;padding:8px 34px 8px 12px;min-width:135px;font-size:14px;font-weight:600;cursor:pointer;outline:none;margin-right:10px}}.language-selector:hover{{border-color:rgba(255,255,255,.35);background-color:#162942}}.language-selector:focus{{border-color:#4da3ff;box-shadow:0 0 0 3px rgba(77,163,255,.15)}}.language-selector option{{background:#111f33;color:#fff}}
 
 :root{{
  --bg:#07111f;
@@ -229,6 +1427,80 @@ html{{
  scroll-behavior:smooth;
 }}
 
+.auth-card{{
+ width:min(100%,520px);
+ margin:40px auto;
+ padding:34px 38px;
+ border-radius:24px;
+ background:linear-gradient(145deg,rgba(16,35,59,.98),rgba(9,24,41,.98));
+ border:1px solid var(--border);
+ box-shadow:0 20px 55px rgba(0,0,0,.24);
+}}
+
+.auth-card h2{{
+ margin:0 0 26px;
+ font-size:30px;
+ line-height:1.2;
+ text-align:center;
+}}
+
+.auth-card form{{
+ display:flex;
+ flex-direction:column;
+ gap:0;
+}}
+
+.auth-card label{{
+ display:block;
+ margin:0 0 8px;
+ font-size:14px;
+ font-weight:600;
+ color:#dbeafe;
+}}
+
+.auth-card input{{
+ width:100%;
+ box-sizing:border-box;
+ min-height:48px;
+ margin:0 0 18px;
+ padding:0 15px;
+ border-radius:12px;
+ border:1px solid rgba(148,163,184,.22);
+ background:rgba(15,23,42,.72);
+ color:#f8fafc;
+ font-size:15px;
+ outline:none;
+ transition:border-color .2s,box-shadow .2s,background .2s;
+}}
+
+.auth-card input:focus{{
+ border-color:rgba(96,165,250,.65);
+ box-shadow:0 0 0 3px rgba(59,130,246,.12);
+ background:rgba(15,23,42,.9);
+}}
+
+.auth-card button{{
+ width:100%;
+ min-height:50px;
+ margin-top:4px;
+ border:0;
+ border-radius:12px;
+ font-size:16px;
+ font-weight:700;
+ cursor:pointer;
+}}
+
+@media (max-width:640px){{
+ .auth-card{{
+  width:auto;
+  margin:24px 12px;
+  padding:26px 20px;
+  border-radius:20px;
+ }}
+ .auth-card h2{{
+  font-size:26px;
+ }}
+}}
 body{{
  margin:0;
  min-height:100vh;
@@ -282,7 +1554,7 @@ header{{
 }}
 
 .brand::before{{
- content:"⚡";
+ content:"вљЎ";
  width:38px;
  height:38px;
  display:grid;
@@ -298,9 +1570,42 @@ nav{{
  align-items:center;
  justify-content:flex-end;
  gap:4px;
- flex-wrap:wrap;
+ flex-wrap:nowrap;
+ white-space:nowrap;
+ min-width:0;
 }}
 
+.language-switcher{{
+ display:inline-flex !important;
+ align-items:center;
+ justify-content:center;
+ gap:8px;
+ flex:0 0 auto;
+ white-space:nowrap;
+ margin-left:6px;
+}}
+
+@media (max-width:1100px){{
+ nav{{
+  flex-wrap:wrap;
+  justify-content:flex-end;
+ }}
+}}
+
+@media (max-width:700px){{
+ header{{
+  padding:0 16px;
+  flex-wrap:wrap;
+ }}
+
+ nav{{
+  width:100%;
+  justify-content:flex-start;
+  padding-bottom:10px;
+  overflow-x:auto;
+  flex-wrap:nowrap;
+ }}
+}}
 nav a{{
  color:#cbd5e1;
  text-decoration:none;
@@ -911,51 +2216,51 @@ footer{{
       </a>
 
       <p class="footer-description">
-        Earn online by completing verified activities, offers, surveys,
-        games and other available tasks.
+        {tr('Earn online by completing verified activities, offers, surveys, games and other available tasks.', u)}
+
       </p>
     </div>
 
     <div>
       <div class="footer-heading">EasySurf</div>
       <div class="footer-links">
-        <a href="/">Home</a>
-        <a href="/dashboard">Dashboard</a>
-        <a href="/earn">Earn</a>
-        <a href="/rewards">Rewards</a>
-        <a href="/leaderboard">Leaderboard</a>
+        <a href="/">{tr('Home', u)}</a>
+        <a href="/dashboard">{tr('Dashboard', u)}</a>
+        <a href="/earn">{tr('Earn', u)}</a>
+        <a href="/rewards">{tr('Rewards', u)}</a>
+        <a href="/leaderboard">{tr('Leaderboard', u)}</a>
       </div>
     </div>
 
     <div>
-      <div class="footer-heading">Earn</div>
+      <div class="footer-heading">{tr('Earn', u)}</div>
       <div class="footer-links">
-        <a href="/earn">Tasks</a>
-        <a href="/offers">Offers</a>
-        <a href="/surveys">Surveys</a>
-        <a href="/games">Games</a>
-        <a href="/apps">Apps</a>
-        <a href="/videos">Videos</a>
+        <a href="/earn">{tr('Tasks', u)}</a>
+        <a href="/offers">{tr('Offers', u)}</a>
+        <a href="/surveys">{tr('Surveys', u)}</a>
+        <a href="/games">{tr('Games', u)}</a>
+        <a href="/apps">{tr('Apps', u)}</a>
+        <a href="/videos">{tr('Videos', u)}</a>
       </div>
     </div>
 
     <div>
-      <div class="footer-heading">Company</div>
+      <div class="footer-heading">{tr('Company', u)}</div>
       <div class="footer-links">
-        <a href="/about">About Us</a>
-        <a href="/contact">Contact</a>
-        <a href="/referrals">Referrals</a>
-        <a href="/payouts">Payouts</a>
+        <a href="/about">{tr('About Us', u)}</a>
+        <a href="/contact">{tr('Contact', u)}</a>
+        <a href="/referrals">{tr('Referrals', u)}</a>
+        <a href="/payouts">{tr('Payouts', u)}</a>
       </div>
     </div>
 
     <div>
-      <div class="footer-heading">Support</div>
+      <div class="footer-heading">{tr('Support', u)}</div>
       <div class="footer-links">
-        <a href="/faq">FAQ</a>
-        <a href="/help">Help Center</a>
-        <a href="/contact">Contact Support</a>
-        <a href="/terms">Terms of Service</a>
+        <a href="/faq">{tr('FAQ', u)}</a>
+        <a href="/help">{tr('Help Center', u)}</a>
+        <a href="/contact">{tr('Contact Support', u)}</a>
+        <a href="/terms">{tr('Terms of Service', u)}</a>
       </div>
     </div>
 
@@ -965,15 +2270,15 @@ footer{{
 
   <div class="footer-bottom">
     <div>
-      ? 2026 EasySurf. All rights reserved.
+      В© 2026 EasySurf. {tr('All rights reserved.', u)}
     </div>
 
     <div class="footer-bottom-links">
-      <a href="/terms">Terms</a>
+      <a href="/terms">{tr('Terms', u)}</a>
 
       <span class="footer-status">
         <span class="footer-status-dot"></span>
-        Platform online
+        {tr('Platform online', u)}
       </span>
     </div>
   </div>
@@ -986,7 +2291,7 @@ footer{{
 
 
 # ============================================================
-# SECURITY V2 — AUTHENTICATION RATE LIMITING
+# SECURITY V2 вЂ” AUTHENTICATION RATE LIMITING
 # ============================================================
 
 _LOGIN_WINDOW_SECONDS = 600
@@ -1086,11 +2391,11 @@ def _rate_limited_response(retry_after):
 def home(r:Request):
     u=user(r)
 
-    body="""
-    <section class="hero" style="position:relative;overflow:hidden;">
+    body=f"""
+    <section class="hero" style="position:relative;overflow:hidden;background-image:linear-gradient(90deg,rgba(15,23,42,.96) 0%,rgba(15,23,42,.82) 48%,rgba(15,23,42,.35) 100%),url('/static/images/hero-banner.png');background-size:cover;background-position:center;min-height:460px;display:flex;align-items:center;">
         <div style="position:relative;z-index:2;max-width:760px;">
             <div style="display:inline-flex;align-items:center;gap:8px;padding:7px 13px;border:1px solid rgba(96,165,250,.25);border-radius:999px;background:rgba(59,130,246,.10);font-size:13px;color:#93c5fd;margin-bottom:18px;">
-                ⚡ EasySurf Rewards Platform
+                вљЎ EasySurf Rewards Platform
             </div>
 
             <h1 style="font-size:clamp(38px,6vw,68px);line-height:1.02;margin:0 0 18px;">
@@ -1099,19 +2404,19 @@ def home(r:Request):
             </h1>
 
             <p class="muted" style="font-size:18px;line-height:1.7;max-width:650px;margin:0;">
-                Complete surveys, offers, games, app activities and simple tasks
-                from one modern rewards platform.
+                {tr('Complete surveys, offers, games, app activities and simple tasks from one modern rewards platform.', u)}
+
             </p>
 
             <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:28px;">
-                <a class="btn" href="/register">🚀 Start earning</a>
+                <a class="btn" href="/register">рџљЂ {tr('Start earning', u)}</a>
                 <a class="btn secondary" href="/login">Login</a>
             </div>
 
             <div style="display:flex;gap:28px;flex-wrap:wrap;margin-top:30px;color:#94a3b8;font-size:13px;">
-                <span>✓ Simple tasks</span>
-                <span>✓ Daily rewards</span>
-                <span>✓ Referral bonuses</span>
+                <span>вњ“ {tr('Simple tasks', u)}</span>
+                <span>вњ“ {tr('Daily rewards', u)}</span>
+                <span>вњ“ {tr('Referral bonuses', u)}</span>
             </div>
         </div>
 
@@ -1122,78 +2427,78 @@ def home(r:Request):
     <section style="margin-top:26px;">
         <div style="display:flex;align-items:end;justify-content:space-between;gap:16px;margin-bottom:16px;flex-wrap:wrap;">
             <div>
-                <div class="muted" style="font-size:13px;text-transform:uppercase;letter-spacing:.08em;">Platform</div>
-                <h2 style="margin:5px 0 0;">Everything in one place</h2>
+                <div class="muted" style="font-size:13px;text-transform:uppercase;letter-spacing:.08em;">{tr('Platform', u)}</div>
+                <h2 style="margin:5px 0 0;">{tr('Everything in one place', u)}</h2>
             </div>
-            <div class="muted" style="font-size:14px;">Choose an earning method and get started.</div>
+            <div class="muted" style="font-size:14px;">{tr('Choose an earning method and get started.', u)}</div>
         </div>
 
         <div class="grid">
 
             <div class="card earn-card" style="min-height:190px;">
                 <div>
-                    <div class="earn-icon" style="font-size:32px;">📋</div>
-                    <h3>Surveys</h3>
+                    <div class="earn-icon" style="font-size:32px;">рџ“‹</div>
+                    <h3>{tr('Surveys', u)}</h3>
                     <p class="muted">
-                        Paid research surveys when real inventory is available.
+                        {tr('Paid research surveys when real inventory is available.', u)}
                     </p>
                 </div>
-                <a href="/surveys">Explore →</a>
+                <a href="/surveys">{tr('Explore в†’', u)}</a>
             </div>
 
             <div class="card earn-card" style="min-height:190px;">
                 <div>
-                    <div class="earn-icon" style="font-size:32px;">🎁</div>
-                    <h3>Offers</h3>
+                    <div class="earn-icon" style="font-size:32px;">рџЋЃ</div>
+                    <h3>{tr('Offers', u)}</h3>
                     <p class="muted">
-                        Advertiser-approved offers and tracked activities.
+                        {tr('Advertiser-approved offers and tracked activities.', u)}
                     </p>
                 </div>
-                <a href="/offers">Explore →</a>
+                <a href="/offers">{tr('Explore в†’', u)}</a>
             </div>
 
             <div class="card earn-card" style="min-height:190px;">
                 <div>
-                    <div class="earn-icon" style="font-size:32px;">🎮</div>
-                    <h3>Games</h3>
+                    <div class="earn-icon" style="font-size:32px;">рџЋ®</div>
+                    <h3>{tr('Games', u)}</h3>
                     <p class="muted">
-                        Game-based rewards through approved providers.
+                        {tr('Game-based rewards through approved providers.', u)}
                     </p>
                 </div>
-                <a href="/games">Explore →</a>
+                <a href="/games">{tr('Explore в†’', u)}</a>
             </div>
 
             <div class="card earn-card" style="min-height:190px;">
                 <div>
-                    <div class="earn-icon" style="font-size:32px;">📱</div>
-                    <h3>Apps</h3>
+                    <div class="earn-icon" style="font-size:32px;">рџ“±</div>
+                    <h3>{tr('Apps', u)}</h3>
                     <p class="muted">
-                        App-based earning opportunities.
+                        {tr('App-based earning opportunities.', u)}
                     </p>
                 </div>
-                <a href="/apps">Explore →</a>
+                <a href="/apps">{tr('Explore в†’', u)}</a>
             </div>
 
             <div class="card earn-card" style="min-height:190px;">
                 <div>
-                    <div class="earn-icon" style="font-size:32px;">▶️</div>
-                    <h3>Videos</h3>
+                    <div class="earn-icon" style="font-size:32px;">в–¶пёЏ</div>
+                    <h3>{tr('Videos', u)}</h3>
                     <p class="muted">
-                        Watch approved video tasks and activities.
+                        {tr('Watch approved video tasks and activities.', u)}
                     </p>
                 </div>
-                <a href="/videos">Explore →</a>
+                <a href="/videos">{tr('Explore в†’', u)}</a>
             </div>
 
             <div class="card earn-card" style="min-height:190px;">
                 <div>
-                    <div class="earn-icon" style="font-size:32px;">🌐</div>
-                    <h3>Tasks</h3>
+                    <div class="earn-icon" style="font-size:32px;">рџЊђ</div>
+                    <h3>{tr('Tasks', u)}</h3>
                     <p class="muted">
-                        Complete verified website and microtasks.
+                        {tr('Complete verified website and microtasks.', u)}
                     </p>
                 </div>
-                <a href="/earn">Start →</a>
+                <a href="/earn">Start в†’</a>
             </div>
 
         </div>
@@ -1203,17 +2508,17 @@ def home(r:Request):
         <div style="position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;">
             <div>
                 <div style="font-size:13px;color:#60a5fa;text-transform:uppercase;letter-spacing:.08em;font-weight:700;">
-                    Ready when you are
+                    {tr('Ready when you are', u)}
                 </div>
-                <h2 style="margin:7px 0 8px;">Start building your rewards balance</h2>
+                <h2 style="margin:7px 0 8px;">{tr('Start building your rewards balance', u)}</h2>
                 <p class="muted" style="margin:0;max-width:620px;">
-                    Create your free account, explore available opportunities,
-                    collect rewards and track your activity from your dashboard.
+                    {tr('Create your free account, explore available opportunities,', u)}
+                    {tr('collect rewards and track your activity from your dashboard.', u)}
                 </p>
             </div>
 
             <a class="btn" href="/register" style="white-space:nowrap;">
-                Create free account →
+                {tr('Create free account в†’', u)}
             </a>
         </div>
 
@@ -1234,7 +2539,7 @@ def regp(r:Request):
   message='<div class="alert">Verification email sent. Please check your inbox to verify your email.</div>'
  elif email_status=='failed':
   message='<div class="alert">Registration succeeded, but the verification email could not be sent. Please use the resend option after registration.</div>'
- return layout('Register',f'<div class="center card"><h2>Create account</h2>{message}<form method="post"><input type="hidden" name="csrf_token" value="{t}"><label>Email</label><input name="email" type="email" required><label>Password</label><input name="password" type="password" required minlength="6"><button>Register</button></form></div>')
+ return layout('Register',f'<div class="center card auth-card"><h2>Create account</h2>{message}<form method="post"><input type="hidden" name="csrf_token" value="{t}"><label>{tr("Email")}</label><input name="email" type="email" required><label>Password</label><input name="password" type="password" required minlength="6"><button>Register</button></form></div>')
 @app.post('/register')
 @app.post('/register')
 def reg(r:Request,email:str=Form(...),password:str=Form(...),csrf_token:str=Form(...),ref:str=Form('')):
@@ -1435,7 +2740,7 @@ def resend_verification_page(r:Request):
 
  return layout(
   'Resend verification',
-  f'<div class="center card"><h2>Resend verification email</h2><form method="post"><input type="hidden" name="csrf_token" value="{t}"><label>Email</label><input name="email" type="email" required><button>Send verification email</button></form><p class="muted"><a href="/login">Back to login</a></p></div>'
+  f'<div class="center card"><h2>Resend verification email</h2><form method="post"><input type="hidden" name="csrf_token" value="{t}"><label>{tr("Email")}</label><input name="email" type="email" required><button>Send verification email</button></form><p class="muted"><a href="/login">Back to login</a></p></div>'
  )
 
 @app.post('/resend-verification')
@@ -1523,6 +2828,7 @@ def resend_verification(
   303
  )
 
+@app.get('/login',response_class=HTMLResponse)
 def loginp(r:Request):
  if user(r):
   return RedirectResponse('/dashboard',303)
@@ -1536,7 +2842,7 @@ def loginp(r:Request):
  elif verification=='failed':
   message='<div class="alert">We could not send the verification email. Please try again later.</div>'
  resend='<p style="margin-top:12px"><a href="/resend-verification">Resend verification email</a></p>'
- return layout('Login',f'<div class="center card"><h2>Login</h2>{message}<form method="post"><input type="hidden" name="csrf_token" value="{t}"><label>Email</label><input name="email" type="email" required><label>Password</label><input name="password" type="password" required><button>Login</button></form>{resend}</div>')
+ return layout('Login',f'<div class="center card auth-card"><h2>Login</h2>{message}<form method="post"><input type="hidden" name="csrf_token" value="{t}"><label>{tr("Email")}</label><input name="email" type="email" required><label>Password</label><input name="password" type="password" required><button>Login</button></form>{resend}</div>')
 @app.post('/login')
 def login(r:Request,email:str=Form(...),password:str=Form(...),csrf_token:str=Form(...)):
  ip=_client_ip(r)
@@ -1592,6 +2898,285 @@ def login(r:Request,email:str=Form(...),password:str=Form(...),csrf_token:str=Fo
  if not int(u['email_verified'] or 0):
   return RedirectResponse('/login?verification=required',303)
  r.session.clear();r.session['user_id']=u['id'];r.session['csrf']=secrets.token_urlsafe(32);return RedirectResponse('/dashboard',303)
+
+@app.get('/profile',response_class=HTMLResponse)
+def profile_page(r:Request):
+    u=user(r)
+
+    if not u:
+        return RedirectResponse('/login',status_code=303)
+
+    conn=db()
+
+    row=conn.execute(
+        "SELECT id,email,balance,is_admin,created_at,referral_code,username,display_name,avatar,language,notifications FROM users WHERE id=?",
+        (u["id"],)
+    ).fetchone()
+
+    conn.close()
+
+    if not row:
+        return RedirectResponse('/login',status_code=303)
+
+    username=str(row["username"] or "")
+    display_name=str(row["display_name"] or username)
+    avatar=str(row["avatar"] or "")
+    language=str(row["language"] or "en")
+    notifications=int(row["notifications"] or 0)
+
+    if avatar:
+        avatar_html=(
+            '<img src="/static/uploads/avatars/' + avatar + '" '
+            'alt="Avatar" '
+            'style="width:96px;height:96px;border-radius:50%;object-fit:cover;'
+            'border:4px solid rgba(255,255,255,.15);">'
+        )
+    else:
+        initial=(display_name[:1].upper() if display_name else "?")
+        avatar_html=(
+            '<div style="width:96px;height:96px;border-radius:50%;'
+            'background:linear-gradient(135deg,#2563eb,#7c3aed);'
+            'display:flex;align-items:center;justify-content:center;'
+            'font-size:38px;font-weight:800;color:white;">'
+            + initial +
+            '</div>'
+        )
+
+    saved=str(r.query_params.get("saved") or "")
+
+    saved_html=""
+
+    if saved=="1":
+        saved_html=(
+            '<div class="card" style="border-left:4px solid #22c55e;margin-bottom:18px;">'
+            '<strong>Profile updated successfully.</strong>'
+            '</div>'
+        )
+
+    body=(
+        saved_html
+
+        + '<div class="card" style="margin-bottom:20px;">'
+        + '<div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap;">'
+        + avatar_html
+        + '<div>'
+        + f'<h1 style="margin:0 0 5px 0;">{tr('My Profile', u)}</h1>'
+        + '<div class="muted">@' + username + '</div>'
+        + '</div>'
+        + '</div>'
+        + '</div>'
+
+        + '<div class="card">'
+        + f'<h2>{tr('Personal information', u)}</h2>'
+
+        + '<form method="post" action="/profile" enctype="multipart/form-data">'
+
+        + f'<label>{tr('Display name', u)}</label>'
+        + '<input name="display_name" value="' + display_name.replace('"','&quot;') + '" maxlength="50" required>'
+
+        + f'<label>{tr('Username', u)}</label>'
+        + '<input name="username" value="' + username.replace('"','&quot;') + '" maxlength="30" required>'
+
+        + '<div class="muted" style="margin-bottom:12px;">'
+        + f'{tr('3вЂ“30 characters: letters, numbers and underscore.', u)}'
+        + '</div>'
+
+        + f'<label>{tr("Email")}</label>'
+        + '<input value="' + str(row["email"]).replace('"','&quot;') + '" disabled>'
+
+        + f'<label>{tr('Language', u)}</label>'
+        + '<select name="language">'
+        + '<option value="en"' + (' selected' if language=="en" else '') + '>English</option>'
+        + '<option value="ru"' + (' selected' if language=="ru" else '') + '>Р СѓСЃСЃРєРёР№</option>'
+        + '<option value="uz"' + (' selected' if language=="uz" else '') + '>' + tr('OвЂzbekcha', u) + '</option>'
+        + '</select>'
+
+        + '<label style="display:flex;align-items:center;gap:10px;margin-top:14px;">'
+        + '<input type="checkbox" name="notifications" value="1"'
+        + (' checked' if notifications else '')
+        + ' style="width:auto;">'
+        + tr('Receive notifications', u)
+        + '</label>'
+
+        + f'<label style="margin-top:18px;">{tr('Avatar', u)}</label>'
+        + '<input type="file" name="avatar_file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp">'
+
+        + '<div class="muted" style="margin-top:6px;">'
+        + f'{tr('JPG, PNG or WEBP. Maximum 2 MB.', u)}'
+        + '</div>'
+
+        + '<button type="submit" style="margin-top:18px;">'
+        + tr('Save profile', u)
+        + '</button>'
+
+        + '</form>'
+        + '</div>'
+
+        + '<div class="card" style="margin-top:20px;">'
+        + f'<h2>{tr('Account', u)}</h2>'
+        + f'<p><strong>{tr('Balance', u)}:</strong> ' + str(int(row["balance"] or 0)) + '</p>'
+        + f'<p><strong>{tr('Referral code', u)}:</strong> ' + str(row["referral_code"] or "вЂ”") + '</p>'
+        + f'<p><strong>{tr('Account ID', u)}:</strong> ' + str(int(row["id"])) + '</p>'
+        + f'<p><strong>{tr('Admin', u)}:</strong> ' + ('Yes' if int(row["is_admin"] or 0) else 'No') + '</p>'
+        + '</div>'
+    )
+
+    return layout("Profile",body,row)
+
+
+@app.post('/profile')
+async def profile_update(
+    r:Request,
+    display_name:str=Form(...),
+    username:str=Form(...),
+    language:str=Form("en"),
+    notifications:str|None=Form(None),
+    avatar_file:UploadFile|None=File(None)
+):
+    u=user(r)
+
+    if not u:
+        return RedirectResponse('/login',status_code=303)
+
+    import re
+
+    display_name=display_name.strip()
+    username=username.strip().lower()
+
+    if len(display_name)<1 or len(display_name)>50:
+        return HTMLResponse("Invalid display name",status_code=400)
+
+    if not (3<=len(username)<=30):
+        return HTMLResponse("Invalid username",status_code=400)
+
+    if not re.fullmatch(r"[a-zA-Z0-9_]+",username):
+        return HTMLResponse(
+            "Username may contain only letters, numbers and underscore.",
+            status_code=400
+        )
+
+    if language not in ("en","ru","uz"):
+        language="en"
+
+    conn=db()
+
+    existing=conn.execute(
+        "SELECT id FROM users WHERE lower(username)=lower(?) AND id<>?",
+        (username,u["id"])
+    ).fetchone()
+
+    if existing:
+        conn.close()
+        return HTMLResponse("Username is already taken.",status_code=409)
+
+    avatar_name=None
+
+    if avatar_file and avatar_file.filename:
+
+        filename=str(avatar_file.filename)
+        suffix=Path(filename).suffix.lower()
+
+        allowed={".jpg",".jpeg",".png",".webp"}
+
+        if suffix not in allowed:
+            conn.close()
+            return HTMLResponse(
+                "Avatar must be JPG, PNG or WEBP.",
+                status_code=400
+            )
+
+        content=await avatar_file.read()
+
+        if len(content)>2*1024*1024:
+            conn.close()
+            return HTMLResponse(
+                "Avatar is too large. Maximum size is 2 MB.",
+                status_code=400
+            )
+
+        valid=False
+
+        if suffix in (".jpg",".jpeg"):
+            valid=content.startswith(b"\xff\xd8\xff")
+
+        elif suffix==".png":
+            valid=content.startswith(b"\x89PNG\r\n\x1a\n")
+
+        elif suffix==".webp":
+            valid=(
+                len(content)>=12
+                and content[0:4]==b"RIFF"
+                and content[8:12]==b"WEBP"
+            )
+
+        if not valid:
+            conn.close()
+            return HTMLResponse(
+                "Invalid image file.",
+                status_code=400
+            )
+
+        avatar_name="user_" + str(u["id"]) + suffix
+        avatar_path=AVATAR_DIR / avatar_name
+        avatar_path.write_bytes(content)
+
+    if avatar_name:
+        conn.execute(
+            "UPDATE users SET username=?,display_name=?,language=?,notifications=?,avatar=? WHERE id=?",
+            (
+                username,
+                display_name,
+                language,
+                1 if notifications else 0,
+                avatar_name,
+                u["id"]
+            )
+        )
+    else:
+        conn.execute(
+            "UPDATE users SET username=?,display_name=?,language=?,notifications=? WHERE id=?",
+            (
+                username,
+                display_name,
+                language,
+                1 if notifications else 0,
+                u["id"]
+            )
+        )
+
+    conn.commit()
+    conn.close()
+
+    return RedirectResponse('/profile?saved=1',status_code=303)
+
+
+
+@app.get('/language')
+def change_language(r: Request):
+    language = (r.query_params.get('language') or 'en').lower()
+    next_path = r.query_params.get('next') or '/'
+
+    if language not in SUPPORTED_LANGUAGES:
+        language = 'en'
+
+    if not next_path.startswith('/') or next_path.startswith('//'):
+        next_path = '/'
+
+    user_id = r.session.get('user_id')
+
+    if user_id:
+        conn = db()
+        try:
+            conn.execute(
+                "UPDATE users SET language=? WHERE id=?",
+                (language, int(user_id))
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
+    r.session['language'] = language
+    return RedirectResponse(next_path, status_code=303)
 @app.get('/logout')
 def logout(r:Request):r.session.clear();return RedirectResponse('/',303)
 
@@ -1681,32 +3266,32 @@ def dash(r:Request):
         f"""
         <div class="card earn-card" style="min-height:190px;">
             <div>
-                <div class="earn-icon" style="font-size:32px;">🌐</div>
+                <div class="earn-icon" style="font-size:32px;">рџЊђ</div>
                 <div style="display:inline-flex;padding:5px 9px;border-radius:999px;background:rgba(59,130,246,.10);color:#93c5fd;font-size:11px;margin-bottom:8px;">
                     Website Task
                 </div>
                 <h3 style="margin:4px 0 8px;">{escape(x["title"])}</h3>
                 <p class="muted">
-                    ⏱ {x["seconds"]} sec
-                    &nbsp;·&nbsp;
-                    💰 {money(x["reward"])}
+                    вЏ± {x["seconds"]} sec
+                    &nbsp;В·&nbsp;
+                    рџ’° {money(x["reward"])}
                 </p>
             </div>
-            <a class="btn" href="/task/{x["id"]}">Start task →</a>
+            <a class="btn" href="/task/{x["id"]}">Start task в†’</a>
         </div>
         """
         for x in tasks[:6]
     )
 
     if not task_cards:
-        task_cards="""
+        task_cards=f"""
         <div class="card empty" style="grid-column:1/-1;text-align:center;padding:36px;">
-            <div class="earn-icon" style="font-size:38px;">🔎</div>
-            <h3>No website tasks available</h3>
+            <div class="earn-icon" style="font-size:38px;">рџ”Ћ</div>
+            <h3>{tr('No website tasks available', u)}</h3>
             <p class="muted">
-                New tasks may appear later. Explore other earning categories in the meantime.
+                {tr('New tasks may appear later. Explore other earning categories in the meantime.', u)}
             </p>
-            <a class="btn" href="/earn">Explore Earn →</a>
+            <a class="btn" href="/earn">{tr('Explore Earn в†’', u)}</a>
         </div>
         """
 
@@ -1731,20 +3316,20 @@ def dash(r:Request):
         activity="""
         <tr>
             <td colspan="2" class="muted" style="text-align:center;padding:24px;">
-                No activity yet. Start earning to see your transactions here.
+                No activity yet. {tr('Start earning', u)} to see your transactions here.
             </td>
         </tr>
         """
 
     body=f"""
-    <section class="hero" style="position:relative;overflow:hidden;">
+    <section class="hero" style="position:relative;overflow:hidden;background-image:linear-gradient(90deg,rgba(15,23,42,.96) 0%,rgba(15,23,42,.82) 48%,rgba(15,23,42,.35) 100%),url('/static/images/hero-banner.png');background-size:cover;background-position:center;min-height:460px;display:flex;align-items:center;">
         <div style="position:relative;z-index:2;">
             <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border:1px solid rgba(96,165,250,.25);border-radius:999px;background:rgba(59,130,246,.10);font-size:12px;color:#93c5fd;margin-bottom:14px;">
-                ⚡ Your EasySurf Dashboard
+                вљЎ {tr('Your EasySurf Dashboard', u)}
             </div>
 
             <h1 style="margin:0 0 8px;">
-                Welcome back
+                {tr('Welcome back', u)}
             </h1>
 
             <p class="muted" style="margin:0;font-size:15px;">
@@ -1752,8 +3337,8 @@ def dash(r:Request):
             </p>
 
             <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:22px;">
-                <a class="btn" href="/earn">🚀 Earn now</a>
-                <a class="btn secondary" href="/rewards">🎁 Rewards</a>
+                <a class="btn" href="/earn">рџљЂ {tr('Earn now', u)}</a>
+                <a class="btn secondary" href="/rewards">рџЋЃ {tr('Rewards', u)}</a>
             </div>
         </div>
 
@@ -1765,26 +3350,26 @@ def dash(r:Request):
         <div class="grid">
 
             <div class="card" style="min-height:150px;">
-                <div class="earn-icon" style="font-size:30px;">💰</div>
-                <div class="muted">Available balance</div>
+                <div class="earn-icon" style="font-size:30px;">рџ’°</div>
+                <div class="muted">{tr('Available balance', u)}</div>
                 <div class="metric" style="font-size:32px;margin-top:5px;">{money(u["balance"])}</div>
             </div>
 
             <div class="card" style="min-height:150px;">
-                <div class="earn-icon" style="font-size:30px;">📈</div>
-                <div class="muted">Earned today</div>
+                <div class="earn-icon" style="font-size:30px;">рџ“€</div>
+                <div class="muted">{tr('Earned today', u)}</div>
                 <div class="metric" style="font-size:32px;margin-top:5px;">{money(today_earned)}</div>
             </div>
 
             <div class="card" style="min-height:150px;">
-                <div class="earn-icon" style="font-size:30px;">⏳</div>
-                <div class="muted">Pending rewards</div>
+                <div class="earn-icon" style="font-size:30px;">вЏі</div>
+                <div class="muted">{tr('Pending rewards', u)}</div>
                 <div class="metric" style="font-size:32px;margin-top:5px;">{money(pending)}</div>
             </div>
 
             <div class="card" style="min-height:150px;">
-                <div class="earn-icon" style="font-size:30px;">🔥</div>
-                <div class="muted">Tasks completed</div>
+                <div class="earn-icon" style="font-size:30px;">рџ”Ґ</div>
+                <div class="muted">{tr('Tasks completed', u)}</div>
                 <div class="metric" style="font-size:32px;margin-top:5px;">{done}</div>
             </div>
 
@@ -1795,11 +3380,11 @@ def dash(r:Request):
         <div style="display:flex;justify-content:space-between;align-items:end;gap:15px;flex-wrap:wrap;">
             <div>
                 <div style="font-size:12px;color:#60a5fa;text-transform:uppercase;letter-spacing:.08em;font-weight:700;">
-                    Daily target
+                    {tr('Daily target', u)}
                 </div>
-                <h2 style="margin:5px 0 4px;">Today's earning goal</h2>
+                <h2 style="margin:5px 0 4px;">{tr("Today's earning goal", u)}</h2>
                 <p class="muted" style="margin:0;">
-                    Keep completing available activities to grow your balance.
+                    {tr('Keep completing available activities to grow your balance.', u)}
                 </p>
             </div>
 
@@ -1813,8 +3398,8 @@ def dash(r:Request):
         </div>
 
         <div style="display:flex;justify-content:space-between;gap:10px;margin-top:10px;font-size:13px;">
-            <span><b>{money(today_earned)}</b> earned today</span>
-            <span class="muted">Goal: {money(goal)}</span>
+            <span><b>{money(today_earned)}</b> {tr('earned today', u)}</span>
+            <span class="muted">{tr('Goal', u)}: {money(goal)}</span>
         </div>
     </section>
 
@@ -1822,49 +3407,49 @@ def dash(r:Request):
         <div style="display:flex;align-items:end;justify-content:space-between;gap:15px;flex-wrap:wrap;margin-bottom:15px;">
             <div>
                 <div class="muted" style="font-size:12px;text-transform:uppercase;letter-spacing:.08em;">
-                    Quick access
+                    {tr('Quick access', u)}
                 </div>
-                <h2 style="margin:5px 0 0;">Start earning</h2>
+                <h2 style="margin:5px 0 0;">{tr('Start earning', u)}</h2>
             </div>
-            <a href="/earn" class="muted">View all →</a>
+            <a href="/earn" class="muted">{tr('View all', u)} в†’</a>
         </div>
 
         <div class="grid">
 
             <div class="card earn-card" style="min-height:175px;">
                 <div>
-                    <div class="earn-icon" style="font-size:32px;">📋</div>
-                    <h3>Surveys</h3>
-                    <p class="muted">Paid research surveys when inventory is available.</p>
+                    <div class="earn-icon" style="font-size:32px;">рџ“‹</div>
+                    <h3>{tr('Surveys', u)}</h3>
+                    <p class="muted">{tr('Paid research surveys when inventory is available.', u)}</p>
                 </div>
-                <a href="/surveys">View surveys →</a>
+                <a href="/surveys">{tr('View surveys', u)} в†’</a>
             </div>
 
             <div class="card earn-card" style="min-height:175px;">
                 <div>
-                    <div class="earn-icon" style="font-size:32px;">🎁</div>
-                    <h3>Offers</h3>
-                    <p class="muted">Advertiser offers and tracked activities.</p>
+                    <div class="earn-icon" style="font-size:32px;">рџЋЃ</div>
+                    <h3>{tr('Offers', u)}</h3>
+                    <p class="muted">{tr('Advertiser offers and tracked activities.', u)}</p>
                 </div>
-                <a href="/offers">View offers →</a>
+                <a href="/offers">{tr('View offers', u)} в†’</a>
             </div>
 
             <div class="card earn-card" style="min-height:175px;">
                 <div>
-                    <div class="earn-icon" style="font-size:32px;">🎮</div>
-                    <h3>Games</h3>
-                    <p class="muted">Play approved games and reach milestones.</p>
+                    <div class="earn-icon" style="font-size:32px;">рџЋ®</div>
+                    <h3>{tr('Games', u)}</h3>
+                    <p class="muted">{tr('Play approved games and reach milestones.', u)}</p>
                 </div>
-                <a href="/games">View games →</a>
+                <a href="/games">{tr('View games', u)} в†’</a>
             </div>
 
             <div class="card earn-card" style="min-height:175px;">
                 <div>
-                    <div class="earn-icon" style="font-size:32px;">📱</div>
-                    <h3>Apps</h3>
-                    <p class="muted">Discover tracked app opportunities.</p>
+                    <div class="earn-icon" style="font-size:32px;">рџ“±</div>
+                    <h3>{tr('Apps', u)}</h3>
+                    <p class="muted">{tr('Discover tracked app opportunities.', u)}</p>
                 </div>
-                <a href="/apps">View apps →</a>
+                <a href="/apps">{tr('View apps', u)} в†’</a>
             </div>
 
         </div>
@@ -1874,11 +3459,11 @@ def dash(r:Request):
         <div style="display:flex;align-items:end;justify-content:space-between;gap:15px;flex-wrap:wrap;margin-bottom:15px;">
             <div>
                 <div class="muted" style="font-size:12px;text-transform:uppercase;letter-spacing:.08em;">
-                    Available now
+                    {tr('Available now', u)}
                 </div>
-                <h2 style="margin:5px 0 0;">Website Tasks</h2>
+                <h2 style="margin:5px 0 0;">{tr('Website Tasks', u)}</h2>
             </div>
-            <a href="/earn" class="muted">Browse earning options →</a>
+            <a href="/earn" class="muted">{tr('Browse earning options', u)} в†’</a>
         </div>
 
         <div class="grid">
@@ -1890,17 +3475,17 @@ def dash(r:Request):
         <div style="display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap;margin-bottom:14px;">
             <div>
                 <div class="muted" style="font-size:12px;text-transform:uppercase;letter-spacing:.08em;">
-                    Your account
+                    {tr('Your account', u)}
                 </div>
-                <h2 style="margin:5px 0 0;">Recent Activity</h2>
+                <h2 style="margin:5px 0 0;">{tr('Recent Activity', u)}</h2>
             </div>
-            <a href="/activity" class="muted">View all →</a>
+            <a href="/activity" class="muted">{tr('View all', u)} в†’</a>
         </div>
 
         <table>
             <tr>
-                <th>Activity</th>
-                <th>Amount</th>
+                <th>{tr('Activity', u)}</th>
+                <th>{tr('Amount', u)}</th>
             </tr>
             {activity}
         </table>
@@ -1910,17 +3495,17 @@ def dash(r:Request):
         <div class="grid">
 
             <div class="card">
-                <div class="muted">Total earned</div>
+                <div class="muted">{tr('Total earned', u)}</div>
                 <div class="metric" style="font-size:28px;margin-top:5px;">{money(earned)}</div>
             </div>
 
             <div class="card">
-                <div class="muted">Total paid</div>
+                <div class="muted">{tr('Total paid', u)}</div>
                 <div class="metric" style="font-size:28px;margin-top:5px;">{money(paid)}</div>
             </div>
 
             <div class="card">
-                <div class="muted">Referrals</div>
+                <div class="muted">{tr('Referrals', u)}</div>
                 <div class="metric" style="font-size:28px;margin-top:5px;">{refs}</div>
             </div>
 
@@ -1931,15 +3516,15 @@ def dash(r:Request):
         <div style="position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;">
             <div>
                 <div style="font-size:12px;color:#60a5fa;text-transform:uppercase;letter-spacing:.08em;font-weight:700;">
-                    Keep going
+                    {tr('Keep going', u)}
                 </div>
-                <h2 style="margin:6px 0 7px;">There are more ways to earn</h2>
+                <h2 style="margin:6px 0 7px;">{tr('There are more ways to earn', u)}</h2>
                 <p class="muted" style="margin:0;max-width:600px;">
-                    Explore all available earning categories and keep your activity growing.
+                    {tr('Explore all available earning categories and keep your activity growing.', u)}
                 </p>
             </div>
 
-            <a class="btn" href="/earn">Explore Earn →</a>
+            <a class="btn" href="/earn">{tr('Explore Earn в†’', u)}</a>
         </div>
 
         <div style="position:absolute;right:-80px;top:-100px;width:240px;height:240px;border-radius:50%;background:rgba(59,130,246,.08);"></div>
@@ -1999,7 +3584,7 @@ def task(r:Request,tid:int):
  function runTimer(){{
    timer.textContent=n;
    if(n<=0){{
-     timer.textContent="✓ Completed";
+     timer.textContent="вњ“ Completed";
      completeBtn.disabled=false;
      status.textContent="Time completed. You can now claim your reward.";
      return;
@@ -2064,7 +3649,7 @@ def complete(r:Request,aid:int,csrf_token:str=Form(...)):
 def history(r:Request):
  u=user(r)
  if not u:return RedirectResponse('/login',303)
- c=db();rows=c.execute('SELECT * FROM transactions WHERE user_id=? ORDER BY id DESC',(u['id'],)).fetchall();c.close();trs=''.join(f'<tr><td>{escape(x["kind"])}</td><td>{escape(x["description"])}</td><td>{money(x["amount"])}</td></tr>' for x in rows);return layout('History',f'<div class="card"><h2>History</h2><table><tr><th>Type</th><th>Description</th><th>Amount</th></tr>{trs or "<tr><td colspan=3>No transactions.</td></tr>"}</table></div>',u)
+ c=db();rows=c.execute('SELECT * FROM transactions WHERE user_id=? ORDER BY id DESC',(u['id'],)).fetchall();c.close();trs=''.join(f'<tr><td>{escape(x["kind"])}</td><td>{escape(x["description"])}</td><td>{money(x["amount"])}</td></tr>' for x in rows);return layout('History',f'<div class="card"><h2>History</h2><table><tr><th>{tr('Type', u)}</th><th>{tr('Description', u)}</th><th>{tr('Amount', u)}</th></tr>{trs or "<tr><td colspan=3>No transactions.</td></tr>"}</table></div>',u)
 @app.get('/referrals',response_class=HTMLResponse)
 def referrals(r:Request):
     u=user(r)
@@ -2115,21 +3700,21 @@ def referrals(r:Request):
         trs="""
         <tr>
             <td colspan="2" style="padding:35px 15px;text-align:center;">
-                <div style="font-size:32px;margin-bottom:8px;">👥</div>
-                <strong>No referrals yet</strong>
+                <div style="font-size:32px;margin-bottom:8px;">рџ‘Ґ</div>
+                <strong>{tr('No referrals yet', u)}</strong>
                 <div class="muted" style="margin-top:6px;">
-                    Share your referral code to start building your network.
+                    {tr('Share your referral code to start building your network.', u)}
                 </div>
             </td>
         </tr>
         """
 
     body=f"""
-    <section class="hero" style="position:relative;overflow:hidden;">
+    <section class="hero" style="position:relative;overflow:hidden;background-image:linear-gradient(90deg,rgba(15,23,42,.96) 0%,rgba(15,23,42,.82) 48%,rgba(15,23,42,.35) 100%),url('/static/images/hero-banner.png');background-size:cover;background-position:center;min-height:460px;display:flex;align-items:center;">
         <div style="position:relative;z-index:2;">
 
             <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border:1px solid rgba(34,197,94,.25);border-radius:999px;background:rgba(34,197,94,.09);font-size:12px;color:#86efac;margin-bottom:14px;">
-                🤝 EasySurf Referral Program
+                рџ¤ќ EasySurf Referral Program
             </div>
 
             <h1 style="margin:0 0 10px;">
@@ -2137,17 +3722,17 @@ def referrals(r:Request):
             </h1>
 
             <p class="muted" style="max-width:720px;font-size:16px;line-height:1.7;margin:0;">
-                Share your referral code with friends and receive a referral bonus
+                {tr('Share your referral code with friends and receive a referral bonus', u)}
                 when a new user registers through your code.
             </p>
 
             <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:22px;">
                 <a class="btn" href="/earn">
-                    ⚡ Start earning
+                    вљЎ {tr('Start earning', u)}
                 </a>
 
                 <a class="btn secondary" href="/activity">
-                    📊 View activity
+                    рџ“Љ {tr('View activity', u)}
                 </a>
             </div>
 
@@ -2178,18 +3763,18 @@ def referrals(r:Request):
                     <button type="button"
                             class="btn secondary"
                             onclick="copyReferralCode()">
-                        📋 Copy code
+                        рџ“‹ {tr('Copy code', u)}
                     </button>
 
                 </div>
 
                 <p class="muted" style="margin:13px 0 0;line-height:1.6;">
-                    Give this code to a friend during registration.
+                    {tr('Give this code to a friend during registration.', u)}
                 </p>
 
                 <div id="copy-message"
                      style="display:none;margin-top:10px;color:#86efac;font-size:13px;">
-                    ✓ Referral code copied
+                    вњ“ Referral code copied
                 </div>
 
             </div>
@@ -2205,7 +3790,7 @@ def referrals(r:Request):
         <div class="grid">
 
             <div class="card" style="min-height:150px;">
-                <div class="earn-icon" style="font-size:34px;">👥</div>
+                <div class="earn-icon" style="font-size:34px;">рџ‘Ґ</div>
 
                 <div class="muted" style="font-size:12px;text-transform:uppercase;letter-spacing:.07em;">
                     Referrals
@@ -2216,15 +3801,15 @@ def referrals(r:Request):
                 </div>
 
                 <div class="muted" style="font-size:13px;">
-                    registered users
+                    {tr('registered users', u)}
                 </div>
             </div>
 
             <div class="card" style="min-height:150px;">
-                <div class="earn-icon" style="font-size:34px;">💰</div>
+                <div class="earn-icon" style="font-size:34px;">рџ’°</div>
 
                 <div class="muted" style="font-size:12px;text-transform:uppercase;letter-spacing:.07em;">
-                    Referral earnings
+                    {tr('Referral earnings', u)}
                 </div>
 
                 <div style="font-size:28px;font-weight:800;margin-top:4px;color:#86efac;">
@@ -2232,15 +3817,15 @@ def referrals(r:Request):
                 </div>
 
                 <div class="muted" style="font-size:13px;">
-                    total referral bonuses
+                    {tr('total referral bonuses', u)}
                 </div>
             </div>
 
             <div class="card" style="min-height:150px;">
-                <div class="earn-icon" style="font-size:34px;">🎁</div>
+                <div class="earn-icon" style="font-size:34px;">рџЋЃ</div>
 
                 <div class="muted" style="font-size:12px;text-transform:uppercase;letter-spacing:.07em;">
-                    Referral reward
+                    {tr('Referral reward', u)}
                 </div>
 
                 <div style="font-size:28px;font-weight:800;margin-top:4px;">
@@ -2248,7 +3833,7 @@ def referrals(r:Request):
                 </div>
 
                 <div class="muted" style="font-size:13px;">
-                    per successful signup
+                    {tr('per successful signup', u)}
                 </div>
             </div>
 
@@ -2264,7 +3849,7 @@ def referrals(r:Request):
 
                 <div>
                     <div class="muted" style="font-size:12px;text-transform:uppercase;letter-spacing:.08em;">
-                        Referral activity
+                        {tr('Referral activity', u)}
                     </div>
 
                     <h2 style="margin:5px 0 0;">
@@ -2281,7 +3866,7 @@ def referrals(r:Request):
             <div style="overflow-x:auto;">
                 <table style="margin:0;">
                     <tr>
-                        <th>User</th>
+                        <th>{tr('User', u)}</th>
                         <th>Bonus</th>
                     </tr>
 
@@ -2299,15 +3884,15 @@ def referrals(r:Request):
 
             <div>
                 <div style="font-size:12px;color:#86efac;text-transform:uppercase;letter-spacing:.08em;font-weight:700;">
-                    Grow your network
+                    {tr('Grow your network', u)}
                 </div>
 
                 <h2 style="margin:6px 0 7px;">
-                    Invite more friends
+                    {tr('Invite more friends', u)}
                 </h2>
 
                 <p class="muted" style="margin:0;max-width:620px;line-height:1.6;">
-                    Share your referral code with people you know and earn the available referral bonus for successful registrations.
+                    {tr('Share your referral code with people you know and earn the available referral bonus for successful registrations.', u)}
                 </p>
             </div>
 
@@ -2315,11 +3900,11 @@ def referrals(r:Request):
                 <button type="button"
                         class="btn"
                         onclick="copyReferralCode()">
-                    📋 Copy referral code
+                    рџ“‹ Copy referral code
                 </button>
 
                 <a class="btn secondary" href="/earn">
-                    Explore earning
+                    {tr('Explore earning', u)}
                 </a>
             </div>
 
@@ -2370,7 +3955,7 @@ def payouts_page(r:Request):
  c=db(); rows=c.execute('SELECT * FROM payouts WHERE user_id=? ORDER BY id DESC',(u['id'],)).fetchall(); c.close()
  token=csrf(r)
  trs=''.join(f'<tr><td>#{x["id"]}</td><td>{money(x["amount"])}</td><td>{escape(x["method"])}</td><td>{escape(x["account"])}</td><td>{escape(x["status"])}</td></tr>' for x in rows) or '<tr><td colspan="5">No payout requests.</td></tr>'
- body=f'''<div class="grid"><div class="card"><h2>Withdraw</h2><p>Available balance: <b>{money(u["balance"])}</b></p><p class="muted">Minimum withdrawal: {money(5000)}</p><form method="post" action="/payouts"><input type="hidden" name="csrf_token" value="{token}"><label>Amount (thousandths USD)</label><input name="amount" type="number" min="5000" step="1" required><label>Method</label><select name="method"><option value="PayPal">PayPal</option><option value="USDT TRC20">USDT TRC20</option><option value="Other">Other</option></select><label>Account / wallet</label><input name="account" maxlength="200" required><button>Request payout</button></form></div><div class="card"><h2>Rules</h2><p class="muted">Payouts are processed manually in this local MVP. No real payment is sent automatically.</p></div></div><div class="card"><h2>Payout history</h2><table><tr><th>ID</th><th>Amount</th><th>Method</th><th>Account</th><th>Status</th></tr>{trs}</table></div>'''
+ body=f'''<div class="grid"><div class="card"><h2>Withdraw</h2><p>{tr('Available balance', u)}: <b>{money(u["balance"])}</b></p><p class="muted">Minimum withdrawal: {money(5000)}</p><form method="post" action="/payouts"><input type="hidden" name="csrf_token" value="{token}"><label>{tr('Amount', u)} (thousandths USD)</label><input name="amount" type="number" min="5000" step="1" required><label>Method</label><select name="method"><option value="PayPal">PayPal</option><option value="USDT TRC20">USDT TRC20</option><option value="Other">Other</option></select><label>Account / wallet</label><input name="account" maxlength="200" required><button>Request payout</button></form></div><div class="card"><h2>Rules</h2><p class="muted">Payouts are processed manually in this local MVP. No real payment is sent automatically.</p></div></div><div class="card"><h2>Payout history</h2><table><tr><th>ID</th><th>{tr('Amount', u)}</th><th>Method</th><th>Account</th><th>Status</th></tr>{trs}</table></div>'''
  return layout('Payouts',body,u)
 
 @app.post('/payouts')
@@ -2386,14 +3971,20 @@ def create_payout(r:Request,amount:int=Form(...),method:str=Form(...),account:st
   if not fresh or fresh['balance']<amount:
    c.rollback(); return RedirectResponse('/payouts',303)
   ts=now()
-  c.execute('UPDATE users SET balance=balance-? WHERE id=? AND balance>=?',(amount,u['id'],amount))
+  reserved=c.execute(
+   'UPDATE users SET balance=balance-? WHERE id=? AND balance>=?',
+   (amount,u['id'],amount)
+  ).rowcount
+
+  if reserved!=1:
+   c.rollback()
+   return RedirectResponse('/payouts',303)
   cur=c.execute('INSERT INTO payouts(user_id,amount,method,account,status,created_at,updated_at) VALUES(?,?,?,?,?,?,?)',(u['id'],amount,method,account.strip(),'pending',ts,ts))
   c.execute('INSERT INTO transactions(user_id,amount,kind,description,created_at) VALUES(?,?,?,?,?)',(u['id'],-amount,'payout_request',f'Payout #{cur.lastrowid} reserved',ts))
   c.commit()
  finally:c.close()
  return RedirectResponse('/payouts',303)
 
-@app.post('/admin/payout/{pid}')
 @app.post('/admin/payout/{pid}')
 def update_payout(r:Request,pid:int,status:str=Form(...),csrf_token:str=Form(...)):
  u=user(r)
@@ -2424,7 +4015,7 @@ def update_payout(r:Request,pid:int,status:str=Form(...),csrf_token:str=Form(...
   current=str(p['status'] or '').strip().lower()
   target=str(status).strip().lower()
 
-  # Explicit payout state machine.
+  # Explicit payout state machine:
   #
   # pending  -> approved
   # pending  -> rejected
@@ -2453,13 +4044,15 @@ def update_payout(r:Request,pid:int,status:str=Form(...),csrf_token:str=Form(...
 
   ts=now()
 
+  # The payout amount was already reserved when the request
+  # was created. A rejection returns that reservation.
   if target=='rejected':
-   updated=c.execute(
+   refunded=c.execute(
     'UPDATE users SET balance=balance+? WHERE id=?',
     (amount,p['user_id'])
    ).rowcount
 
-   if updated!=1:
+   if refunded!=1:
     c.rollback()
     return RedirectResponse('/admin',303)
 
@@ -2478,6 +4071,8 @@ def update_payout(r:Request,pid:int,status:str=Form(...),csrf_token:str=Form(...
     )
    )
 
+  # The amount was already reserved at payout_request time.
+  # approved and paid therefore do not modify balance.
   updated=c.execute(
    '''
    UPDATE payouts
@@ -2491,19 +4086,59 @@ def update_payout(r:Request,pid:int,status:str=Form(...),csrf_token:str=Form(...
    c.rollback()
    return RedirectResponse('/admin',303)
 
+  if target=='approved':
+   c.execute(
+    '''
+    INSERT INTO transactions
+    (user_id,amount,kind,description,created_at)
+    VALUES(?,?,?,?,?)
+    ''',
+    (
+     p['user_id'],
+     0,
+     'payout_approved',
+     f'Payout #{pid} approved for processing',
+     ts
+    )
+   )
+
+  elif target=='paid':
+   c.execute(
+    '''
+    INSERT INTO transactions
+    (user_id,amount,kind,description,created_at)
+    VALUES(?,?,?,?,?)
+    ''',
+    (
+     p['user_id'],
+     0,
+     'payout_paid',
+     f'Payout #{pid} marked as paid',
+     ts
+    )
+   )
+
   c.commit()
+
+ except Exception:
+  try:
+   c.rollback()
+  except Exception:
+   pass
+  raise
 
  finally:
   c.close()
 
  return RedirectResponse('/admin',303)
+ 
 @app.get('/admin',response_class=HTMLResponse)
 def admin(r:Request):
  u=user(r)
  if not u or not u['is_admin']:return RedirectResponse('/login',303)
  c=db();ts=c.execute('SELECT * FROM tasks ORDER BY id DESC').fetchall();us=c.execute('SELECT email,balance FROM users ORDER BY id DESC').fetchall();ps=c.execute('SELECT p.*,u.email FROM payouts p JOIN users u ON u.id=p.user_id ORDER BY p.id DESC').fetchall();c.close();token=csrf(r);rows=''.join(f'<tr><td>{x["id"]}</td><td>{escape(x["title"])}</td><td>{escape(x["task_type"])}</td><td>{x["seconds"]}s</td><td>{money(x["reward"])}</td><td>{money(x["budget"])}</td><td>{money(x["spent"])}</td><td>{money(max(0,x["budget"]-x["spent"]))}</td></tr>' for x in ts);users=''.join(f'<tr><td>{escape(x["email"])}</td><td>{money(x["balance"])}</td></tr>' for x in us)
  payouts=''.join(f'<tr><td>#{x["id"]}</td><td>{escape(x["email"])}</td><td>{money(x["amount"])}</td><td>{escape(x["method"])}</td><td>{escape(x["status"])}</td><td><form method="post" action="/admin/payout/{x["id"]}"><input type="hidden" name="csrf_token" value="{token}"><select name="status"><option value="approved">approved</option><option value="paid">paid</option><option value="rejected">rejected</option></select><button>Update</button></form></td></tr>' for x in ps) or '<tr><td colspan=6>No payout requests.</td></tr>'
- body=f'''<h1>Admin</h1><div class="card"><h2>Create task</h2><form method="post" action="/admin/task"><input type="hidden" name="csrf_token" value="{token}"><label>Title</label><input name="title" required maxlength="120"><label>Destination URL</label><input name="url" type="url" required><label>Seconds</label><input name="seconds" type="number" min="5" max="86400" value="20" required><label>Reward (thousandths USD)</label><input name="reward" type="number" min="1" value="5" required><label>Budget (thousandths USD)</label><input name="budget" type="number" min="1" value="1000" required><label>Type</label><select name="task_type"><option value="visit">Website visit</option><option value="video">Video</option></select><label>Video URL</label><input name="video_url" type="url"><button>Create task</button></form></div><div class="card"><h2>Tasks</h2><table><tr><th>ID</th><th>Title</th><th>Type</th><th>Time</th><th>Reward</th><th>Budget</th><th>Spent</th><th>Remaining</th></tr>{rows}</table></div><div class="card"><h2>Users</h2><table><tr><th>Email</th><th>Balance</th></tr>{users}</table></div><div class="card"><h2>Payouts</h2><table><tr><th>ID</th><th>User</th><th>Amount</th><th>Method</th><th>Status</th><th>Action</th></tr>{payouts}</table></div>''';return layout('Admin',body,u)
+ body=f'''<h1>Admin</h1><div class="card"><h2>Create task</h2><form method="post" action="/admin/task"><input type="hidden" name="csrf_token" value="{token}"><label>Title</label><input name="title" required maxlength="120"><label>Destination URL</label><input name="url" type="url" required><label>Seconds</label><input name="seconds" type="number" min="5" max="86400" value="20" required><label>Reward (thousandths USD)</label><input name="reward" type="number" min="1" value="5" required><label>Budget (thousandths USD)</label><input name="budget" type="number" min="1" value="1000" required><label>{tr('Type', u)}</label><select name="task_type"><option value="visit">Website visit</option><option value="video">Video</option></select><label>Video URL</label><input name="video_url" type="url"><button>Create task</button></form></div><div class="card"><h2>Tasks</h2><table><tr><th>ID</th><th>Title</th><th>{tr('Type', u)}</th><th>Time</th><th>Reward</th><th>Budget</th><th>Spent</th><th>Remaining</th></tr>{rows}</table></div><div class="card"><h2>Users</h2><table><tr><th>{tr("Email")}</th><th>Balance</th></tr>{users}</table></div><div class="card"><h2>Payouts</h2><table><tr><th>ID</th><th>{tr('User', u)}</th><th>{tr('Amount', u)}</th><th>Method</th><th>Status</th><th>Action</th></tr>{payouts}</table></div>''';return layout('Admin',body,u)
 @app.post('/admin/task')
 def create_task(r:Request,title:str=Form(...),url:str=Form(...),seconds:int=Form(...),reward:int=Form(...),budget:int=Form(...),task_type:str=Form(...),video_url:str=Form(''),csrf_token:str=Form(...)):
  u=user(r)
@@ -2582,7 +4217,7 @@ def earn(r:Request):
         f"""
         <div class="card earn-card" style="min-height:205px;">
             <div>
-                <div class="earn-icon" style="font-size:34px;">🌐</div>
+                <div class="earn-icon" style="font-size:34px;">рџЊђ</div>
 
                 <div style="display:inline-flex;align-items:center;padding:5px 9px;border-radius:999px;background:rgba(59,130,246,.10);color:#93c5fd;font-size:11px;margin-bottom:8px;">
                     Website Task
@@ -2592,16 +4227,16 @@ def earn(r:Request):
 
                 <div style="display:flex;gap:8px;flex-wrap:wrap;font-size:13px;">
                     <span style="padding:5px 9px;border-radius:8px;background:rgba(148,163,184,.08);">
-                        ⏱ {x["seconds"]} sec
+                        вЏ± {x["seconds"]} sec
                     </span>
                     <span style="padding:5px 9px;border-radius:8px;background:rgba(34,197,94,.09);color:#86efac;">
-                        💰 {money(x["reward"])}
+                        рџ’° {money(x["reward"])}
                     </span>
                 </div>
             </div>
 
             <a class="btn" href="/task/{x["id"]}">
-                Start task →
+                Start task в†’
             </a>
         </div>
         """
@@ -2611,10 +4246,10 @@ def earn(r:Request):
     if not cards:
         cards="""
         <div class="card empty" style="grid-column:1/-1;text-align:center;padding:42px;">
-            <div class="earn-icon" style="font-size:42px;">🔎</div>
-            <h3>No website tasks available right now</h3>
+            <div class="earn-icon" style="font-size:42px;">рџ”Ћ</div>
+            <h3>{tr('No website tasks available right now', u)}</h3>
             <p class="muted" style="max-width:560px;margin:8px auto 20px;">
-                There are currently no available website tasks for your account.
+                {tr('There are currently no available website tasks for your account.', u)}
                 Check back later or explore another earning category.
             </p>
             <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;">
@@ -2625,10 +4260,10 @@ def earn(r:Request):
         """
 
     body=f"""
-    <section class="hero" style="position:relative;overflow:hidden;">
+    <section class="hero" style="position:relative;overflow:hidden;background-image:linear-gradient(90deg,rgba(15,23,42,.96) 0%,rgba(15,23,42,.82) 48%,rgba(15,23,42,.35) 100%),url('/static/images/hero-banner.png');background-size:cover;background-position:center;min-height:460px;display:flex;align-items:center;">
         <div style="position:relative;z-index:2;">
             <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border:1px solid rgba(96,165,250,.25);border-radius:999px;background:rgba(59,130,246,.10);font-size:12px;color:#93c5fd;margin-bottom:14px;">
-                ⚡ EasySurf Earning Center
+                вљЎ EasySurf Earning Center
             </div>
 
             <h1 style="margin:0 0 10px;">
@@ -2636,13 +4271,13 @@ def earn(r:Request):
             </h1>
 
             <p class="muted" style="max-width:700px;font-size:16px;line-height:1.7;margin:0;">
-                Choose from available surveys, offers, games, apps, videos
-                and verified website tasks.
+                {tr('Choose from available surveys, offers, games, apps, videos', u)}
+                {tr('and verified website tasks.', u)}
             </p>
 
             <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:24px;">
-                <a class="btn" href="#tasks">🌐 Browse tasks</a>
-                <a class="btn secondary" href="/rewards">🎁 View rewards</a>
+                <a class="btn" href="#tasks">рџЊђ {tr('Browse tasks', u)}</a>
+                <a class="btn secondary" href="/rewards">рџЋЃ {tr('View rewards', u)}</a>
             </div>
         </div>
 
@@ -2668,68 +4303,68 @@ def earn(r:Request):
 
             <div class="card earn-card" style="min-height:185px;">
                 <div>
-                    <div class="earn-icon" style="font-size:34px;">📋</div>
-                    <h3>Surveys</h3>
+                    <div class="earn-icon" style="font-size:34px;">рџ“‹</div>
+                    <h3>{tr('Surveys', u)}</h3>
                     <p class="muted">
-                        Share your opinion through paid research surveys when inventory is available.
+                        {tr('Share your opinion through paid research surveys when inventory is available.', u)}
                     </p>
                 </div>
-                <a href="/surveys">Explore surveys →</a>
+                <a href="/surveys">{tr('Explore surveys', u)} в†’</a>
             </div>
 
             <div class="card earn-card" style="min-height:185px;">
                 <div>
-                    <div class="earn-icon" style="font-size:34px;">🎁</div>
-                    <h3>Offers</h3>
+                    <div class="earn-icon" style="font-size:34px;">рџЋЃ</div>
+                    <h3>{tr('Offers', u)}</h3>
                     <p class="muted">
-                        Complete advertiser-approved activities and tracked offers.
+                        {tr('Complete advertiser-approved activities and tracked offers.', u)}
                     </p>
                 </div>
-                <a href="/offers">Explore offers →</a>
+                <a href="/offers">{tr('Explore offers', u)} в†’</a>
             </div>
 
             <div class="card earn-card" style="min-height:185px;">
                 <div>
-                    <div class="earn-icon" style="font-size:34px;">🎮</div>
-                    <h3>Games</h3>
+                    <div class="earn-icon" style="font-size:34px;">рџЋ®</div>
+                    <h3>{tr('Games', u)}</h3>
                     <p class="muted">
                         Discover game-based opportunities and milestone rewards.
                     </p>
                 </div>
-                <a href="/games">Explore games →</a>
+                <a href="/games">{tr('Explore games', u)} в†’</a>
             </div>
 
             <div class="card earn-card" style="min-height:185px;">
                 <div>
-                    <div class="earn-icon" style="font-size:34px;">📱</div>
-                    <h3>Apps</h3>
+                    <div class="earn-icon" style="font-size:34px;">рџ“±</div>
+                    <h3>{tr('Apps', u)}</h3>
                     <p class="muted">
                         Find tracked app activities and approved earning opportunities.
                     </p>
                 </div>
-                <a href="/apps">Explore apps →</a>
+                <a href="/apps">{tr('Explore apps', u)} в†’</a>
             </div>
 
             <div class="card earn-card" style="min-height:185px;">
                 <div>
-                    <div class="earn-icon" style="font-size:34px;">▶️</div>
-                    <h3>Videos</h3>
+                    <div class="earn-icon" style="font-size:34px;">в–¶пёЏ</div>
+                    <h3>{tr('Videos', u)}</h3>
                     <p class="muted">
-                        Watch approved video activities when available.
+                        {tr('Watch approved video activities when available.', u)}
                     </p>
                 </div>
-                <a href="/videos">Explore videos →</a>
+                <a href="/videos">{tr('Explore videos', u)} в†’</a>
             </div>
 
             <div class="card earn-card" style="min-height:185px;">
                 <div>
-                    <div class="earn-icon" style="font-size:34px;">🧩</div>
-                    <h3>Micro Tasks</h3>
+                    <div class="earn-icon" style="font-size:34px;">рџ§©</div>
+                    <h3>{tr('Micro Tasks', u)}</h3>
                     <p class="muted">
                         Complete small verified activities and simple tasks.
                     </p>
                 </div>
-                <a href="/microtasks">Explore tasks →</a>
+                <a href="/microtasks">Explore tasks в†’</a>
             </div>
 
         </div>
@@ -2739,14 +4374,14 @@ def earn(r:Request):
         <div style="display:flex;align-items:end;justify-content:space-between;gap:15px;flex-wrap:wrap;margin-bottom:15px;">
             <div>
                 <div class="muted" style="font-size:12px;text-transform:uppercase;letter-spacing:.08em;">
-                    Available now
+                    {tr('Available now', u)}
                 </div>
-                <h2 style="margin:5px 0 0;">Website Tasks</h2>
+                <h2 style="margin:5px 0 0;">{tr('Website Tasks', u)}</h2>
             </div>
 
             <div style="display:flex;align-items:center;gap:8px;font-size:13px;">
                 <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;"></span>
-                <span class="muted">{len(tasks)} available</span>
+                <span class="muted">{len(tasks)} {tr('available', u)}</span>
             </div>
         </div>
 
@@ -2763,13 +4398,13 @@ def earn(r:Request):
                 </div>
                 <h2 style="margin:6px 0 7px;">Don't stop at one category</h2>
                 <p class="muted" style="margin:0;max-width:620px;">
-                    Explore rewards, referrals and other earning sections to see what is currently available.
+                    {tr("Explore rewards, referrals and other earning sections to see what is currently available.", u)}
                 </p>
             </div>
 
             <div style="display:flex;gap:10px;flex-wrap:wrap;">
-                <a class="btn" href="/rewards">Rewards →</a>
-                <a class="btn secondary" href="/referrals">Referrals →</a>
+                <a class="btn" href="/rewards">Rewards в†’</a>
+                <a class="btn secondary" href="/referrals">Referrals в†’</a>
             </div>
         </div>
 
@@ -2802,17 +4437,17 @@ def surveys(r:Request):
 
     if cards:
         body=(
-            '<h1>Surveys</h1>'
+            f'<h1>{tr('Surveys', u)}</h1>'
             '<p class="muted">Available surveys from connected providers.</p>'
             + ''.join(cards)
         )
     else:
         body=(
-            '<h1>Surveys</h1>'
+            f'<h1>{tr('Surveys', u)}</h1>'
             '<div class="card">'
-            '<h3>No surveys available right now</h3>'
+            f'<h3>{tr('No surveys available right now', u)}</h3>'
             '<p class="muted">'
-            'There are currently no active survey offers from connected providers.'
+            f'{tr('There are currently no active survey offers from connected providers.', u)}'
             '</p>'
             '</div>'
         )
@@ -2841,25 +4476,35 @@ def games_page(r:Request):
             )
         )
 
+    hero = """
+    <section class="hero" style="position:relative;overflow:hidden;background-image:linear-gradient(90deg,rgba(15,23,42,.96) 0%,rgba(15,23,42,.78) 48%,rgba(15,23,42,.28) 100%),url('/static/images/hero-banner.png');background-size:cover;background-position:center;min-height:360px;display:flex;align-items:center;margin-bottom:24px;">
+        <div style="position:relative;z-index:2;max-width:760px;">
+            <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border:1px solid rgba(139,92,246,.35);border-radius:999px;background:rgba(139,92,246,.10);font-size:12px;color:#c4b5fd;margin-bottom:14px;">
+                🎮 EasySurf Games
+            </div>
+            <h1 style="margin:0 0 10px;">
+                """ + tr("Games", u) + """
+            </h1>
+            <p class="muted" style="max-width:680px;font-size:16px;line-height:1.7;margin:0;">
+                Discover available games, complete activities and earn rewards.
+            </p>
+        </div>
+    </section>
+    """
+
     if cards:
-        body=(
-            '<h1>Games</h1>'
-            '<p class="muted">Available games from connected providers.</p>'
-            + ''.join(cards)
-        )
+        body = hero + ''.join(cards)
     else:
-        body=(
-            '<h1>Games</h1>'
-            '<div class="card">'
-            '<h3>No games available right now</h3>'
-            '<p class="muted">'
-            'There are currently no active game offers from connected providers.'
-            '</p>'
-            '</div>'
-        )
+        body = hero + """
+        <div class="card">
+            <h3>""" + tr("No games available right now", u) + """</h3>
+            <p class="muted">
+                """ + tr("There are currently no active game offers from connected providers.", u) + """
+            </p>
+        </div>
+        """
 
     return layout("Games",body,u)
-
 @app.get('/offers',response_class=HTMLResponse)
 def offers_page(r:Request):
     u=user(r)
@@ -2884,25 +4529,35 @@ def offers_page(r:Request):
             )
         )
 
+    hero = """
+    <section class="hero" style="position:relative;overflow:hidden;background-image:linear-gradient(90deg,rgba(15,23,42,.96) 0%,rgba(15,23,42,.78) 48%,rgba(15,23,42,.28) 100%),url('/static/images/offers-banner.png');background-size:cover;background-position:center;min-height:360px;display:flex;align-items:center;margin-bottom:24px;">
+        <div style="position:relative;z-index:2;max-width:760px;">
+            <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border:1px solid rgba(245,158,11,.35);border-radius:999px;background:rgba(245,158,11,.10);font-size:12px;color:#fcd34d;margin-bottom:14px;">
+                💰 EasySurf Offers
+            </div>
+            <h1 style="margin:0 0 10px;">
+                """ + tr("Offers", u) + """
+            </h1>
+            <p class="muted" style="max-width:680px;font-size:16px;line-height:1.7;margin:0;">
+                Explore available offers and complete partner activities to earn rewards.
+            </p>
+        </div>
+    </section>
+    """
+
     if cards:
-        body=(
-            '<h1>Offers</h1>'
-            '<p class="muted">Available offers from connected providers.</p>'
-            + ''.join(cards)
-        )
+        body = hero + ''.join(cards)
     else:
-        body=(
-            '<h1>Offers</h1>'
-            '<div class="card">'
-            '<h3>No offers available right now</h3>'
-            '<p class="muted">'
-            'There are currently no active offers from connected providers.'
-            '</p>'
-            '</div>'
-        )
+        body = hero + """
+        <div class="card">
+            <h3>""" + tr("No offers available right now", u) + """</h3>
+            <p class="muted">
+                """ + tr("There are currently no active offers from connected providers.", u) + """
+            </p>
+        </div>
+        """
 
     return layout("Offers",body,u)
-
 @app.get('/microtasks',response_class=HTMLResponse)
 def microtasks_page(r:Request):
     u=user(r)
@@ -2911,29 +4566,29 @@ def microtasks_page(r:Request):
         return RedirectResponse('/login',303)
 
     body=f"""
-    <section class="hero" style="position:relative;overflow:hidden;">
+    <section class="hero" style="position:relative;overflow:hidden;background-image:linear-gradient(90deg,rgba(15,23,42,.96) 0%,rgba(15,23,42,.82) 48%,rgba(15,23,42,.35) 100%),url('/static/images/hero-banner.png');background-size:cover;background-position:center;min-height:460px;display:flex;align-items:center;">
         <div style="position:relative;z-index:2;">
 
             <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border:1px solid rgba(245,158,11,.28);border-radius:999px;background:rgba(245,158,11,.09);font-size:12px;color:#fcd34d;margin-bottom:14px;">
-                🧩 EasySurf Microtasks
+                рџ§© {tr('EasySurf Microtasks', u)}
             </div>
 
             <h1 style="margin:0 0 10px;">
-                Complete small tasks. Earn rewards.
+                {tr('Complete small tasks. Earn rewards.', u)}
             </h1>
 
             <p class="muted" style="max-width:720px;font-size:16px;line-height:1.7;margin:0;">
-                Microtasks are short activities designed to be simple,
-                clear and easy to complete when real task inventory is available.
+                {tr('Microtasks are short activities designed to be simple, Clear and easy to complete when real task inventory is available.', u)}
+
             </p>
 
             <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:22px;">
                 <a class="btn" href="/earn">
-                    ⚡ Browse all tasks
+                    вљЎ {tr('Browse all tasks', u)}
                 </a>
 
                 <a class="btn secondary" href="/activity">
-                    📊 View activity
+                    рџ“Љ {tr('View activity', u)}
                 </a>
             </div>
 
@@ -2949,10 +4604,10 @@ def microtasks_page(r:Request):
         <div class="grid">
 
             <div class="card" style="min-height:150px;">
-                <div class="earn-icon" style="font-size:34px;">🧩</div>
+                <div class="earn-icon" style="font-size:34px;">рџ§©</div>
 
                 <div class="muted" style="font-size:12px;text-transform:uppercase;letter-spacing:.07em;">
-                    Microtasks
+                    {tr('Microtasks', u)}
                 </div>
 
                 <div style="font-size:28px;font-weight:800;margin-top:4px;">
@@ -2960,39 +4615,39 @@ def microtasks_page(r:Request):
                 </div>
 
                 <div class="muted" style="font-size:13px;">
-                    currently available
+                    {tr('currently available', u)}
                 </div>
             </div>
 
             <div class="card" style="min-height:150px;">
-                <div class="earn-icon" style="font-size:34px;">⏱️</div>
+                <div class="earn-icon" style="font-size:34px;">вЏ±пёЏ</div>
 
                 <div class="muted" style="font-size:12px;text-transform:uppercase;letter-spacing:.07em;">
-                    Task style
+                    {tr('Task style', u)}
                 </div>
 
                 <div style="font-size:28px;font-weight:800;margin-top:4px;">
-                    Short
+                    {tr('Short', u)}
                 </div>
 
                 <div class="muted" style="font-size:13px;">
-                    focused activities
+                    {tr('focused activities', u)}
                 </div>
             </div>
 
             <div class="card" style="min-height:150px;">
-                <div class="earn-icon" style="font-size:34px;">🛡️</div>
+                <div class="earn-icon" style="font-size:34px;">рџ›ЎпёЏ</div>
 
                 <div class="muted" style="font-size:12px;text-transform:uppercase;letter-spacing:.07em;">
-                    Rewards
+                    {tr('Rewards', u)}
                 </div>
 
                 <div style="font-size:28px;font-weight:800;margin-top:4px;color:#86efac;">
-                    Verified
+                    {tr('Verified', u)}
                 </div>
 
                 <div class="muted" style="font-size:13px;">
-                    after valid completion
+                    {tr('after valid completion', u)}
                 </div>
             </div>
 
@@ -3007,30 +4662,30 @@ def microtasks_page(r:Request):
             <div style="position:relative;z-index:2;max-width:720px;margin:0 auto;">
 
                 <div style="width:78px;height:78px;margin:0 auto 18px;border-radius:24px;display:flex;align-items:center;justify-content:center;font-size:40px;background:linear-gradient(135deg,rgba(245,158,11,.18),rgba(59,130,246,.10));border:1px solid rgba(245,158,11,.25);box-shadow:0 15px 45px rgba(0,0,0,.18);">
-                    🧩
+                    рџ§©
                 </div>
 
                 <div style="font-size:12px;color:#fbbf24;text-transform:uppercase;letter-spacing:.09em;font-weight:700;">
-                    Microtask inventory
+                    {tr('Microtask inventory', u)}
                 </div>
 
                 <h2 style="margin:7px 0 10px;">
-                    No microtasks available yet
+                    {tr('No microtasks available yet', u)}
                 </h2>
 
                 <p class="muted" style="max-width:620px;margin:0 auto;line-height:1.7;">
-                    This section is ready for real microtask providers.
-                    EasySurf does not generate fake tasks, fake completions,
-                    or artificial rewards.
+                    {tr('This section is ready for real microtask providers. EasySurf does not generate fake tasks, fake completions, or artificial rewards.', u)}
+
+
                 </p>
 
                 <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:22px;">
                     <a class="btn" href="/earn">
-                        ⚡ Browse earning tasks
+                        вљЎ {tr('Browse earning tasks', u)}
                     </a>
 
                     <a class="btn secondary" href="/offers">
-                        💎 Explore offers
+                        рџ’Ћ {tr('Explore offers', u)}
                     </a>
                 </div>
 
@@ -3049,38 +4704,38 @@ def microtasks_page(r:Request):
         <div class="grid">
 
             <div class="card">
-                <div style="font-size:28px;margin-bottom:10px;">🔎</div>
+                <div style="font-size:28px;margin-bottom:10px;">рџ”Ћ</div>
 
                 <h3 style="margin:0 0 7px;">
-                    Choose a task
+                    {tr('Choose a task', u)}
                 </h3>
 
                 <p class="muted" style="margin:0;line-height:1.6;font-size:13px;">
-                    Select an available microtask and read its requirements carefully.
+                    {tr('Select an available microtask and read its requirements carefully.', u)}
                 </p>
             </div>
 
             <div class="card">
-                <div style="font-size:28px;margin-bottom:10px;">✍️</div>
+                <div style="font-size:28px;margin-bottom:10px;">вњЌпёЏ</div>
 
                 <h3 style="margin:0 0 7px;">
-                    Complete it
+                    {tr('Complete it', u)}
                 </h3>
 
                 <p class="muted" style="margin:0;line-height:1.6;font-size:13px;">
-                    Follow the instructions and submit only valid work.
+                    {tr('Follow the instructions and submit only valid work.', u)}
                 </p>
             </div>
 
             <div class="card">
-                <div style="font-size:28px;margin-bottom:10px;">💰</div>
+                <div style="font-size:28px;margin-bottom:10px;">рџ’°</div>
 
                 <h3 style="margin:0 0 7px;">
-                    Get credited
+                    {tr('Get credited', u)}
                 </h3>
 
                 <p class="muted" style="margin:0;line-height:1.6;font-size:13px;">
-                    A reward is credited after the completion is accepted or verified.
+                    {tr('A reward is credited after the completion is accepted or verified.', u)}
                 </p>
             </div>
 
@@ -3120,7 +4775,7 @@ def videos_page(r:Request):
 
                 <div>
                     <div style="width:52px;height:52px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:27px;background:rgba(239,68,68,.10);border:1px solid rgba(239,68,68,.18);margin-bottom:14px;">
-                        ▶️
+                        в–¶пёЏ
                     </div>
 
                     <h3 style="margin:0 0 7px;">
@@ -3141,15 +4796,15 @@ def videos_page(r:Request):
             <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:18px;">
 
                 <span style="padding:6px 9px;border-radius:999px;background:rgba(148,163,184,.08);color:#cbd5e1;font-size:12px;">
-                    ⏱️ {int(x["seconds"])} sec
+                    вЏ±пёЏ {int(x["seconds"])} sec
                 </span>
 
                 <span style="padding:6px 9px;border-radius:999px;background:rgba(148,163,184,.08);color:#cbd5e1;font-size:12px;">
-                    🎥 Video
+                    рџЋҐ Video
                 </span>
 
                 <span style="padding:6px 9px;border-radius:999px;background:rgba(59,130,246,.08);color:#93c5fd;font-size:12px;">
-                    ✓ Available
+                    вњ“ Available
                 </span>
 
             </div>
@@ -3157,7 +4812,7 @@ def videos_page(r:Request):
             <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:20px;">
 
                 <a class="btn" href="/complete/{int(x["id"])}">
-                    ▶️ Start video
+                    в–¶пёЏ Start video
                 </a>
 
             </div>
@@ -3174,7 +4829,7 @@ def videos_page(r:Request):
             <div style="position:relative;z-index:2;max-width:720px;margin:0 auto;">
 
                 <div style="width:78px;height:78px;margin:0 auto 18px;border-radius:24px;display:flex;align-items:center;justify-content:center;font-size:40px;background:linear-gradient(135deg,rgba(239,68,68,.16),rgba(59,130,246,.10));border:1px solid rgba(239,68,68,.22);box-shadow:0 15px 45px rgba(0,0,0,.18);">
-                    ▶️
+                    в–¶пёЏ
                 </div>
 
                 <div style="font-size:12px;color:#fca5a5;text-transform:uppercase;letter-spacing:.09em;font-weight:700;">
@@ -3187,17 +4842,17 @@ def videos_page(r:Request):
 
                 <p class="muted" style="max-width:620px;margin:0 auto;line-height:1.7;">
                     New video tasks will appear here when real campaigns are available.
-                    EasySurf does not create fake video views or artificial rewards.
+                    EasySurf does not create fake video views {tr('or artificial rewards.', u)}
                 </p>
 
                 <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:22px;">
 
                     <a class="btn" href="/earn">
-                        ⚡ Browse earning tasks
+                        вљЎ {tr('Browse earning tasks', u)}
                     </a>
 
                     <a class="btn secondary" href="/games">
-                        🎮 Explore games
+                        рџЋ® Explore games
                     </a>
 
                 </div>
@@ -3212,12 +4867,12 @@ def videos_page(r:Request):
         """
 
     body=f"""
-    <section class="hero" style="position:relative;overflow:hidden;">
+    <section class="hero" style="position:relative;overflow:hidden;background-image:linear-gradient(90deg,rgba(15,23,42,.96) 0%,rgba(15,23,42,.82) 48%,rgba(15,23,42,.35) 100%),url('/static/images/hero-banner.png');background-size:cover;background-position:center;min-height:460px;display:flex;align-items:center;">
 
         <div style="position:relative;z-index:2;">
 
             <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border:1px solid rgba(239,68,68,.28);border-radius:999px;background:rgba(239,68,68,.09);font-size:12px;color:#fca5a5;margin-bottom:14px;">
-                🎥 EasySurf Videos
+                рџЋҐ EasySurf Videos
             </div>
 
             <h1 style="margin:0 0 10px;">
@@ -3232,11 +4887,11 @@ def videos_page(r:Request):
             <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:22px;">
 
                 <a class="btn" href="/earn">
-                    ⚡ Browse all tasks
+                    вљЎ {tr('Browse all tasks', u)}
                 </a>
 
                 <a class="btn secondary" href="/activity">
-                    📊 View activity
+                    рџ“Љ {tr('View activity', u)}
                 </a>
 
             </div>
@@ -3256,7 +4911,7 @@ def videos_page(r:Request):
             <div class="card" style="min-height:150px;">
 
                 <div class="earn-icon" style="font-size:34px;">
-                    🎥
+                    рџЋҐ
                 </div>
 
                 <div class="muted" style="font-size:12px;text-transform:uppercase;letter-spacing:.07em;">
@@ -3268,7 +4923,7 @@ def videos_page(r:Request):
                 </div>
 
                 <div class="muted" style="font-size:13px;">
-                    currently available
+                    {tr('currently available', u)}
                 </div>
 
             </div>
@@ -3276,7 +4931,7 @@ def videos_page(r:Request):
             <div class="card" style="min-height:150px;">
 
                 <div class="earn-icon" style="font-size:34px;">
-                    ⏱️
+                    вЏ±пёЏ
                 </div>
 
                 <div class="muted" style="font-size:12px;text-transform:uppercase;letter-spacing:.07em;">
@@ -3284,7 +4939,7 @@ def videos_page(r:Request):
                 </div>
 
                 <div style="font-size:28px;font-weight:800;margin-top:4px;">
-                    Short
+                    {tr('Short', u)}
                 </div>
 
                 <div class="muted" style="font-size:13px;">
@@ -3296,7 +4951,7 @@ def videos_page(r:Request):
             <div class="card" style="min-height:150px;">
 
                 <div class="earn-icon" style="font-size:34px;">
-                    💰
+                    рџ’°
                 </div>
 
                 <div class="muted" style="font-size:12px;text-transform:uppercase;letter-spacing:.07em;">
@@ -3304,11 +4959,11 @@ def videos_page(r:Request):
                 </div>
 
                 <div style="font-size:28px;font-weight:800;margin-top:4px;color:#86efac;">
-                    Verified
+                    {tr('Verified', u)}
                 </div>
 
                 <div class="muted" style="font-size:13px;">
-                    after valid completion
+                    {tr('after valid completion', u)}
                 </div>
 
             </div>
@@ -3332,7 +4987,7 @@ def videos_page(r:Request):
         <div style="display:flex;align-items:center;gap:15px;">
 
             <div style="width:48px;height:48px;border-radius:15px;display:flex;align-items:center;justify-content:center;font-size:24px;background:rgba(59,130,246,.10);">
-                ℹ️
+                в„№пёЏ
             </div>
 
             <div>
@@ -3392,8 +5047,8 @@ def about_page(r:Request):
       <div class="card">
         <h2>Transparency</h2>
         <p class="muted">
-          Activity availability and reward amounts depend on the tasks
-          currently available on the platform.
+          {tr('Activity', u)} availability and reward amounts depend on the tasks
+          {tr('currently available', u)} on the platform.
         </p>
       </div>
     </section>
@@ -3544,7 +5199,7 @@ def help_page(r:Request):
       </a>
 
       <a class="card" href="/activity" style="text-decoration:none;color:inherit;">
-        <h2>Activity</h2>
+        <h2>{tr('Activity', u)}</h2>
         <p class="muted">
           Review recorded account activity.
         </p>
@@ -3581,9 +5236,9 @@ def privacy_page(r:Request):
         to support.
       </p>
 
-      <h2>Activity records</h2>
+      <h2>{tr('Activity', u)} records</h2>
       <p class="muted">
-        Activity and transaction records may be retained to calculate
+        {tr('Activity', u)} and transaction records may be retained to calculate
         rewards, prevent duplicate completions and investigate suspicious
         activity.
       </p>
@@ -3706,25 +5361,35 @@ def apps_page(r:Request):
             )
         )
 
+    hero = """
+    <section class="hero" style="position:relative;overflow:hidden;background-image:linear-gradient(90deg,rgba(15,23,42,.96) 0%,rgba(15,23,42,.78) 48%,rgba(15,23,42,.28) 100%),url('/static/images/apps-banner.png');background-size:cover;background-position:center;min-height:360px;display:flex;align-items:center;margin-bottom:24px;">
+        <div style="position:relative;z-index:2;max-width:760px;">
+            <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border:1px solid rgba(59,130,246,.35);border-radius:999px;background:rgba(59,130,246,.10);font-size:12px;color:#93c5fd;margin-bottom:14px;">
+                📱 EasySurf Apps
+            </div>
+            <h1 style="margin:0 0 10px;">
+                """ + tr("Apps", u) + """
+            </h1>
+            <p class="muted" style="max-width:680px;font-size:16px;line-height:1.7;margin:0;">
+                Discover available applications from connected providers and earn rewards.
+            </p>
+        </div>
+    </section>
+    """
+
     if cards:
-        body=(
-            '<h1>Apps</h1>'
-            '<p class="muted">Available applications from connected providers.</p>'
-            + ''.join(cards)
-        )
+        body = hero + ''.join(cards)
     else:
-        body=(
-            '<h1>Apps</h1>'
-            '<div class="card">'
-            '<h3>No apps available right now</h3>'
-            '<p class="muted">'
-            'There are currently no active app offers from connected providers.'
-            '</p>'
-            '</div>'
-        )
+        body = hero + """
+        <div class="card">
+            <h3>""" + tr("No apps available right now", u) + """</h3>
+            <p class="muted">
+                """ + tr("There are currently no active app offers from connected providers.", u) + """
+            </p>
+        </div>
+        """
 
     return layout("Apps",body,u)
-
 @app.get('/rewards',response_class=HTMLResponse)
 def rewards(r:Request):
     u=user(r)
@@ -3766,20 +5431,20 @@ def rewards(r:Request):
         <div class="card" style="border-color:rgba(34,197,94,.25);background:linear-gradient(135deg,rgba(34,197,94,.10),rgba(15,23,42,.82));">
             <div style="display:flex;align-items:flex-start;gap:16px;">
                 <div style="width:54px;height:54px;min-width:54px;border-radius:16px;display:flex;align-items:center;justify-content:center;background:rgba(34,197,94,.14);font-size:28px;">
-                    ✓
+                    вњ“
                 </div>
 
                 <div>
                     <div style="font-size:12px;color:#86efac;text-transform:uppercase;letter-spacing:.08em;font-weight:700;">
-                        Daily Bonus
+                        {tr('Daily Bonus', u)}
                     </div>
 
                     <h2 style="margin:5px 0 7px;">
-                        Bonus claimed today
+                        {tr('Bonus claimed today', u)}
                     </h2>
 
                     <p class="muted" style="margin:0;line-height:1.6;">
-                        Come back tomorrow to continue your streak and claim the next daily bonus.
+                        {tr('Come back tomorrow to continue your streak and claim the next daily bonus.', u)}
                     </p>
                 </div>
             </div>
@@ -3794,7 +5459,7 @@ def rewards(r:Request):
 
                 <div style="display:flex;align-items:flex-start;gap:16px;">
                     <div style="width:58px;height:58px;min-width:58px;border-radius:18px;display:flex;align-items:center;justify-content:center;background:rgba(59,130,246,.16);font-size:30px;">
-                        🎁
+                        рџЋЃ
                     </div>
 
                     <div>
@@ -3803,11 +5468,11 @@ def rewards(r:Request):
                         </div>
 
                         <h2 style="margin:5px 0 7px;">
-                            Your daily bonus is ready
+                            {tr('Your daily bonus is ready', u)}
                         </h2>
 
                         <p class="muted" style="margin:0;line-height:1.6;">
-                            Claim your bonus once today and keep your earning streak alive.
+                            {tr('Claim your bonus once today and keep your earning streak alive.', u)}
                         </p>
                     </div>
                 </div>
@@ -3818,7 +5483,7 @@ def rewards(r:Request):
                            value="{token}">
 
                     <button class="btn" style="min-width:190px;">
-                        🎁 Claim Daily Bonus
+                        рџЋЃ Claim {tr('Daily Bonus', u)}
                     </button>
                 </form>
 
@@ -3829,11 +5494,11 @@ def rewards(r:Request):
         """
 
     body=f"""
-    <section class="hero" style="position:relative;overflow:hidden;">
+    <section class="hero" style="position:relative;overflow:hidden;background-image:linear-gradient(90deg,rgba(15,23,42,.96) 0%,rgba(15,23,42,.82) 48%,rgba(15,23,42,.35) 100%),url('/static/images/hero-banner.png');background-size:cover;background-position:center;min-height:460px;display:flex;align-items:center;">
         <div style="position:relative;z-index:2;">
 
             <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border:1px solid rgba(168,85,247,.25);border-radius:999px;background:rgba(168,85,247,.10);font-size:12px;color:#c4b5fd;margin-bottom:14px;">
-                ✨ EasySurf Rewards Center
+                вњЁ EasySurf Rewards Center
             </div>
 
             <h1 style="margin:0 0 10px;">
@@ -3841,17 +5506,17 @@ def rewards(r:Request):
             </h1>
 
             <p class="muted" style="max-width:720px;font-size:16px;line-height:1.7;margin:0;">
-                Claim your daily bonus, build your earning streak,
-                reach your daily goal and unlock more rewards.
+                {tr('Claim your daily bonus, build your earning streak,', u)}
+                {tr('reach your daily goal and unlock more rewards.', u)}
             </p>
 
             <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:22px;">
                 <a class="btn" href="/earn">
-                    ⚡ Start earning
+                    вљЎ {tr('Start earning', u)}
                 </a>
 
                 <a class="btn secondary" href="/activity">
-                    📊 View activity
+                    рџ“Љ {tr('View activity', u)}
                 </a>
             </div>
 
@@ -3867,16 +5532,16 @@ def rewards(r:Request):
         <div style="display:flex;align-items:end;justify-content:space-between;gap:15px;flex-wrap:wrap;margin-bottom:15px;">
             <div>
                 <div class="muted" style="font-size:12px;text-transform:uppercase;letter-spacing:.08em;">
-                    Today's reward
+                    {tr("Today's reward", u)}
                 </div>
 
                 <h2 style="margin:5px 0 0;">
-                    Daily Bonus
+                    {tr('Daily Bonus', u)}
                 </h2>
             </div>
 
             <div style="font-size:13px;" class="muted">
-                One claim per day
+                {tr('One claim per day', u)}
             </div>
         </div>
 
@@ -3894,15 +5559,15 @@ def rewards(r:Request):
 
                     <div>
                         <div style="font-size:12px;color:#60a5fa;text-transform:uppercase;letter-spacing:.08em;font-weight:700;">
-                            Daily Goal
+                            {tr('Daily Goal', u)}
                         </div>
 
                         <h2 style="margin:6px 0 7px;">
-                            Reach today's target
+                            {tr("Reach today's target", u)}
                         </h2>
 
                         <p class="muted" style="margin:0;max-width:580px;line-height:1.6;">
-                            Keep completing eligible activities to increase your progress toward the daily earning goal.
+                            {tr('Keep completing eligible activities to increase your progress toward the daily earning goal.', u)}
                         </p>
                     </div>
 
@@ -3925,7 +5590,7 @@ def rewards(r:Request):
 
                 <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;flex-wrap:wrap;">
                     <span class="muted" style="font-size:13px;">
-                        Earned today
+                        {tr('Earned today', u)}
                     </span>
 
                     <strong style="font-size:16px;">
@@ -3947,16 +5612,16 @@ def rewards(r:Request):
 
             <div>
                 <div class="muted" style="font-size:12px;text-transform:uppercase;letter-spacing:.08em;">
-                    Your progress
+                    {tr('Your progress', u)}
                 </div>
 
                 <h2 style="margin:5px 0 0;">
-                    Keep the momentum
+                    {tr('Keep the momentum', u)}
                 </h2>
             </div>
 
             <div class="muted" style="font-size:13px;">
-                Earn every day to build your progress
+                {tr('Earn every day to build your progress', u)}
             </div>
 
         </div>
@@ -3965,54 +5630,54 @@ def rewards(r:Request):
 
             <div class="card earn-card" style="min-height:205px;">
                 <div>
-                    <div class="earn-icon" style="font-size:38px;">🔥</div>
+                    <div class="earn-icon" style="font-size:38px;">рџ”Ґ</div>
 
                     <div style="display:inline-flex;padding:5px 9px;border-radius:999px;background:rgba(249,115,22,.10);color:#fdba74;font-size:11px;margin-bottom:8px;">
-                        Daily streak
+                        {tr('Daily streak', u)}
                     </div>
 
                     <h3 style="margin:4px 0 7px;">
-                        Streak
+                        {tr('Streak', u)}
                     </h3>
 
                     <p class="muted" style="line-height:1.6;">
-                        Keep earning every day to maintain your reward streak.
+                        {tr('Keep earning every day to maintain your reward streak.', u)}
                     </p>
                 </div>
 
                 <a href="/activity">
-                    View activity →
+                    {tr('View activity в†’', u)}
                 </a>
             </div>
 
             <div class="card earn-card" style="min-height:205px;">
                 <div>
-                    <div class="earn-icon" style="font-size:38px;">🏆</div>
+                    <div class="earn-icon" style="font-size:38px;">рџЏ†</div>
 
                     <div style="display:inline-flex;padding:5px 9px;border-radius:999px;background:rgba(168,85,247,.10);color:#c4b5fd;font-size:11px;margin-bottom:8px;">
-                        Milestones
+                        {tr('Milestones', u)}
                     </div>
 
                     <h3 style="margin:4px 0 7px;">
-                        Achievements
+                        {tr('Achievements', u)}
                     </h3>
 
                     <p class="muted" style="line-height:1.6;">
-                        Complete milestones and keep building your account progress.
+                        {tr('Complete milestones and keep building your account progress.', u)}
                     </p>
                 </div>
 
                 <a href="/activity">
-                    View progress →
+                    View progress в†’
                 </a>
             </div>
 
             <div class="card earn-card" style="min-height:205px;">
                 <div>
-                    <div class="earn-icon" style="font-size:38px;">🥇</div>
+                    <div class="earn-icon" style="font-size:38px;">рџҐ‡</div>
 
                     <div style="display:inline-flex;padding:5px 9px;border-radius:999px;background:rgba(234,179,8,.10);color:#fde68a;font-size:11px;margin-bottom:8px;">
-                        Community
+                        {tr('Community', u)}
                     </div>
 
                     <h3 style="margin:4px 0 7px;">
@@ -4020,12 +5685,12 @@ def rewards(r:Request):
                     </h3>
 
                     <p class="muted" style="line-height:1.6;">
-                        See how your total earnings compare with other EasySurf users.
+                        {tr('See how your total earnings compare with other EasySurf users.', u)}
                     </p>
                 </div>
 
                 <a href="/leaderboard">
-                    Open leaderboard →
+                    {tr('Open leaderboard в†’', u)}
                 </a>
             </div>
 
@@ -4039,11 +5704,11 @@ def rewards(r:Request):
 
             <div>
                 <div style="font-size:12px;color:#60a5fa;text-transform:uppercase;letter-spacing:.08em;font-weight:700;">
-                    More ways to earn
+                    {tr('More ways to earn', u)}
                 </div>
 
                 <h2 style="margin:6px 0 7px;">
-                    Turn activity into rewards
+                    {tr('Turn activity into rewards', u)}
                 </h2>
 
                 <p class="muted" style="margin:0;max-width:620px;line-height:1.6;">
@@ -4053,7 +5718,7 @@ def rewards(r:Request):
 
             <div style="display:flex;gap:10px;flex-wrap:wrap;">
                 <a class="btn" href="/earn">
-                    Explore earning
+                    {tr('Explore earning', u)}
                 </a>
 
                 <a class="btn secondary" href="/referrals">
@@ -4218,10 +5883,10 @@ def activity(r:Request):
     )
 
     if not transactions:
-        transactions="""
+        transactions=f"""
         <tr>
             <td colspan="3" class="muted">
-                No transactions yet.
+                {tr('No transactions yet.', u)}
             </td>
         </tr>
         """
@@ -4231,37 +5896,37 @@ def activity(r:Request):
         <tr>
             <td>{escape(x["source_type"])}</td>
             <td>{money(x["amount"])}</td>
-            <td class="orange">Pending</td>
+            <td class="orange">{tr('Pending', u)}</td>
         </tr>
         """
         for x in pending
     )
 
     if not pending_rows:
-        pending_rows="""
+        pending_rows=f"""
         <tr>
             <td colspan="3" class="muted">
-                No pending rewards.
+                {tr('No pending rewards.', u)}
             </td>
         </tr>
         """
 
     body=f"""
     <section class="hero">
-        <h1>📊 Activity</h1>
+        <h1>рџ“Љ {tr('Activity', u)}</h1>
         <p class="muted">
-            Track your completed and pending rewards.
+            {tr('Track your completed and pending rewards.', u)}
         </p>
     </section>
 
     <div class="card">
-        <h2>Pending Rewards</h2>
+        <h2>{tr('Pending Rewards', u)}</h2>
 
         <table>
             <tr>
-                <th>Source</th>
-                <th>Amount</th>
-                <th>Status</th>
+                <th>{tr('Source', u)}</th>
+                <th>{tr('Amount', u)}</th>
+                <th>{tr('Status', u)}</th>
             </tr>
 
             {pending_rows}
@@ -4269,13 +5934,13 @@ def activity(r:Request):
     </div>
 
     <div class="card">
-        <h2>Transaction History</h2>
+        <h2>{tr('Transaction History', u)}</h2>
 
         <table>
             <tr>
-                <th>Description</th>
-                <th>Type</th>
-                <th>Amount</th>
+                <th>{tr('Description', u)}</th>
+                <th>{tr('Type', u)}</th>
+                <th>{tr('Amount', u)}</th>
             </tr>
 
             {transactions}
@@ -4334,25 +5999,25 @@ def leaderboard(r:Request):
         table="""
         <tr>
             <td colspan="3">
-                No rankings yet.
+                {tr('No rankings yet.', u)}
             </td>
         </tr>
         """
 
     body=f"""
     <section class="hero">
-        <h1>🏆 Leaderboard</h1>
+        <h1>рџЏ† {tr('Leaderboard', u)}</h1>
         <p class="muted">
-            Top EasySurf earners.
+            {tr('Top EasySurf earners.', u)}
         </p>
     </section>
 
     <div class="card">
         <table>
             <tr>
-                <th>Rank</th>
-                <th>User</th>
-                <th>Total earned</th>
+                <th>{tr('Rank', u)}</th>
+                <th>{tr('User', u)}</th>
+                <th>{tr('Total earned', u)}</th>
             </tr>
 
             {table}
@@ -4364,7 +6029,7 @@ def leaderboard(r:Request):
 
 
 # ============================================================
-# SECURITY V4 — OFFERWALL.GG SECURE POSTBACK
+# SECURITY V4 вЂ” OFFERWALL.GG SECURE POSTBACK
 # ============================================================
 
 def _init_offerwall_v4():
@@ -4833,7 +6498,7 @@ async def offerwall_callback(r:Request):
             )
 
         # ----------------------------------------------------
-        # CREDITED — DATABASE UNIQUE CONSTRAINT IS THE
+        # CREDITED вЂ” DATABASE UNIQUE CONSTRAINT IS THE
         # CONCURRENCY-SAFE IDEMPOTENCY CHECK
         # ----------------------------------------------------
 
@@ -4996,5 +6661,3 @@ _init_offerwall_v4()
 # ============================================================
 # END SECURITY V4
 # ============================================================
-
-

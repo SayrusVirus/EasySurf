@@ -3,8 +3,7 @@ import sqlite3
 import time
 
 
-BASE_DIR = Path(__file__).resolve().parents[2]
-DB_PATH = BASE_DIR / "easysurf.db"
+from services.db_config import DB_PATH
 
 
 def db():
