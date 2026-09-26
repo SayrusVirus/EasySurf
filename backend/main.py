@@ -1321,6 +1321,11 @@ SUPPORTED_LANGUAGES = {
 }
 
 
+
+@app.on_event('startup')
+def _run_startup():
+    startup()
+
 def get_language(u=None):
     language = CURRENT_LANGUAGE.get()
 
