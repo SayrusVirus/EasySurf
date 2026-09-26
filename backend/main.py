@@ -2531,8 +2531,58 @@ def home(r:Request):
     """
 
     return layout("Home",body,u)
-@app.get('/register',response_class=HTMLResponse)
 @app.get('/auth/google')
+def google_start(r:Request):
+    client_id=os.getenv(
+        'GOOGLE_CLIENT_ID',
+        ''
+    ).strip()
+
+    if not client_id:
+        return RedirectResponse(
+            '/register?google=not_configured',
+            303
+        )
+
+    public_url=os.getenv(
+        'EASYSURF_PUBLIC_URL',
+        'http://127.0.0.1:8000'
+    ).strip().rstrip('/')
+
+    redirect_uri=os.getenv(
+        'GOOGLE_REDIRECT_URI',
+        public_url + '/auth/google/callback'
+    ).strip()
+
+    state=secrets.token_urlsafe(32)
+
+    r.session['google_oauth_state']=state
+    r.session['google_ref']=(
+        r.query_params.get(
+            'ref',
+            ''
+        ).strip().upper()
+    )
+
+    params={
+        'client_id':client_id,
+        'redirect_uri':redirect_uri,
+        'response_type':'code',
+        'scope':'openid email profile',
+        'state':state,
+        'prompt':'select_account'
+    }
+
+    url=(
+        'https://accounts.google.com/o/oauth2/v2/auth?'
+        + urllib.parse.urlencode(params)
+    )
+
+    return RedirectResponse(
+        url,
+        303
+    )
+
 @app.get('/register',response_class=HTMLResponse)
 def regp(r:Request):
     if user(r):
@@ -3378,7 +3428,6 @@ def resend_verification(
   303
  )
 
-@app.get('/login',response_class=HTMLResponse)
 @app.get('/login',response_class=HTMLResponse)
 def loginp(r:Request):
     if user(r):
