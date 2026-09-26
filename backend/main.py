@@ -2539,10 +2539,20 @@ def regp(r:Request):
   message='<div class="alert">Verification email sent. Please check your inbox to verify your email.</div>'
  elif email_status=='failed':
   message='<div class="alert">Registration succeeded, but the verification email could not be sent. Please use the resend option after registration.</div>'
- return layout('Register',f'<div class="center card auth-card"><h2>Create account</h2>{message}<form method="post"><input type="hidden" name="csrf_token" value="{t}"><label>{tr("Email")}</label><input name="email" type="email" required><label>Password</label><input name="password" type="password" required minlength="6"><button>Register</button></form></div>')
+ elif email_status=='exists':
+  message='<div class="alert">An account with this email already exists. Please log in instead.</div>'
+ elif email_status=='mismatch':
+  message='<div class="alert">Passwords do not match.</div>'
+ elif email_status=='short':
+  message='<div class="alert">Password must be at least 6 characters long.</div>'
+ elif email_status=='invalid':
+  message='<div class="alert">Please enter a valid email address.</div>'
+ elif email_status=='error':
+  message='<div class="alert">Registration could not be completed. Please try again.</div>'
+ return layout('Register',f'<div class="center card auth-card"><h2>Create account</h2>{message}<form method="post"><input type="hidden" name="csrf_token" value="{t}"><label>{tr("Email")}</label><input name="email" type="email" required><label>{tr("Password")}</label><input name="password" type="password" required minlength="6" autocomplete="new-password"><label>{tr("Confirm password")}</label><input name="password_confirm" type="password" required minlength="6" autocomplete="new-password"><button>{tr("Register")}</button></form></div>')
+
 @app.post('/register')
-@app.post('/register')
-def reg(r:Request,email:str=Form(...),password:str=Form(...),csrf_token:str=Form(...),ref:str=Form('')):
+def reg(r:Request,email:str=Form(...),password:str=Form(...),password_confirm:str=Form(...),csrf_token:str=Form(...),ref:str=Form('')):
  ip=_client_ip(r)
  rate_key=f"ip:{ip}"
 
@@ -2569,8 +2579,14 @@ def reg(r:Request,email:str=Form(...),password:str=Form(...),csrf_token:str=Form
  email=email.strip().lower()
  ref=ref.strip().upper()
 
- if len(email)>320 or len(password)<6:
-  return RedirectResponse('/register',303)
+ if not email or len(email)>320 or '@' not in email:
+  return RedirectResponse('/register?email=invalid',303)
+
+ if len(password)<6:
+  return RedirectResponse('/register?email=short',303)
+
+ if password!=password_confirm:
+  return RedirectResponse('/register?email=mismatch',303)
 
  public_url=os.getenv(
   'EASYSURF_PUBLIC_URL',
@@ -2581,6 +2597,16 @@ def reg(r:Request,email:str=Form(...),password:str=Form(...),csrf_token:str=Form
 
  try:
   c.execute('BEGIN IMMEDIATE')
+
+  existing=c.execute(
+   'SELECT id FROM users WHERE email=?',
+   (email,)
+  ).fetchone()
+
+  if existing:
+   c.rollback()
+   c.close()
+   return RedirectResponse('/register?email=exists',303)
 
   rr=c.execute(
    'SELECT id FROM users WHERE referral_code=?',
@@ -2644,18 +2670,16 @@ def reg(r:Request,email:str=Form(...),password:str=Form(...),csrf_token:str=Form
    c.rollback()
   except Exception:
    pass
-
   c.close()
-  return RedirectResponse('/register',303)
+  return RedirectResponse('/register?email=exists',303)
 
  except Exception:
   try:
    c.rollback()
   except Exception:
    pass
-
   c.close()
-  return RedirectResponse('/register',303)
+  return RedirectResponse('/register?email=error',303)
 
  c.close()
 
