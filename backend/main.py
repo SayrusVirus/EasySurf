@@ -3458,6 +3458,10 @@ def loginp(r:Request):
             '</div>'
         )
 
+    login_error=r.query_params.get(
+     'error',
+     ''
+    ).strip().lower()
     if login_error=='invalid':
         message=(
             '<div class="auth-message error">'
