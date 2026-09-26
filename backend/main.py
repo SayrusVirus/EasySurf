@@ -1,4 +1,4 @@
-﻿from fastapi import FastAPI, Request, Form, UploadFile, File
+from fastapi import FastAPI, Request, Form, UploadFile, File
 from fastapi.staticfiles import StaticFiles
 from services.provider_core import (
     get_apps,
@@ -268,10 +268,10 @@ LANGUAGE_TRANSLATIONS = {
         "Japanese": "Japanese",
         "Turkish": "Turkish",
 
-        "Р СѓСЃСЃРєРёР№": "Russian",
+        "Русский": "Russian",
         "Italiano": "Italian",
         "Deutsch": "German",
-        "ж—Ґжњ¬иЄћ": "Japanese",
+        "日本語": "Japanese",
         "TГјrkГ§e": "Turkish",
 
         "Profile updated successfully.": "Profile updated successfully.",
@@ -292,7 +292,7 @@ LANGUAGE_TRANSLATIONS = {
         "Available": "Available",
         "Total": "Total",
         "Today": "Today",
-        "Yesterday": "Р’С‡РµСЂР°",
+        "Yesterday": "Вчера",
         "This week": "This week",
         "This month": "This month",
 
@@ -313,7 +313,7 @@ LANGUAGE_TRANSLATIONS = {
         "Pending rewards": "Pending rewards",
         "Tasks completed": "Tasks completed",
         "Daily target": "Daily target",
-        "Today's earning goal": "Р”РЅРµРІРЅР°СЏ С†РµР»СЊ Р·Р°СЂР°Р±РѕС‚РєР°",
+        "Today's earning goal": "Дневная цель заработка",
         "Keep completing available activities to grow your balance.": "Keep completing available activities to grow your balance.",
         "Quick access": "Quick access",
         "View all": "View all",
@@ -375,342 +375,342 @@ LANGUAGE_TRANSLATIONS = {
     },
 
     "ru": {
-        "Dashboard": "РџР°РЅРµР»СЊ СѓРїСЂР°РІР»РµРЅРёСЏ",
-        "Profile": "РџСЂРѕС„РёР»СЊ",
-        "Earn": "Р—Р°СЂР°Р±РѕС‚РѕРє",
-        "Rewards": "РќР°РіСЂР°РґС‹",
-        "Activity": "РђРєС‚РёРІРЅРѕСЃС‚СЊ",
-        "Leaderboard": "РўР°Р±Р»РёС†Р° Р»РёРґРµСЂРѕРІ",
-"View activity": "РџРѕСЃРјРѕС‚СЂРµС‚СЊ Р°РєС‚РёРІРЅРѕСЃС‚СЊ",
-"Today's reward": "РќР°РіСЂР°РґР° Р·Р° СЃРµРіРѕРґРЅСЏ",
-"Daily Bonus": "Р•Р¶РµРґРЅРµРІРЅС‹Р№ Р±РѕРЅСѓСЃ",
-"One claim per day": "РћРґРЅР° РЅР°РіСЂР°РґР° РІ РґРµРЅСЊ",
-"Bonus claimed today": "Р‘РѕРЅСѓСЃ СѓР¶Рµ РїРѕР»СѓС‡РµРЅ СЃРµРіРѕРґРЅСЏ",
-"Come back tomorrow to continue your streak and claim the next daily bonus.": "Р’РµСЂРЅРёС‚РµСЃСЊ Р·Р°РІС‚СЂР°, С‡С‚РѕР±С‹ РїСЂРѕРґРѕР»Р¶РёС‚СЊ СЃРµСЂРёСЋ Рё РїРѕР»СѓС‡РёС‚СЊ СЃР»РµРґСѓСЋС‰РёР№ РµР¶РµРґРЅРµРІРЅС‹Р№ Р±РѕРЅСѓСЃ.",
-"Your daily bonus is ready": "Р’Р°С€ РµР¶РµРґРЅРµРІРЅС‹Р№ Р±РѕРЅСѓСЃ РіРѕС‚РѕРІ",
-"Claim your bonus once today and keep your earning streak alive.": "РџРѕР»СѓС‡РёС‚Рµ Р±РѕРЅСѓСЃ СЃРµРіРѕРґРЅСЏ Рё РїСЂРѕРґРѕР»Р¶Р°Р№С‚Рµ СЃРІРѕСЋ СЃРµСЂРёСЋ Р·Р°СЂР°Р±РѕС‚РєР°.",
-"Claim Daily Bonus": "РџРѕР»СѓС‡РёС‚СЊ РµР¶РµРґРЅРµРІРЅС‹Р№ Р±РѕРЅСѓСЃ",
-"Rewards & Bonuses": "РќР°РіСЂР°РґС‹ Рё Р±РѕРЅСѓСЃС‹",
-"Daily Goal": "Р”РЅРµРІРЅР°СЏ С†РµР»СЊ",
-"Reach today's target": "Р”РѕСЃС‚РёРіРЅРёС‚Рµ СЃРµРіРѕРґРЅСЏС€РЅРµР№ С†РµР»Рё",
-"progress": "РїСЂРѕРіСЂРµСЃСЃ",
-"Your progress": "Р’Р°С€ РїСЂРѕРіСЂРµСЃСЃ",
-"Keep the momentum": "РџСЂРѕРґРѕР»Р¶Р°Р№С‚Рµ РІ С‚РѕРј Р¶Рµ РґСѓС…Рµ",
-"Earn every day to build your progress": "Р—Р°СЂР°Р±Р°С‚С‹РІР°Р№С‚Рµ РєР°Р¶РґС‹Р№ РґРµРЅСЊ, С‡С‚РѕР±С‹ СѓРІРµР»РёС‡РёРІР°С‚СЊ СЃРІРѕР№ РїСЂРѕРіСЂРµСЃСЃ",
-"Daily streak": "Р•Р¶РµРґРЅРµРІРЅР°СЏ СЃРµСЂРёСЏ",
-"Streak": "РЎРµСЂРёСЏ",
-"Keep earning every day to maintain your reward streak.": "Р—Р°СЂР°Р±Р°С‚С‹РІР°Р№С‚Рµ РєР°Р¶РґС‹Р№ РґРµРЅСЊ, С‡С‚РѕР±С‹ РїРѕРґРґРµСЂР¶РёРІР°С‚СЊ СЃРµСЂРёСЋ РЅР°РіСЂР°Рґ.",
-"View progress": "РџРѕСЃРјРѕС‚СЂРµС‚СЊ РїСЂРѕРіСЂРµСЃСЃ",
-"Milestones": "Р”РѕСЃС‚РёР¶РµРЅРёСЏ",
-"Achievements": "Р”РѕСЃС‚РёР¶РµРЅРёСЏ",
-"Complete milestones and keep building your account progress.": "Р’С‹РїРѕР»РЅСЏР№С‚Рµ С†РµР»Рё Рё РїСЂРѕРґРѕР»Р¶Р°Р№С‚Рµ СЂР°Р·РІРёРІР°С‚СЊ СЃРІРѕР№ Р°РєРєР°СѓРЅС‚.",
-"Community": "РЎРѕРѕР±С‰РµСЃС‚РІРѕ",
-"Open leaderboard": "РћС‚РєСЂС‹С‚СЊ С‚Р°Р±Р»РёС†Сѓ Р»РёРґРµСЂРѕРІ",
-"More ways to earn": "Р‘РѕР»СЊС€Рµ СЃРїРѕСЃРѕР±РѕРІ Р·Р°СЂР°Р±РѕС‚Р°С‚СЊ",
-"Turn activity into rewards": "РџСЂРµРІСЂР°С‰Р°Р№С‚Рµ Р°РєС‚РёРІРЅРѕСЃС‚СЊ РІ РЅР°РіСЂР°РґС‹",
-"Surveys": "РћРїСЂРѕСЃС‹",
-"Offers": "РџСЂРµРґР»РѕР¶РµРЅРёСЏ",
+        "Dashboard": "Панель управления",
+        "Profile": "Профиль",
+        "Earn": "Заработок",
+        "Rewards": "Награды",
+        "Activity": "Активность",
+        "Leaderboard": "Таблица лидеров",
+"View activity": "Посмотреть активность",
+"Today's reward": "Награда за сегодня",
+"Daily Bonus": "Ежедневный бонус",
+"One claim per day": "Одна награда в день",
+"Bonus claimed today": "Бонус уже получен сегодня",
+"Come back tomorrow to continue your streak and claim the next daily bonus.": "Вернитесь завтра, чтобы продолжить серию и получить следующий ежедневный бонус.",
+"Your daily bonus is ready": "Ваш ежедневный бонус готов",
+"Claim your bonus once today and keep your earning streak alive.": "Получите бонус сегодня и продолжайте свою серию заработка.",
+"Claim Daily Bonus": "Получить ежедневный бонус",
+"Rewards & Bonuses": "Награды и бонусы",
+"Daily Goal": "Дневная цель",
+"Reach today's target": "Достигните сегодняшней цели",
+"progress": "прогресс",
+"Your progress": "Ваш прогресс",
+"Keep the momentum": "Продолжайте в том же духе",
+"Earn every day to build your progress": "Зарабатывайте каждый день, чтобы увеличивать свой прогресс",
+"Daily streak": "Ежедневная серия",
+"Streak": "Серия",
+"Keep earning every day to maintain your reward streak.": "Зарабатывайте каждый день, чтобы поддерживать серию наград.",
+"View progress": "Посмотреть прогресс",
+"Milestones": "Достижения",
+"Achievements": "Достижения",
+"Complete milestones and keep building your account progress.": "Выполняйте цели и продолжайте развивать свой аккаунт.",
+"Community": "Сообщество",
+"Open leaderboard": "Открыть таблицу лидеров",
+"More ways to earn": "Больше способов заработать",
+"Turn activity into rewards": "Превращайте активность в награды",
+"Surveys": "Опросы",
+"Offers": "Предложения",
 "Games": "Р ВР С–РЎР‚РЎвЂ№",
-"Apps": "РџСЂРёР»РѕР¶РµРЅРёСЏ",
-"Videos": "Р’РёРґРµРѕ",
-"No surveys available right now": "РЎРµР№С‡Р°СЃ РЅРµС‚ РґРѕСЃС‚СѓРїРЅС‹С… РѕРїСЂРѕСЃРѕРІ",
-"There are currently no active survey offers from connected providers.": "Р’ РЅР°СЃС‚РѕСЏС‰РµРµ РІСЂРµРјСЏ РЅРµС‚ Р°РєС‚РёРІРЅС‹С… РїСЂРµРґР»РѕР¶РµРЅРёР№ РѕРїСЂРѕСЃРѕРІ РѕС‚ РїРѕРґРєР»СЋС‡С‘РЅРЅС‹С… РїСЂРѕРІР°Р№РґРµСЂРѕРІ.",
-"No offers available right now": "РЎРµР№С‡Р°СЃ РЅРµС‚ РґРѕСЃС‚СѓРїРЅС‹С… РїСЂРµРґР»РѕР¶РµРЅРёР№",
-"There are currently no active offers from connected providers.": "Р’ РЅР°СЃС‚РѕСЏС‰РµРµ РІСЂРµРјСЏ РЅРµС‚ Р°РєС‚РёРІРЅС‹С… РїСЂРµРґР»РѕР¶РµРЅРёР№ РѕС‚ РїРѕРґРєР»СЋС‡С‘РЅРЅС‹С… РїСЂРѕРІР°Р№РґРµСЂРѕРІ.",
-"No games available right now": "РЎРµР№С‡Р°СЃ РЅРµС‚ РґРѕСЃС‚СѓРїРЅС‹С… РёРіСЂ",
-"There are currently no active game offers from connected providers.": "Р’ РЅР°СЃС‚РѕСЏС‰РµРµ РІСЂРµРјСЏ РЅРµС‚ Р°РєС‚РёРІРЅС‹С… РїСЂРµРґР»РѕР¶РµРЅРёР№ РёРіСЂ РѕС‚ РїРѕРґРєР»СЋС‡С‘РЅРЅС‹С… РїСЂРѕРІР°Р№РґРµСЂРѕРІ.",
-"No apps available right now": "РЎРµР№С‡Р°СЃ РЅРµС‚ РґРѕСЃС‚СѓРїРЅС‹С… РїСЂРёР»РѕР¶РµРЅРёР№",
-"There are currently no active app offers from connected providers.": "Р’ РЅР°СЃС‚РѕСЏС‰РµРµ РІСЂРµРјСЏ РЅРµС‚ Р°РєС‚РёРІРЅС‹С… РїСЂРµРґР»РѕР¶РµРЅРёР№ РїСЂРёР»РѕР¶РµРЅРёР№ РѕС‚ РїРѕРґРєР»СЋС‡С‘РЅРЅС‹С… РїСЂРѕРІР°Р№РґРµСЂРѕРІ.",
-"Today's reward": "РќР°РіСЂР°РґР° Р·Р° СЃРµРіРѕРґРЅСЏ",
-"Daily Bonus": "Р•Р¶РµРґРЅРµРІРЅС‹Р№ Р±РѕРЅСѓСЃ",
-"One claim per day": "РћРґРЅР° РЅР°РіСЂР°РґР° РІ РґРµРЅСЊ",
-"Bonus claimed today": "Р‘РѕРЅСѓСЃ СѓР¶Рµ РїРѕР»СѓС‡РµРЅ СЃРµРіРѕРґРЅСЏ",
-"Come back tomorrow to continue your streak and claim the next daily bonus.": "Р’РµСЂРЅРёС‚РµСЃСЊ Р·Р°РІС‚СЂР°, С‡С‚РѕР±С‹ РїСЂРѕРґРѕР»Р¶РёС‚СЊ СЃРµСЂРёСЋ Рё РїРѕР»СѓС‡РёС‚СЊ СЃР»РµРґСѓСЋС‰РёР№ РµР¶РµРґРЅРµРІРЅС‹Р№ Р±РѕРЅСѓСЃ.",
-"Daily Goal": "Р”РЅРµРІРЅР°СЏ С†РµР»СЊ",
-"Reach today's target": "Р”РѕСЃС‚РёРіРЅРёС‚Рµ СЃРµРіРѕРґРЅСЏС€РЅРµР№ С†РµР»Рё",
-"progress": "РїСЂРѕРіСЂРµСЃСЃ",
-"Your progress": "Р’Р°С€ РїСЂРѕРіСЂРµСЃСЃ",
-"Keep the momentum": "РџСЂРѕРґРѕР»Р¶Р°Р№С‚Рµ РІ С‚РѕРј Р¶Рµ РґСѓС…Рµ",
-"Earn every day to build your progress": "Р—Р°СЂР°Р±Р°С‚С‹РІР°Р№С‚Рµ РєР°Р¶РґС‹Р№ РґРµРЅСЊ, С‡С‚РѕР±С‹ СѓРІРµР»РёС‡РёРІР°С‚СЊ СЃРІРѕР№ РїСЂРѕРіСЂРµСЃСЃ",
-"Daily streak": "Р•Р¶РµРґРЅРµРІРЅР°СЏ СЃРµСЂРёСЏ",
-"Streak": "РЎРµСЂРёСЏ",
-"Keep earning every day to maintain your reward streak.": "Р—Р°СЂР°Р±Р°С‚С‹РІР°Р№С‚Рµ РєР°Р¶РґС‹Р№ РґРµРЅСЊ, С‡С‚РѕР±С‹ РїРѕРґРґРµСЂР¶РёРІР°С‚СЊ СЃРµСЂРёСЋ РЅР°РіСЂР°Рґ.",
-"View activity в†’": "РџРѕСЃРјРѕС‚СЂРµС‚СЊ Р°РєС‚РёРІРЅРѕСЃС‚СЊ в†’",
-"View progress в†’": "РџРѕСЃРјРѕС‚СЂРµС‚СЊ РїСЂРѕРіСЂРµСЃСЃ в†’",
-"Milestones": "Р”РѕСЃС‚РёР¶РµРЅРёСЏ",
-"Achievements": "Р”РѕСЃС‚РёР¶РµРЅРёСЏ",
-"Complete milestones and keep building your account progress.": "Р’С‹РїРѕР»РЅСЏР№С‚Рµ С†РµР»Рё Рё РїСЂРѕРґРѕР»Р¶Р°Р№С‚Рµ СЂР°Р·РІРёРІР°С‚СЊ СЃРІРѕР№ Р°РєРєР°СѓРЅС‚.",
-"Community": "РЎРѕРѕР±С‰РµСЃС‚РІРѕ",
-"Leaderboard": "РўР°Р±Р»РёС†Р° Р»РёРґРµСЂРѕРІ",
-"See how your total earnings compare with other EasySurf users.": "РЎСЂР°РІРЅРёС‚Рµ СЃРІРѕР№ РѕР±С‰РёР№ Р·Р°СЂР°Р±РѕС‚РѕРє СЃ РґСЂСѓРіРёРјРё РїРѕР»СЊР·РѕРІР°С‚РµР»СЏРјРё EasySurf.",
-"Open leaderboard в†’": "Р С›РЎвЂљР С”РЎР‚РЎвЂ№РЎвЂљРЎРЉ РЎвЂљР В°Р В±Р В»Р С‘РЎвЂ РЎС“ Р В»Р С‘Р Т‘Р ВµРЎР‚Р С•Р Р† в†’",
-"More ways to earn": "Р‘РѕР»СЊС€Рµ СЃРїРѕСЃРѕР±РѕРІ Р·Р°СЂР°Р±РѕС‚Р°С‚СЊ",
-"Turn activity into rewards": "РџСЂРµРІСЂР°С‰Р°Р№С‚Рµ Р°РєС‚РёРІРЅРѕСЃС‚СЊ РІ РЅР°РіСЂР°РґС‹",
+"Apps": "Приложения",
+"Videos": "Видео",
+"No surveys available right now": "Сейчас нет доступных опросов",
+"There are currently no active survey offers from connected providers.": "В настоящее время нет активных предложений опросов от подключённых провайдеров.",
+"No offers available right now": "Сейчас нет доступных предложений",
+"There are currently no active offers from connected providers.": "В настоящее время нет активных предложений от подключённых провайдеров.",
+"No games available right now": "Сейчас нет доступных игр",
+"There are currently no active game offers from connected providers.": "В настоящее время нет активных предложений игр от подключённых провайдеров.",
+"No apps available right now": "Сейчас нет доступных приложений",
+"There are currently no active app offers from connected providers.": "В настоящее время нет активных предложений приложений от подключённых провайдеров.",
+"Today's reward": "Награда за сегодня",
+"Daily Bonus": "Ежедневный бонус",
+"One claim per day": "Одна награда в день",
+"Bonus claimed today": "Бонус уже получен сегодня",
+"Come back tomorrow to continue your streak and claim the next daily bonus.": "Вернитесь завтра, чтобы продолжить серию и получить следующий ежедневный бонус.",
+"Daily Goal": "Дневная цель",
+"Reach today's target": "Достигните сегодняшней цели",
+"progress": "прогресс",
+"Your progress": "Ваш прогресс",
+"Keep the momentum": "Продолжайте в том же духе",
+"Earn every day to build your progress": "Зарабатывайте каждый день, чтобы увеличивать свой прогресс",
+"Daily streak": "Ежедневная серия",
+"Streak": "Серия",
+"Keep earning every day to maintain your reward streak.": "Зарабатывайте каждый день, чтобы поддерживать серию наград.",
+"View activity →": "Посмотреть активность →",
+"View progress →": "Посмотреть прогресс →",
+"Milestones": "Достижения",
+"Achievements": "Достижения",
+"Complete milestones and keep building your account progress.": "Выполняйте цели и продолжайте развивать свой аккаунт.",
+"Community": "Сообщество",
+"Leaderboard": "Таблица лидеров",
+"See how your total earnings compare with other EasySurf users.": "Сравните свой общий заработок с другими пользователями EasySurf.",
+"Open leaderboard →": "РћС‚РєСЂС‹С‚СЊ С‚Р°Р±Р»РёС†Сѓ Р»РёРґРµСЂРѕРІ →",
+"More ways to earn": "Больше способов заработать",
+"Turn activity into rewards": "Превращайте активность в награды",
 "Explore available tasks, surveys, offers, games and other earning sections.": "Р ВР В·РЎС“РЎвЂЎР В°Р в„–РЎвЂљР Вµ Р Т‘Р С•РЎРѓРЎвЂљРЎС“Р С—Р Р…РЎвЂ№Р Вµ Р В·Р В°Р Т‘Р В°Р Р…Р С‘РЎРЏ, Р С•Р С—РЎР‚Р С•РЎРѓРЎвЂ№, Р С—РЎР‚Р ВµР Т‘Р В»Р С•Р В¶Р ВµР Р…Р С‘РЎРЏ, Р С‘Р С–РЎР‚РЎвЂ№ Р С‘ Р Т‘РЎР‚РЎС“Р С–Р С‘Р Вµ РЎР‚Р В°Р В·Р Т‘Р ВµР В»РЎвЂ№ Р В·Р В°РЎР‚Р В°Р В±Р С•РЎвЂљР С”Р В°.",
-"My Profile": "РњРѕР№ РїСЂРѕС„РёР»СЊ",
-"Personal information": "Р›РёС‡РЅР°СЏ РёРЅС„РѕСЂРјР°С†РёСЏ",
-"Display name": "РћС‚РѕР±СЂР°Р¶Р°РµРјРѕРµ РёРјСЏ",
+"My Profile": "Мой профиль",
+"Personal information": "Личная информация",
+"Display name": "Отображаемое имя",
 "Username": "Р ВР СРЎРЏ Р С—Р С•Р В»РЎРЉР В·Р С•Р Р†Р В°РЎвЂљР ВµР В»РЎРЏ",
-"3вЂ“30 characters: letters, numbers and underscore.": "РћС‚ 3 РґРѕ 30 СЃРёРјРІРѕР»РѕРІ: Р±СѓРєРІС‹, С†РёС„СЂС‹ Рё СЃРёРјРІРѕР» РїРѕРґС‡С‘СЂРєРёРІР°РЅРёСЏ.",
-"Email": "Р­Р»РµРєС‚СЂРѕРЅРЅР°СЏ РїРѕС‡С‚Р°",
-"Language": "РЇР·С‹Рє",
-"Receive notifications": "РџРѕР»СѓС‡Р°С‚СЊ СѓРІРµРґРѕРјР»РµРЅРёСЏ",
-"Avatar": "РђРІР°С‚Р°СЂ",
-"JPG, PNG or WEBP. Maximum 2 MB.": "JPG, PNG РёР»Рё WEBP. РњР°РєСЃРёРјР°Р»СЊРЅС‹Р№ СЂР°Р·РјРµСЂ вЂ” 2 РњР‘.",
-"Save profile": "РЎРѕС…СЂР°РЅРёС‚СЊ РїСЂРѕС„РёР»СЊ",
-"Account": "РђРєРєР°СѓРЅС‚",
-"Balance": "Р‘Р°Р»Р°РЅСЃ",
-"Referral code": "Р РµС„РµСЂР°Р»СЊРЅС‹Р№ РєРѕРґ",
-"Account ID": "ID Р°РєРєР°СѓРЅС‚Р°",
-"Admin": "РђРґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂ",
-"Pending Rewards": "РћР¶РёРґР°СЋС‰РёРµ РЅР°РіСЂР°РґС‹",
-"No pending rewards.": "РќРµС‚ РѕР¶РёРґР°СЋС‰РёС… РЅР°РіСЂР°Рґ.",
+"3–30 characters: letters, numbers and underscore.": "От 3 до 30 символов: буквы, цифры и символ подчёркивания.",
+"Email": "Электронная почта",
+"Language": "Язык",
+"Receive notifications": "Получать уведомления",
+"Avatar": "Аватар",
+"JPG, PNG or WEBP. Maximum 2 MB.": "JPG, PNG или WEBP. Максимальный размер — 2 МБ.",
+"Save profile": "Сохранить профиль",
+"Account": "Аккаунт",
+"Balance": "Баланс",
+"Referral code": "Реферальный код",
+"Account ID": "ID аккаунта",
+"Admin": "Администратор",
+"Pending Rewards": "Ожидающие награды",
+"No pending rewards.": "Нет ожидающих наград.",
 "Transaction History": "Р ВРЎРѓРЎвЂљР С•РЎР‚Р С‘РЎРЏ РЎвЂљРЎР‚Р В°Р Р…Р В·Р В°Р С”РЎвЂ Р С‘Р в„–",
-"Description": "РћРїРёСЃР°РЅРёРµ",
-"Type": "РўРёРї",
-"Amount": "РЎСѓРјРјР°",
-"Top EasySurf earners.": "Р›РёРґРµСЂС‹ РїРѕ Р·Р°СЂР°Р±РѕС‚РєСѓ EasySurf.",
-"Rank": "РњРµСЃС‚Рѕ",
-"User": "РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ",
-"Total earned": "Р’СЃРµРіРѕ Р·Р°СЂР°Р±РѕС‚Р°РЅРѕ",
-"Your referral code": "Р’Р°С€ СЂРµС„РµСЂР°Р»СЊРЅС‹Р№ РєРѕРґ",
-"Copy code": "РЎРєРѕРїРёСЂРѕРІР°С‚СЊ РєРѕРґ",
-"Give this code to a friend during registration.": "РџРµСЂРµРґР°Р№С‚Рµ СЌС‚РѕС‚ РєРѕРґ РґСЂСѓРіСѓ РїСЂРё СЂРµРіРёСЃС‚СЂР°С†РёРё.",
-"Referrals": "Р РµС„РµСЂР°Р»С‹",
-"registered users": "Р·Р°СЂРµРіРёСЃС‚СЂРёСЂРѕРІР°РЅРЅС‹С… РїРѕР»СЊР·РѕРІР°С‚РµР»РµР№",
-"Referral earnings": "Р РµС„РµСЂР°Р»СЊРЅС‹Р№ Р·Р°СЂР°Р±РѕС‚РѕРє",
-"total referral bonuses": "РѕР±С‰Р°СЏ СЃСѓРјРјР° СЂРµС„РµСЂР°Р»СЊРЅС‹С… Р±РѕРЅСѓСЃРѕРІ",
-"Referral reward": "Р РµС„РµСЂР°Р»СЊРЅР°СЏ РЅР°РіСЂР°РґР°",
-"per successful signup": "Р·Р° СѓСЃРїРµС€РЅСѓСЋ СЂРµРіРёСЃС‚СЂР°С†РёСЋ",
-"Referral activity": "Р РµС„РµСЂР°Р»СЊРЅР°СЏ Р°РєС‚РёРІРЅРѕСЃС‚СЊ",
-"Your referrals": "Р’Р°С€Рё СЂРµС„РµСЂР°Р»С‹",
-"0 total": "Р’СЃРµРіРѕ: 0",
-"No referrals yet": "РџРѕРєР° РЅРµС‚ СЂРµС„РµСЂР°Р»РѕРІ",
-"Share your referral code to start building your network.": "РџРѕРґРµР»РёС‚РµСЃСЊ СЃРІРѕРёРј СЂРµС„РµСЂР°Р»СЊРЅС‹Рј РєРѕРґРѕРј, С‡С‚РѕР±С‹ РЅР°С‡Р°С‚СЊ СЂР°Р·РІРёРІР°С‚СЊ СЃРІРѕСЋ СЃРµС‚СЊ.",
-"Grow your network": "Р Р°Р·РІРёРІР°Р№С‚Рµ СЃРІРѕСЋ СЃРµС‚СЊ",
-"Invite more friends": "РџСЂРёРіР»Р°С€Р°Р№С‚Рµ Р±РѕР»СЊС€Рµ РґСЂСѓР·РµР№",
-"Share your referral code with people you know and earn the available referral bonus for successful registrations.": "РџРѕРґРµР»РёС‚РµСЃСЊ СЃРІРѕРёРј СЂРµС„РµСЂР°Р»СЊРЅС‹Рј РєРѕРґРѕРј СЃРѕ Р·РЅР°РєРѕРјС‹РјРё Рё РїРѕР»СѓС‡Р°Р№С‚Рµ РґРѕСЃС‚СѓРїРЅС‹Р№ СЂРµС„РµСЂР°Р»СЊРЅС‹Р№ Р±РѕРЅСѓСЃ Р·Р° СѓСЃРїРµС€РЅС‹Рµ СЂРµРіРёСЃС‚СЂР°С†РёРё.",
-        "Referrals": "Р РµС„РµСЂР°Р»С‹",
-        "Withdraw": "Р’С‹РІРѕРґ СЃСЂРµРґСЃС‚РІ",
-        "Payouts": "Р’С‹РїР»Р°С‚С‹",
-        "Offers": "РџСЂРµРґР»РѕР¶РµРЅРёСЏ",
+"Description": "Описание",
+"Type": "Тип",
+"Amount": "Сумма",
+"Top EasySurf earners.": "Лидеры по заработку EasySurf.",
+"Rank": "Место",
+"User": "Пользователь",
+"Total earned": "Всего заработано",
+"Your referral code": "Ваш реферальный код",
+"Copy code": "Скопировать код",
+"Give this code to a friend during registration.": "Передайте этот код другу при регистрации.",
+"Referrals": "Рефералы",
+"registered users": "зарегистрированных пользователей",
+"Referral earnings": "Реферальный заработок",
+"total referral bonuses": "общая сумма реферальных бонусов",
+"Referral reward": "Реферальная награда",
+"per successful signup": "за успешную регистрацию",
+"Referral activity": "Реферальная активность",
+"Your referrals": "Ваши рефералы",
+"0 total": "Всего: 0",
+"No referrals yet": "Пока нет рефералов",
+"Share your referral code to start building your network.": "Поделитесь своим реферальным кодом, чтобы начать развивать свою сеть.",
+"Grow your network": "Развивайте свою сеть",
+"Invite more friends": "Приглашайте больше друзей",
+"Share your referral code with people you know and earn the available referral bonus for successful registrations.": "Поделитесь своим реферальным кодом со знакомыми и получайте доступный реферальный бонус за успешные регистрации.",
+        "Referrals": "Рефералы",
+        "Withdraw": "Вывод средств",
+        "Payouts": "Выплаты",
+        "Offers": "Предложения",
         "Games": "Р ВР С–РЎР‚РЎвЂ№",
-        "Apps": "РџСЂРёР»РѕР¶РµРЅРёСЏ",
-        "Tasks": "Р—Р°РґР°РЅРёСЏ",
-        "Microtasks": "РњРёРєСЂРѕР·Р°РґР°РЅРёСЏ",
-        "Login": "Р’РѕР№С‚Рё",
-        "Register": "Р РµРіРёСЃС‚СЂР°С†РёСЏ",
-        "Get Started": "РќР°С‡Р°С‚СЊ",
-        "Logout": "Р’С‹Р№С‚Рё",
+        "Apps": "Приложения",
+        "Tasks": "Задания",
+        "Microtasks": "Микрозадания",
+        "Login": "Войти",
+        "Register": "Регистрация",
+        "Get Started": "Начать",
+        "Logout": "Выйти",
 
-        "My Profile": "РњРѕР№ РїСЂРѕС„РёР»СЊ",
-        "Personal information": "Р›РёС‡РЅР°СЏ РёРЅС„РѕСЂРјР°С†РёСЏ",
-        "Display name": "РћС‚РѕР±СЂР°Р¶Р°РµРјРѕРµ РёРјСЏ",
+        "My Profile": "Мой профиль",
+        "Personal information": "Личная информация",
+        "Display name": "Отображаемое имя",
         "Username": "Р ВР СРЎРЏ Р С—Р С•Р В»РЎРЉР В·Р С•Р Р†Р В°РЎвЂљР ВµР В»РЎРЏ",
-        "Email": "Р­Р»РµРєС‚СЂРѕРЅРЅР°СЏ РїРѕС‡С‚Р°",
-        "Language": "РЇР·С‹Рє",
-        "Notifications": "РЈРІРµРґРѕРјР»РµРЅРёСЏ",
-        "Receive notifications": "РџРѕР»СѓС‡Р°С‚СЊ СѓРІРµРґРѕРјР»РµРЅРёСЏ",
-        "Avatar": "РђРІР°С‚Р°СЂ",
-        "Save profile": "РЎРѕС…СЂР°РЅРёС‚СЊ РїСЂРѕС„РёР»СЊ",
-        "Save changes": "РЎРѕС…СЂР°РЅРёС‚СЊ РёР·РјРµРЅРµРЅРёСЏ",
+        "Email": "Электронная почта",
+        "Language": "Язык",
+        "Notifications": "Уведомления",
+        "Receive notifications": "Получать уведомления",
+        "Avatar": "Аватар",
+        "Save profile": "Сохранить профиль",
+        "Save changes": "Сохранить изменения",
 
-        "Account": "РђРєРєР°СѓРЅС‚",
-        "Balance": "Р‘Р°Р»Р°РЅСЃ",
-        "Total earned": "Р’СЃРµРіРѕ Р·Р°СЂР°Р±РѕС‚Р°РЅРѕ",
-        "Total paid": "Р’СЃРµРіРѕ РІС‹РїР»Р°С‡РµРЅРѕ",
-        "Referral code": "Р РµС„РµСЂР°Р»СЊРЅС‹Р№ РєРѕРґ",
-        "Account ID": "ID Р°РєРєР°СѓРЅС‚Р°",
-        "Admin": "РђРґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂ",
-        "Yes": "Р”Р°",
-        "No": "РќРµС‚",
+        "Account": "Аккаунт",
+        "Balance": "Баланс",
+        "Total earned": "Всего заработано",
+        "Total paid": "Всего выплачено",
+        "Referral code": "Реферальный код",
+        "Account ID": "ID аккаунта",
+        "Admin": "Администратор",
+        "Yes": "Да",
+        "No": "Нет",
 
-        "English": "РђРЅРіР»РёР№СЃРєРёР№",
-        "Russian": "Р СѓСЃСЃРєРёР№",
+        "English": "Английский",
+        "Russian": "Русский",
         "Italian": "Р ВРЎвЂљР В°Р В»РЎРЉРЎРЏР Р…РЎРѓР С”Р С‘Р в„–",
-        "German": "РќРµРјРµС†РєРёР№",
-        "Japanese": "РЇРїРѕРЅСЃРєРёР№",
-        "Turkish": "РўСѓСЂРµС†РєРёР№",
+        "German": "Немецкий",
+        "Japanese": "Японский",
+        "Turkish": "Турецкий",
 
-        "Р СѓСЃСЃРєРёР№": "Р СѓСЃСЃРєРёР№",
+        "Русский": "Русский",
         "Italiano": "Р ВРЎвЂљР В°Р В»РЎРЉРЎРЏР Р…РЎРѓР С”Р С‘Р в„–",
-        "Deutsch": "РќРµРјРµС†РєРёР№",
-        "ж—Ґжњ¬иЄћ": "РЇРїРѕРЅСЃРєРёР№",
-        "TГјrkГ§e": "РўСѓСЂРµС†РєРёР№",
+        "Deutsch": "Немецкий",
+        "日本語": "Японский",
+        "Türkçe": "Турецкий",
 
-        "Profile updated successfully.": "РџСЂРѕС„РёР»СЊ СѓСЃРїРµС€РЅРѕ РѕР±РЅРѕРІР»С‘РЅ.",
-        "Choose an earning method and get started.": "Р’С‹Р±РµСЂРёС‚Рµ СЃРїРѕСЃРѕР± Р·Р°СЂР°Р±РѕС‚РєР° Рё РЅР°С‡РЅРёС‚Рµ.",
-        "Available offers from connected providers.": "Р”РѕСЃС‚СѓРїРЅС‹Рµ РїСЂРµРґР»РѕР¶РµРЅРёСЏ РѕС‚ РїРѕРґРєР»СЋС‡С‘РЅРЅС‹С… РїСЂРѕРІР°Р№РґРµСЂРѕРІ.",
-        "Available games from connected providers.": "Р”РѕСЃС‚СѓРїРЅС‹Рµ РёРіСЂС‹ РѕС‚ РїРѕРґРєР»СЋС‡С‘РЅРЅС‹С… РїСЂРѕРІР°Р№РґРµСЂРѕРІ.",
-        "Available apps from connected providers.": "Р”РѕСЃС‚СѓРїРЅС‹Рµ РїСЂРёР»РѕР¶РµРЅРёСЏ РѕС‚ РїРѕРґРєР»СЋС‡С‘РЅРЅС‹С… РїСЂРѕРІР°Р№РґРµСЂРѕРІ.",
+        "Profile updated successfully.": "Профиль успешно обновлён.",
+        "Choose an earning method and get started.": "Выберите способ заработка и начните.",
+        "Available offers from connected providers.": "Доступные предложения от подключённых провайдеров.",
+        "Available games from connected providers.": "Доступные игры от подключённых провайдеров.",
+        "Available apps from connected providers.": "Доступные приложения от подключённых провайдеров.",
 
-        "Save": "РЎРѕС…СЂР°РЅРёС‚СЊ",
-        "Cancel": "РћС‚РјРµРЅР°",
-        "Back": "РќР°Р·Р°Рґ",
-        "Continue": "РџСЂРѕРґРѕР»Р¶РёС‚СЊ",
-        "Submit": "РћС‚РїСЂР°РІРёС‚СЊ",
-        "Search": "РџРѕРёСЃРє",
-        "Loading": "Р—Р°РіСЂСѓР·РєР°",
-        "Completed": "Р—Р°РІРµСЂС€РµРЅРѕ",
-        "Pending": "Р’ РѕР¶РёРґР°РЅРёРё",
-    "No transactions yet.": "РўСЂР°РЅР·Р°РєС†РёР№ РїРѕРєР° РЅРµС‚.",
-    "Track your completed and pending rewards.": "РћС‚СЃР»РµР¶РёРІР°Р№С‚Рµ РІС‹РїРѕР»РЅРµРЅРЅС‹Рµ Рё РѕР¶РёРґР°СЋС‰РёРµ РЅР°РіСЂР°РґС‹.",
-    "Status": "РЎС‚Р°С‚СѓСЃ",
-        "Available": "Р”РѕСЃС‚СѓРїРЅРѕ",
-"available": "РґРѕСЃС‚СѓРїРЅРѕ",
-        "currently available": "РґРѕСЃС‚СѓРїРЅРѕ СЃРµР№С‡Р°СЃ",
-"Choose from available surveys, offers, games, apps, videos": "Р’С‹Р±РёСЂР°Р№С‚Рµ РґРѕСЃС‚СѓРїРЅС‹Рµ РѕРїСЂРѕСЃС‹, РїСЂРµРґР»РѕР¶РµРЅРёСЏ, РёРіСЂС‹, РїСЂРёР»РѕР¶РµРЅРёСЏ Рё РІРёРґРµРѕ",
-"and verified website tasks.": "Рё РїСЂРѕРІРµСЂРµРЅРЅС‹Рµ Р·Р°РґР°РЅРёСЏ РЅР° СЃР°Р№С‚Р°С….",
-"Browse tasks": "РџРѕСЃРјРѕС‚СЂРµС‚СЊ Р·Р°РґР°РЅРёСЏ",
-"View rewards": "РџРѕСЃРјРѕС‚СЂРµС‚СЊ РЅР°РіСЂР°РґС‹",
-"Share your opinion through paid research surveys when inventory is available.": "Р”РµР»РёС‚РµСЃСЊ СЃРІРѕРёРј РјРЅРµРЅРёРµРј РІ РѕРїР»Р°С‡РёРІР°РµРјС‹С… РёСЃСЃР»РµРґРѕРІР°С‚РµР»СЊСЃРєРёС… РѕРїСЂРѕСЃР°С… РїСЂРё РЅР°Р»РёС‡РёРё РґРѕСЃС‚СѓРїРЅС‹С… РїСЂРµРґР»РѕР¶РµРЅРёР№.",
-"Explore surveys": "РџРѕСЃРјРѕС‚СЂРµС‚СЊ РѕРїСЂРѕСЃС‹",
-"Complete advertiser-approved activities and tracked offers.": "Р’С‹РїРѕР»РЅСЏР№С‚Рµ РѕРґРѕР±СЂРµРЅРЅС‹Рµ СЂРµРєР»Р°РјРѕРґР°С‚РµР»СЏРјРё Р°РєС‚РёРІРЅРѕСЃС‚Рё Рё РѕС‚СЃР»РµР¶РёРІР°РµРјС‹Рµ РїСЂРµРґР»РѕР¶РµРЅРёСЏ.",
-"Explore offers": "РџРѕСЃРјРѕС‚СЂРµС‚СЊ РїСЂРµРґР»РѕР¶РµРЅРёСЏ",
-"Explore games": "РџРѕСЃРјРѕС‚СЂРµС‚СЊ РёРіСЂС‹",
-"Explore apps": "РџРѕСЃРјРѕС‚СЂРµС‚СЊ РїСЂРёР»РѕР¶РµРЅРёСЏ",
-"Watch approved video activities when available.": "РЎРјРѕС‚СЂРёС‚Рµ РѕРґРѕР±СЂРµРЅРЅС‹Рµ РІРёРґРµРѕ РїСЂРё РЅР°Р»РёС‡РёРё РґРѕСЃС‚СѓРїРЅС‹С… Р°РєС‚РёРІРЅРѕСЃС‚РµР№.",
-"Explore videos": "РџРѕСЃРјРѕС‚СЂРµС‚СЊ РІРёРґРµРѕ",
-"Micro Tasks": "РњРёРєСЂРѕР·Р°РґР°РЅРёСЏ",
+        "Save": "Сохранить",
+        "Cancel": "Отмена",
+        "Back": "Назад",
+        "Continue": "Продолжить",
+        "Submit": "Отправить",
+        "Search": "Поиск",
+        "Loading": "Загрузка",
+        "Completed": "Завершено",
+        "Pending": "В ожидании",
+    "No transactions yet.": "Транзакций пока нет.",
+    "Track your completed and pending rewards.": "Отслеживайте выполненные и ожидающие награды.",
+    "Status": "Статус",
+        "Available": "Доступно",
+"available": "доступно",
+        "currently available": "доступно сейчас",
+"Choose from available surveys, offers, games, apps, videos": "Выбирайте доступные опросы, предложения, игры, приложения и видео",
+"and verified website tasks.": "и проверенные задания на сайтах.",
+"Browse tasks": "Посмотреть задания",
+"View rewards": "Посмотреть награды",
+"Share your opinion through paid research surveys when inventory is available.": "Делитесь своим мнением в оплачиваемых исследовательских опросах при наличии доступных предложений.",
+"Explore surveys": "Посмотреть опросы",
+"Complete advertiser-approved activities and tracked offers.": "Выполняйте одобренные рекламодателями активности и отслеживаемые предложения.",
+"Explore offers": "Посмотреть предложения",
+"Explore games": "Посмотреть игры",
+"Explore apps": "Посмотреть приложения",
+"Watch approved video activities when available.": "Смотрите одобренные видео при наличии доступных активностей.",
+"Explore videos": "Посмотреть видео",
+"Micro Tasks": "Микрозадания",
 "Explore rewards, referrals and other earning sections to see what is currently available.": "Р ВР В·РЎС“РЎвЂЎР В°Р в„–РЎвЂљР Вµ Р Р…Р В°Р С–РЎР‚Р В°Р Т‘РЎвЂ№, РЎР‚Р ВµРЎвЂћР ВµРЎР‚Р В°Р В»РЎРЉР Р…РЎС“РЎР‹ Р С—РЎР‚Р С•Р С–РЎР‚Р В°Р СР СРЎС“ Р С‘ Р Т‘РЎР‚РЎС“Р С–Р С‘Р Вµ РЎР‚Р В°Р В·Р Т‘Р ВµР В»РЎвЂ№ Р В·Р В°РЎР‚Р В°Р В±Р С•РЎвЂљР С”Р В°, РЎвЂЎРЎвЂљР С•Р В±РЎвЂ№ Р Р†Р С‘Р Т‘Р ВµРЎвЂљРЎРЉ Р Т‘Р С•РЎРѓРЎвЂљРЎС“Р С—Р Р…РЎвЂ№Р Вµ Р Р†Р С•Р В·Р СР С•Р В¶Р Р…Р С•РЎРѓРЎвЂљР С‘.",
-        "Total": "Р’СЃРµРіРѕ",
-        "Today": "РЎРµРіРѕРґРЅСЏ",
-        "Yesterday": "Р’С‡РµСЂР°",
-        "This week": "РќР° СЌС‚РѕР№ РЅРµРґРµР»Рµ",
-        "This month": "Р’ СЌС‚РѕРј РјРµСЃСЏС†Рµ",
+        "Total": "Всего",
+        "Today": "Сегодня",
+        "Yesterday": "Вчера",
+        "This week": "На этой неделе",
+        "This month": "В этом месяце",
 
-        "Welcome": "Р”РѕР±СЂРѕ РїРѕР¶Р°Р»РѕРІР°С‚СЊ",
-        "Welcome back": "РЎ РІРѕР·РІСЂР°С‰РµРЅРёРµРј",
-        "Your balance": "Р’Р°С€ Р±Р°Р»Р°РЅСЃ",
-        "Start earning": "РќР°С‡Р°С‚СЊ Р·Р°СЂР°Р±Р°С‚С‹РІР°С‚СЊ",
-        "Earn money": "Р—Р°СЂР°Р±Р°С‚С‹РІР°С‚СЊ РґРµРЅСЊРіРё",
-        "Earn more": "Р—Р°СЂР°Р±Р°С‚С‹РІР°С‚СЊ Р±РѕР»СЊС€Рµ",
-        "Your rewards": "Р’Р°С€Рё РЅР°РіСЂР°РґС‹",
-        "Your activity": "Р’Р°С€Р° Р°РєС‚РёРІРЅРѕСЃС‚СЊ",
-        "Your referrals": "Р’Р°С€Рё СЂРµС„РµСЂР°Р»С‹",
+        "Welcome": "Добро пожаловать",
+        "Welcome back": "С возвращением",
+        "Your balance": "Ваш баланс",
+        "Start earning": "Начать зарабатывать",
+        "Earn money": "Зарабатывать деньги",
+        "Earn more": "Зарабатывать больше",
+        "Your rewards": "Ваши награды",
+        "Your activity": "Ваша активность",
+        "Your referrals": "Ваши рефералы",
 
-        "Your EasySurf Dashboard": "Р’Р°С€Р° РїР°РЅРµР»СЊ EasySurf",
-        "Earn now": "Р—Р°СЂР°Р±РѕС‚Р°С‚СЊ СЃРµР№С‡Р°СЃ",
-        "Available balance": "Р”РѕСЃС‚СѓРїРЅС‹Р№ Р±Р°Р»Р°РЅСЃ",
-        "Earned today": "Р—Р°СЂР°Р±РѕС‚Р°РЅРѕ СЃРµРіРѕРґРЅСЏ",
-        "Pending rewards": "РћР¶РёРґР°СЋС‰РёРµ РЅР°РіСЂР°РґС‹",
-        "Tasks completed": "Р’С‹РїРѕР»РЅРµРЅРѕ Р·Р°РґР°РЅРёР№",
-        "Daily target": "Р”РЅРµРІРЅР°СЏ С†РµР»СЊ",
-        "Today's earning goal": "Р”РЅРµРІРЅР°СЏ С†РµР»СЊ Р·Р°СЂР°Р±РѕС‚РєР°",
-        "Keep completing available activities to grow your balance.": "РџСЂРѕРґРѕР»Р¶Р°Р№С‚Рµ РІС‹РїРѕР»РЅСЏС‚СЊ РґРѕСЃС‚СѓРїРЅС‹Рµ Р·Р°РґР°РЅРёСЏ, С‡С‚РѕР±С‹ СѓРІРµР»РёС‡РёС‚СЊ Р±Р°Р»Р°РЅСЃ.",
-        "Quick access": "Р‘С‹СЃС‚СЂС‹Р№ РґРѕСЃС‚СѓРї",
-        "View all": "РџРѕСЃРјРѕС‚СЂРµС‚СЊ РІСЃРµ",
-        "Surveys": "РћРїСЂРѕСЃС‹",
-        "Paid research surveys when inventory is available.": "РћРїР»Р°С‡РёРІР°РµРјС‹Рµ РёСЃСЃР»РµРґРѕРІР°С‚РµР»СЊСЃРєРёРµ РѕРїСЂРѕСЃС‹ РїСЂРё РЅР°Р»РёС‡РёРё РґРѕСЃС‚СѓРїРЅС‹С… РїСЂРµРґР»РѕР¶РµРЅРёР№.",
-        "View surveys": "РџРѕСЃРјРѕС‚СЂРµС‚СЊ РѕРїСЂРѕСЃС‹",
-        "Offers": "РџСЂРµРґР»РѕР¶РµРЅРёСЏ",
-        "Advertiser offers and tracked activities.": "РџСЂРµРґР»РѕР¶РµРЅРёСЏ СЂРµРєР»Р°РјРѕРґР°С‚РµР»РµР№ Рё РѕС‚СЃР»РµР¶РёРІР°РµРјС‹Рµ Р°РєС‚РёРІРЅРѕСЃС‚Рё.",
-        "View offers": "РџРѕСЃРјРѕС‚СЂРµС‚СЊ РїСЂРµРґР»РѕР¶РµРЅРёСЏ",
+        "Your EasySurf Dashboard": "Ваша панель EasySurf",
+        "Earn now": "Заработать сейчас",
+        "Available balance": "Доступный баланс",
+        "Earned today": "Заработано сегодня",
+        "Pending rewards": "Ожидающие награды",
+        "Tasks completed": "Выполнено заданий",
+        "Daily target": "Дневная цель",
+        "Today's earning goal": "Дневная цель заработка",
+        "Keep completing available activities to grow your balance.": "Продолжайте выполнять доступные задания, чтобы увеличить баланс.",
+        "Quick access": "Быстрый доступ",
+        "View all": "Посмотреть все",
+        "Surveys": "Опросы",
+        "Paid research surveys when inventory is available.": "Оплачиваемые исследовательские опросы при наличии доступных предложений.",
+        "View surveys": "Посмотреть опросы",
+        "Offers": "Предложения",
+        "Advertiser offers and tracked activities.": "Предложения рекламодателей и отслеживаемые активности.",
+        "View offers": "Посмотреть предложения",
         "Games": "Р ВР С–РЎР‚РЎвЂ№",
         "Play approved games and reach milestones.": "Р ВР С–РЎР‚Р В°Р в„–РЎвЂљР Вµ Р Р† Р С•Р Т‘Р С•Р В±РЎР‚Р ВµР Р…Р Р…РЎвЂ№Р Вµ Р С‘Р С–РЎР‚РЎвЂ№ Р С‘ Р Р†РЎвЂ№Р С—Р С•Р В»Р Р…РЎРЏР в„–РЎвЂљР Вµ РЎвЂ Р ВµР В»Р С‘.",
-        "View games": "РџРѕСЃРјРѕС‚СЂРµС‚СЊ РёРіСЂС‹",
-        "Apps": "РџСЂРёР»РѕР¶РµРЅРёСЏ",
-        "Discover tracked app opportunities.": "РќР°С…РѕРґРёС‚Рµ РґРѕСЃС‚СѓРїРЅС‹Рµ РїСЂРµРґР»РѕР¶РµРЅРёСЏ СЃ РѕС‚СЃР»РµР¶РёРІР°РЅРёРµРј РїСЂРёР»РѕР¶РµРЅРёР№.",
-        "View apps": "РџРѕСЃРјРѕС‚СЂРµС‚СЊ РїСЂРёР»РѕР¶РµРЅРёСЏ",
-        "Available now": "Р”РѕСЃС‚СѓРїРЅРѕ СЃРµР№С‡Р°СЃ",
-        "Website Tasks": "Р—Р°РґР°РЅРёСЏ РЅР° СЃР°Р№С‚Р°С…",
-        "Browse earning options": "РџСЂРѕСЃРјРѕС‚СЂРµС‚СЊ РІР°СЂРёР°РЅС‚С‹ Р·Р°СЂР°Р±РѕС‚РєР°",
-        "Your account": "Р’Р°С€ Р°РєРєР°СѓРЅС‚",
-        "Recent Activity": "РџРѕСЃР»РµРґРЅСЏСЏ Р°РєС‚РёРІРЅРѕСЃС‚СЊ",
-        "No activity yet. Start earning to see your transactions here.": "РђРєС‚РёРІРЅРѕСЃС‚Рё РїРѕРєР° РЅРµС‚. РќР°С‡РЅРёС‚Рµ Р·Р°СЂР°Р±Р°С‚С‹РІР°С‚СЊ, С‡С‚РѕР±С‹ СѓРІРёРґРµС‚СЊ Р·РґРµСЃСЊ СЃРІРѕРё РѕРїРµСЂР°С†РёРё.",
-        "Activity": "РђРєС‚РёРІРЅРѕСЃС‚СЊ",
-        "Amount": "РЎСѓРјРјР°",
-        "Goal": "Р¦РµР»СЊ",
-        "earned today": "Р·Р°СЂР°Р±РѕС‚Р°РЅРѕ СЃРµРіРѕРґРЅСЏ",
-"Today's earning goal": "Р”РЅРµРІРЅР°СЏ С†РµР»СЊ Р·Р°СЂР°Р±РѕС‚РєР°",
-"No website tasks available": "Р—Р°РґР°РЅРёР№ РЅР° СЃР°Р№С‚Р°С… РїРѕРєР° РЅРµС‚",
-"New tasks may appear later. Explore other earning categories in the meantime.": "РќРѕРІС‹Рµ Р·Р°РґР°РЅРёСЏ РјРѕРіСѓС‚ РїРѕСЏРІРёС‚СЊСЃСЏ РїРѕР·Р¶Рµ. Рђ РїРѕРєР° РёР·СѓС‡РёС‚Рµ РґСЂСѓРіРёРµ РєР°С‚РµРіРѕСЂРёРё Р·Р°СЂР°Р±РѕС‚РєР°.",
-"Explore Earn в†’": "РџРµСЂРµР№С‚Рё Рє Р·Р°СЂР°Р±РѕС‚РєСѓ в†’",
-"Keep going": "РџСЂРѕРґРѕР»Р¶Р°Р№С‚Рµ",
-"There are more ways to earn": "Р•СЃС‚СЊ Рё РґСЂСѓРіРёРµ СЃРїРѕСЃРѕР±С‹ Р·Р°СЂР°Р±РѕС‚РєР°",
+        "View games": "Посмотреть игры",
+        "Apps": "Приложения",
+        "Discover tracked app opportunities.": "Находите доступные предложения с отслеживанием приложений.",
+        "View apps": "Посмотреть приложения",
+        "Available now": "Доступно сейчас",
+        "Website Tasks": "Задания на сайтах",
+        "Browse earning options": "Просмотреть варианты заработка",
+        "Your account": "Ваш аккаунт",
+        "Recent Activity": "Последняя активность",
+        "No activity yet. Start earning to see your transactions here.": "Активности пока нет. Начните зарабатывать, чтобы увидеть здесь свои операции.",
+        "Activity": "Активность",
+        "Amount": "Сумма",
+        "Goal": "Цель",
+        "earned today": "заработано сегодня",
+"Today's earning goal": "Дневная цель заработка",
+"No website tasks available": "Заданий на сайтах пока нет",
+"New tasks may appear later. Explore other earning categories in the meantime.": "Новые задания могут появиться позже. А пока изучите другие категории заработка.",
+"Explore Earn →": "Перейти к заработку →",
+"Keep going": "Продолжайте",
+"There are more ways to earn": "Есть и другие способы заработка",
 "Explore all available earning categories and keep your activity growing.": "Р ВР В·РЎС“РЎвЂЎР С‘РЎвЂљР Вµ Р Р†РЎРѓР Вµ Р Т‘Р С•РЎРѓРЎвЂљРЎС“Р С—Р Р…РЎвЂ№Р Вµ Р С”Р В°РЎвЂљР ВµР С–Р С•РЎР‚Р С‘Р С‘ Р В·Р В°РЎР‚Р В°Р В±Р С•РЎвЂљР С”Р В° Р С‘ Р С—РЎР‚Р С•Р Т‘Р С•Р В»Р В¶Р В°Р в„–РЎвЂљР Вµ РЎС“Р Р†Р ВµР В»Р С‘РЎвЂЎР С‘Р Р†Р В°РЎвЂљРЎРЉ РЎРѓР Р†Р С•РЎР‹ Р В°Р С”РЎвЂљР С‘Р Р†Р Р…Р С•РЎРѓРЎвЂљРЎРЉ.",
-"Explore earning": "РџРµСЂРµР№С‚Рё Рє Р·Р°СЂР°Р±РѕС‚РєСѓ",
-"No website tasks available right now": "Р—Р°РґР°РЅРёР№ РЅР° СЃР°Р№С‚Р°С… СЃРµР№С‡Р°СЃ РЅРµС‚",
-"There are currently no available website tasks for your account.": "Р’ РЅР°СЃС‚РѕСЏС‰РµРµ РІСЂРµРјСЏ РґР»СЏ РІР°С€РµРіРѕ Р°РєРєР°СѓРЅС‚Р° РЅРµС‚ РґРѕСЃС‚СѓРїРЅС‹С… Р·Р°РґР°РЅРёР№ РЅР° СЃР°Р№С‚Р°С….",
-"reach your daily goal and unlock more rewards.": "РґРѕСЃС‚РёРіР°Р№С‚Рµ РґРЅРµРІРЅРѕР№ С†РµР»Рё Рё РѕС‚РєСЂС‹РІР°Р№С‚Рµ РґРѕРїРѕР»РЅРёС‚РµР»СЊРЅС‹Рµ РЅР°РіСЂР°РґС‹.",
-"Daily Goal": "Р”РЅРµРІРЅР°СЏ С†РµР»СЊ",
-"Keep completing eligible activities to increase your progress toward the daily earning goal.": "РџСЂРѕРґРѕР»Р¶Р°Р№С‚Рµ РІС‹РїРѕР»РЅСЏС‚СЊ РґРѕСЃС‚СѓРїРЅС‹Рµ Р·Р°РґР°РЅРёСЏ, С‡С‚РѕР±С‹ СѓРІРµР»РёС‡РёРІР°С‚СЊ РїСЂРѕРіСЂРµСЃСЃ Рє РґРЅРµРІРЅРѕР№ С†РµР»Рё Р·Р°СЂР°Р±РѕС‚РєР°.",
+"Explore earning": "Перейти к заработку",
+"No website tasks available right now": "Заданий на сайтах сейчас нет",
+"There are currently no available website tasks for your account.": "В настоящее время для вашего аккаунта нет доступных заданий на сайтах.",
+"reach your daily goal and unlock more rewards.": "достигайте дневной цели и открывайте дополнительные награды.",
+"Daily Goal": "Дневная цель",
+"Keep completing eligible activities to increase your progress toward the daily earning goal.": "Продолжайте выполнять доступные задания, чтобы увеличивать прогресс к дневной цели заработка.",
 
-        "No data available": "РќРµС‚ РґРѕСЃС‚СѓРїРЅС‹С… РґР°РЅРЅС‹С…",
-        "No offers available": "РќРµС‚ РґРѕСЃС‚СѓРїРЅС‹С… РїСЂРµРґР»РѕР¶РµРЅРёР№",
-        "Earn online. Your way.": "Р—Р°СЂР°Р±Р°С‚С‹РІР°Р№С‚Рµ РѕРЅР»Р°Р№РЅ. РџРѕ-СЃРІРѕРµРјСѓ.",
-        "Complete surveys, offers, games, app activities and simple tasks from one modern rewards platform.": "РџСЂРѕС…РѕРґРёС‚Рµ РѕРїСЂРѕСЃС‹, РІС‹РїРѕР»РЅСЏР№С‚Рµ РїСЂРµРґР»РѕР¶РµРЅРёСЏ, РёРіСЂР°Р№С‚Рµ, РёСЃРїРѕР»СЊР·СѓР№С‚Рµ РїСЂРёР»РѕР¶РµРЅРёСЏ Рё РІС‹РїРѕР»РЅСЏР№С‚Рµ РїСЂРѕСЃС‚С‹Рµ Р·Р°РґР°РЅРёСЏ РЅР° РѕРґРЅРѕР№ СЃРѕРІСЂРµРјРµРЅРЅРѕР№ РїР»Р°С‚С„РѕСЂРјРµ.",
-        "Simple tasks": "РџСЂРѕСЃС‚С‹Рµ Р·Р°РґР°РЅРёСЏ",
-        "Daily rewards": "Р•Р¶РµРґРЅРµРІРЅС‹Рµ РЅР°РіСЂР°РґС‹",
-        "Referral bonuses": "Р РµС„РµСЂР°Р»СЊРЅС‹Рµ Р±РѕРЅСѓСЃС‹",
-        "Platform": "РџР»Р°С‚С„РѕСЂРјР°",
-        "Everything in one place": "Р’СЃС‘ РІ РѕРґРЅРѕРј РјРµСЃС‚Рµ",
-        "Choose an earning method and get started.": "Р’С‹Р±РµСЂРёС‚Рµ СЃРїРѕСЃРѕР± Р·Р°СЂР°Р±РѕС‚РєР° Рё РЅР°С‡РЅРёС‚Рµ.",
-        "Paid research surveys when real inventory is available.": "РћРїР»Р°С‡РёРІР°РµРјС‹Рµ РёСЃСЃР»РµРґРѕРІР°С‚РµР»СЊСЃРєРёРµ РѕРїСЂРѕСЃС‹ РїСЂРё РЅР°Р»РёС‡РёРё РґРѕСЃС‚СѓРїРЅС‹С… РїСЂРµРґР»РѕР¶РµРЅРёР№.",
-        "Advertiser-approved offers and tracked activities.": "РџСЂРµРґР»РѕР¶РµРЅРёСЏ РѕС‚ СЂРµРєР»Р°РјРѕРґР°С‚РµР»РµР№ Рё РѕС‚СЃР»РµР¶РёРІР°РµРјС‹Рµ Р°РєС‚РёРІРЅРѕСЃС‚Рё.",
-        "Game-based rewards through approved providers.": "РќР°РіСЂР°РґС‹ Р·Р° РёРіСЂС‹ С‡РµСЂРµР· РїСЂРѕРІРµСЂРµРЅРЅС‹С… РїСЂРѕРІР°Р№РґРµСЂРѕРІ.",
-        "App-based earning opportunities.": "Р’РѕР·РјРѕР¶РЅРѕСЃС‚Рё Р·Р°СЂР°Р±РѕС‚РєР° С‡РµСЂРµР· РїСЂРёР»РѕР¶РµРЅРёСЏ.",
-        "Watch approved video tasks and activities.": "РЎРјРѕС‚СЂРёС‚Рµ РѕРґРѕР±СЂРµРЅРЅС‹Рµ РІРёРґРµРѕ Рё РІС‹РїРѕР»РЅСЏР№С‚Рµ РґРѕСЃС‚СѓРїРЅС‹Рµ Р°РєС‚РёРІРЅРѕСЃС‚Рё.",
-        "Complete verified website and microtasks.": "Р’С‹РїРѕР»РЅСЏР№С‚Рµ РїСЂРѕРІРµСЂРµРЅРЅС‹Рµ Р·Р°РґР°РЅРёСЏ РЅР° СЃР°Р№С‚Р°С… Рё РјРёРєСЂРѕР·Р°РґР°РЅРёСЏ.",
-        "Ready when you are": "Р“РѕС‚РѕРІС‹ РЅР°С‡Р°С‚СЊ?",
-        "Start building your rewards balance": "РќР°С‡РЅРёС‚Рµ СѓРІРµР»РёС‡РёРІР°С‚СЊ СЃРІРѕР№ Р±Р°Р»Р°РЅСЃ РЅР°РіСЂР°Рґ",
-        "Create free account в†’": "Р РЋР С•Р В·Р Т‘Р В°РЎвЂљРЎРЉ Р В±Р ВµРЎРѓР С—Р В»Р В°РЎвЂљР Р…РЎвЂ№Р в„– Р В°Р С”Р С”Р В°РЎС“Р Р…РЎвЂљ в†’",
-        "Explore в†’": "РџРµСЂРµР№С‚Рё в†’",
-        "Start в†’": "Р СњР В°РЎвЂЎР В°РЎвЂљРЎРЉ в†’",
-        "Videos": "Р’РёРґРµРѕ",
-        "Tasks": "Р—Р°РґР°РЅРёСЏ",
-        "Watch approved video tasks and activities.": "РЎРјРѕС‚СЂРёС‚Рµ РѕРґРѕР±СЂРµРЅРЅС‹Рµ РІРёРґРµРѕ Рё РІС‹РїРѕР»РЅСЏР№С‚Рµ РґРѕСЃС‚СѓРїРЅС‹Рµ Р°РєС‚РёРІРЅРѕСЃС‚Рё.",
-        "Complete verified website and microtasks.": "Р’С‹РїРѕР»РЅСЏР№С‚Рµ РїСЂРѕРІРµСЂРµРЅРЅС‹Рµ Р·Р°РґР°РЅРёСЏ РЅР° СЃР°Р№С‚Р°С… Рё РјРёРєСЂРѕР·Р°РґР°РЅРёСЏ.",
-        "Home": "Р“Р»Р°РІРЅР°СЏ",
-        "Dashboard": "РџР°РЅРµР»СЊ СѓРїСЂР°РІР»РµРЅРёСЏ",
-        "Earn": "Р—Р°СЂР°Р±РѕС‚РѕРє",
-        "Rewards": "РќР°РіСЂР°РґС‹",
-        "Offers": "РџСЂРµРґР»РѕР¶РµРЅРёСЏ",
-        "Surveys": "РћРїСЂРѕСЃС‹",
-        "Videos": "Р’РёРґРµРѕ",
-        "Company": "РљРѕРјРїР°РЅРёСЏ",
-        "Support": "РџРѕРґРґРµСЂР¶РєР°",
-        "About Us": "Рћ РЅР°СЃ",
-        "Contact": "РљРѕРЅС‚Р°РєС‚С‹",
-        "Referrals": "Р РµС„РµСЂР°Р»С‹",
-        "Payouts": "Р’С‹РІРѕРґ СЃСЂРµРґСЃС‚РІ",
-        "FAQ": "Р§Р°СЃС‚С‹Рµ РІРѕРїСЂРѕСЃС‹",
-        "Help Center": "Р¦РµРЅС‚СЂ РїРѕРјРѕС‰Рё",
-        "Contact Support": "РЎРІСЏР·Р°С‚СЊСЃСЏ СЃ РїРѕРґРґРµСЂР¶РєРѕР№",
-        "Terms of Service": "РЈСЃР»РѕРІРёСЏ РёСЃРїРѕР»СЊР·РѕРІР°РЅРёСЏ",
-        "Terms": "РЈСЃР»РѕРІРёСЏ",
-        "All rights reserved.": "Р’СЃРµ РїСЂР°РІР° Р·Р°С‰РёС‰РµРЅС‹.",
-        "Earn online by completing verified activities, offers, surveys, games and other available tasks.": "Р—Р°СЂР°Р±Р°С‚С‹РІР°Р№С‚Рµ РѕРЅР»Р°Р№РЅ, РІС‹РїРѕР»РЅСЏСЏ РїСЂРѕРІРµСЂРµРЅРЅС‹Рµ Р°РєС‚РёРІРЅРѕСЃС‚Рё, РїСЂРµРґР»РѕР¶РµРЅРёСЏ, РѕРїСЂРѕСЃС‹, РёРіСЂС‹ Рё РґСЂСѓРіРёРµ РґРѕСЃС‚СѓРїРЅС‹Рµ Р·Р°РґР°РЅРёСЏ.",
-        "No games available": "РќРµС‚ РґРѕСЃС‚СѓРїРЅС‹С… РёРіСЂ",
-        "No apps available": "РќРµС‚ РґРѕСЃС‚СѓРїРЅС‹С… РїСЂРёР»РѕР¶РµРЅРёР№",
-        "No tasks available": "РќРµС‚ РґРѕСЃС‚СѓРїРЅС‹С… Р·Р°РґР°РЅРёР№",
+        "No data available": "Нет доступных данных",
+        "No offers available": "Нет доступных предложений",
+        "Earn online. Your way.": "Зарабатывайте онлайн. По-своему.",
+        "Complete surveys, offers, games, app activities and simple tasks from one modern rewards platform.": "Проходите опросы, выполняйте предложения, играйте, используйте приложения и выполняйте простые задания на одной современной платформе.",
+        "Simple tasks": "Простые задания",
+        "Daily rewards": "Ежедневные награды",
+        "Referral bonuses": "Реферальные бонусы",
+        "Platform": "Платформа",
+        "Everything in one place": "Всё в одном месте",
+        "Choose an earning method and get started.": "Выберите способ заработка и начните.",
+        "Paid research surveys when real inventory is available.": "Оплачиваемые исследовательские опросы при наличии доступных предложений.",
+        "Advertiser-approved offers and tracked activities.": "Предложения от рекламодателей и отслеживаемые активности.",
+        "Game-based rewards through approved providers.": "Награды за игры через проверенных провайдеров.",
+        "App-based earning opportunities.": "Возможности заработка через приложения.",
+        "Watch approved video tasks and activities.": "Смотрите одобренные видео и выполняйте доступные активности.",
+        "Complete verified website and microtasks.": "Выполняйте проверенные задания на сайтах и микрозадания.",
+        "Ready when you are": "Готовы начать?",
+        "Start building your rewards balance": "Начните увеличивать свой баланс наград",
+        "Create free account →": "РЎРѕР·РґР°С‚СЊ Р±РµСЃРїР»Р°С‚РЅС‹Р№ Р°РєРєР°СѓРЅС‚ →",
+        "Explore →": "Перейти →",
+        "Start →": "РќР°С‡Р°С‚СЊ →",
+        "Videos": "Видео",
+        "Tasks": "Задания",
+        "Watch approved video tasks and activities.": "Смотрите одобренные видео и выполняйте доступные активности.",
+        "Complete verified website and microtasks.": "Выполняйте проверенные задания на сайтах и микрозадания.",
+        "Home": "Главная",
+        "Dashboard": "Панель управления",
+        "Earn": "Заработок",
+        "Rewards": "Награды",
+        "Offers": "Предложения",
+        "Surveys": "Опросы",
+        "Videos": "Видео",
+        "Company": "Компания",
+        "Support": "Поддержка",
+        "About Us": "О нас",
+        "Contact": "Контакты",
+        "Referrals": "Рефералы",
+        "Payouts": "Вывод средств",
+        "FAQ": "Частые вопросы",
+        "Help Center": "Центр помощи",
+        "Contact Support": "Связаться с поддержкой",
+        "Terms of Service": "Условия использования",
+        "Terms": "Условия",
+        "All rights reserved.": "Все права защищены.",
+        "Earn online by completing verified activities, offers, surveys, games and other available tasks.": "Зарабатывайте онлайн, выполняя проверенные активности, предложения, опросы, игры и другие доступные задания.",
+        "No games available": "Нет доступных игр",
+        "No apps available": "Нет доступных приложений",
+        "No tasks available": "Нет доступных заданий",
 
-        "Sign in": "Р’РѕР№С‚Рё",
-        "Sign up": "Р—Р°СЂРµРіРёСЃС‚СЂРёСЂРѕРІР°С‚СЊСЃСЏ",
-        "Password": "РџР°СЂРѕР»СЊ",
-        "Confirm password": "РџРѕРґС‚РІРµСЂРґРёС‚Рµ РїР°СЂРѕР»СЊ",
-        "Remember me": "Р—Р°РїРѕРјРЅРёС‚СЊ РјРµРЅСЏ",
-        "Forgot password?": "Р—Р°Р±С‹Р»Рё РїР°СЂРѕР»СЊ?",
-        "Don't have an account?": "РќРµС‚ Р°РєРєР°СѓРЅС‚Р°?",
-        "Already have an account?": "РЈР¶Рµ РµСЃС‚СЊ Р°РєРєР°СѓРЅС‚?",
+        "Sign in": "Войти",
+        "Sign up": "Зарегистрироваться",
+        "Password": "Пароль",
+        "Confirm password": "Подтвердите пароль",
+        "Remember me": "Запомнить меня",
+        "Forgot password?": "Забыли пароль?",
+        "Don't have an account?": "Нет аккаунта?",
+        "Already have an account?": "Уже есть аккаунт?",
 
-        "Invite friends": "РџСЂРёРіР»Р°СЃРёС‚СЊ РґСЂСѓР·РµР№",
-        "Referral program": "Р РµС„РµСЂР°Р»СЊРЅР°СЏ РїСЂРѕРіСЂР°РјРјР°",
-        "Your referral link": "Р’Р°С€Р° СЂРµС„РµСЂР°Р»СЊРЅР°СЏ СЃСЃС‹Р»РєР°",
-        "Copy": "РљРѕРїРёСЂРѕРІР°С‚СЊ",
-        "Copied": "РЎРєРѕРїРёСЂРѕРІР°РЅРѕ",
+        "Invite friends": "Пригласить друзей",
+        "Referral program": "Реферальная программа",
+        "Your referral link": "Ваша реферальная ссылка",
+        "Copy": "Копировать",
+        "Copied": "Скопировано",
 
-        "Request payout": "Р—Р°РїСЂРѕСЃРёС‚СЊ РІС‹РїР»Р°С‚Сѓ",
+        "Request payout": "Запросить выплату",
         "Payout history": "Р ВРЎРѓРЎвЂљР С•РЎР‚Р С‘РЎРЏ Р Р†РЎвЂ№Р С—Р В»Р В°РЎвЂљ",
-        "Minimum payout": "РњРёРЅРёРјР°Р»СЊРЅР°СЏ СЃСѓРјРјР° РІС‹РїР»Р°С‚С‹",
-        "Payment method": "РЎРїРѕСЃРѕР± РѕРїР»Р°С‚С‹",
+        "Minimum payout": "Минимальная сумма выплаты",
+        "Payment method": "Способ оплаты",
 
-        "Home": "Р“Р»Р°РІРЅР°СЏ",
-        "About": "Рћ РЅР°СЃ",
-        "Contact": "РљРѕРЅС‚Р°РєС‚С‹",
-        "Privacy": "РљРѕРЅС„РёРґРµРЅС†РёР°Р»СЊРЅРѕСЃС‚СЊ",
-        "Terms": "РЈСЃР»РѕРІРёСЏ",
-        "Help": "РџРѕРјРѕС‰СЊ",
+        "Home": "Главная",
+        "About": "О нас",
+        "Contact": "Контакты",
+        "Privacy": "Конфиденциальность",
+        "Terms": "Условия",
+        "Help": "Помощь",
     },
 
     "it": {
@@ -721,27 +721,27 @@ LANGUAGE_TRANSLATIONS = {
         "Available balance": "Saldo disponibile",
         "Earned today": "Guadagnato oggi",
         "Pending rewards": "Ricompense in sospeso",
-        "Tasks completed": "AttivitР“В  completate",
+        "Tasks completed": "AttivitГ  completate",
         "Daily target": "Obiettivo giornaliero",
         "Today's earning goal": "Obiettivo di guadagno di oggi",
-        "Keep completing available activities to grow your balance.": "Continua a completare le attivitР“В  disponibili per aumentare il tuo saldo.",
+        "Keep completing available activities to grow your balance.": "Continua a completare le attivitГ  disponibili per aumentare il tuo saldo.",
         "Quick access": "Accesso rapido",
         "View all": "Visualizza tutto",
         "Surveys": "Sondaggi",
         "Paid research surveys when inventory is available.": "Sondaggi di ricerca retribuiti quando sono disponibili.",
         "View surveys": "Visualizza sondaggi",
-        "Advertiser offers and tracked activities.": "Offerte degli inserzionisti e attivitР“В  monitorate.",
+        "Advertiser offers and tracked activities.": "Offerte degli inserzionisti e attivitГ  monitorate.",
         "View offers": "Visualizza offerte",
         "Play approved games and reach milestones.": "Gioca ai giochi approvati e raggiungi gli obiettivi.",
         "View games": "Visualizza giochi",
-        "Discover tracked app opportunities.": "Scopri le opportunitР“В  delle app monitorate.",
+        "Discover tracked app opportunities.": "Scopri le opportunitГ  delle app monitorate.",
         "View apps": "Visualizza app",
         "Available now": "Disponibile ora",
-        "Website Tasks": "AttivitР“В  sul sito web",
+        "Website Tasks": "AttivitГ  sul sito web",
         "Browse earning options": "Sfoglia le opzioni di guadagno",
         "Your account": "Il tuo account",
-        "Recent Activity": "AttivitР“В  recente",
-        "No activity yet. Start earning to see your transactions here.": "Nessuna attivitР“В  ancora. Inizia a guadagnare per vedere qui le tue transazioni.",
+        "Recent Activity": "AttivitГ  recente",
+        "No activity yet. Start earning to see your transactions here.": "Nessuna attivitГ  ancora. Inizia a guadagnare per vedere qui le tue transazioni.",
         "Amount": "Importo",
         "Goal": "Obiettivo",
         "earned today": "guadagnato oggi",
@@ -749,7 +749,7 @@ LANGUAGE_TRANSLATIONS = {
         "Profile": "Profilo",
         "Earn": "Guadagna",
         "Rewards": "Ricompense",
-        "Activity": "AttivitР“В ",
+        "Activity": "AttivitГ ",
         "Leaderboard": "Classifica",
         "Referrals": "Referral",
         "Withdraw": "Prelievo",
@@ -757,8 +757,8 @@ LANGUAGE_TRANSLATIONS = {
         "Offers": "Offerte",
         "Games": "Giochi",
         "Apps": "App",
-        "Tasks": "AttivitР“В ",
-        "Microtasks": "MicroattivitР“В ",
+        "Tasks": "AttivitГ ",
+        "Microtasks": "MicroattivitГ ",
         "Login": "Accedi",
         "Register": "Registrati",
         "Get Started": "Inizia",
@@ -781,7 +781,7 @@ LANGUAGE_TRANSLATIONS = {
         "Referral code": "Codice referral",
         "Account ID": "ID account",
         "Admin": "Amministratore",
-        "Yes": "SР“В¬",
+        "Yes": "SГ¬",
         "No": "No",
 
         "English": "Inglese",
@@ -791,10 +791,10 @@ LANGUAGE_TRANSLATIONS = {
         "Japanese": "Giapponese",
         "Turkish": "Turco",
 
-        "Р СѓСЃСЃРєРёР№": "Russo",
+        "Русский": "Russo",
         "Italiano": "Italiano",
         "Deutsch": "Tedesco",
-        "ж—Ґжњ¬иЄћ": "Giapponese",
+        "日本語": "Giapponese",
         "TГјrkГ§e": "Turco",
 
         "Profile updated successfully.": "Profilo aggiornato con successo.",
@@ -824,16 +824,16 @@ LANGUAGE_TRANSLATIONS = {
         "Your balance": "Il tuo saldo",
         "Start earning": "Inizia a guadagnare",
         "Earn money": "Guadagna denaro",
-        "Earn more": "Guadagna di piР“в„–",
+        "Earn more": "Guadagna di piГ№",
         "Your rewards": "Le tue ricompense",
-        "Your activity": "La tua attivitР“В ",
+        "Your activity": "La tua attivitГ ",
         "Your referrals": "I tuoi referral",
 
         "No data available": "Nessun dato disponibile",
         "No offers available": "Nessuna offerta disponibile",
         "No games available": "Nessun gioco disponibile",
         "No apps available": "Nessuna app disponibile",
-        "No tasks available": "Nessuna attivitР“В  disponibile",
+        "No tasks available": "Nessuna attivitГ  disponibile",
 
         "Sign in": "Accedi",
         "Sign up": "Registrati",
@@ -842,7 +842,7 @@ LANGUAGE_TRANSLATIONS = {
         "Remember me": "Ricordami",
         "Forgot password?": "Password dimenticata?",
         "Don't have an account?": "Non hai un account?",
-        "Already have an account?": "Hai giР“В  un account?",
+        "Already have an account?": "Hai giГ  un account?",
 
         "Invite friends": "Invita amici",
         "Referral program": "Programma referral",
@@ -870,17 +870,17 @@ LANGUAGE_TRANSLATIONS = {
         "Earn now": "Jetzt verdienen",
         "Available balance": "VerfГјgbares Guthaben",
         "Earned today": "Heute verdient",
-        "Pending rewards": "Ausstehende PrР“В¤mien",
+        "Pending rewards": "Ausstehende PrГ¤mien",
         "Tasks completed": "Aufgaben abgeschlossen",
         "Daily target": "Tagesziel",
         "Today's earning goal": "Heutiges Verdienstziel",
-        "Keep completing available activities to grow your balance.": "SchlieГџe weiterhin verfГјgbare AktivitГ¤ten ab, um dein Guthaben zu erhГ¶hen.",
+        "Keep completing available activities to grow your balance.": "Schließe weiterhin verfügbare Aktivitäten ab, um dein Guthaben zu erhöhen.",
         "Quick access": "Schnellzugriff",
         "View all": "Alle anzeigen",
         "Surveys": "Umfragen",
         "Paid research surveys when inventory is available.": "Bezahlte Forschungsumfragen, wenn verfГјgbar.",
         "View surveys": "Umfragen anzeigen",
-        "Advertiser offers and tracked activities.": "Werbeangebote und erfasste AktivitР“В¤ten.",
+        "Advertiser offers and tracked activities.": "Werbeangebote und erfasste AktivitГ¤ten.",
         "View offers": "Angebote anzeigen",
         "Play approved games and reach milestones.": "Spiele genehmigte Spiele und erreiche Meilensteine.",
         "View games": "Spiele anzeigen",
@@ -890,8 +890,8 @@ LANGUAGE_TRANSLATIONS = {
         "Website Tasks": "Website-Aufgaben",
         "Browse earning options": "VerdienstmГ¶glichkeiten durchsuchen",
         "Your account": "Dein Konto",
-        "Recent Activity": "Letzte AktivitР“В¤ten",
-        "No activity yet. Start earning to see your transactions here.": "Noch keine AktivitР“В¤ten. Beginne zu verdienen, um deine Transaktionen hier zu sehen.",
+        "Recent Activity": "Letzte AktivitГ¤ten",
+        "No activity yet. Start earning to see your transactions here.": "Noch keine AktivitГ¤ten. Beginne zu verdienen, um deine Transaktionen hier zu sehen.",
         "Amount": "Betrag",
         "Goal": "Ziel",
         "earned today": "heute verdient",
@@ -899,7 +899,7 @@ LANGUAGE_TRANSLATIONS = {
         "Profile": "Profil",
         "Earn": "Verdienen",
         "Rewards": "Belohnungen",
-        "Activity": "AktivitР“В¤t",
+        "Activity": "AktivitГ¤t",
         "Leaderboard": "Rangliste",
         "Referrals": "Empfehlungen",
         "Withdraw": "Auszahlung",
@@ -924,7 +924,7 @@ LANGUAGE_TRANSLATIONS = {
         "Receive notifications": "Benachrichtigungen erhalten",
         "Avatar": "Avatar",
         "Save profile": "Profil speichern",
-        "Save changes": "Р“вЂћnderungen speichern",
+        "Save changes": "Г„nderungen speichern",
 
         "Account": "Konto",
         "Balance": "Guthaben",
@@ -941,14 +941,14 @@ LANGUAGE_TRANSLATIONS = {
         "Japanese": "Japanisch",
         "Turkish": "TГјrkisch",
 
-        "Р СѓСЃСЃРєРёР№": "Russisch",
+        "Русский": "Russisch",
         "Italiano": "Italienisch",
         "Deutsch": "Deutsch",
-        "ж—Ґжњ¬иЄћ": "Japanisch",
+        "日本語": "Japanisch",
         "TГјrkГ§e": "TГјrkisch",
 
         "Profile updated successfully.": "Profil erfolgreich aktualisiert.",
-        "Choose an earning method and get started.": "WР“В¤hle eine Verdienstmethode und beginne.",
+        "Choose an earning method and get started.": "WГ¤hle eine Verdienstmethode und beginne.",
         "Available offers from connected providers.": "VerfГјgbare Angebote von verbundenen Anbietern.",
         "Available games from connected providers.": "VerfГјgbare Spiele von verbundenen Anbietern.",
         "Available apps from connected providers.": "VerfГјgbare Apps von verbundenen Anbietern.",
@@ -976,7 +976,7 @@ LANGUAGE_TRANSLATIONS = {
         "Earn money": "Geld verdienen",
         "Earn more": "Mehr verdienen",
         "Your rewards": "Deine Belohnungen",
-        "Your activity": "Deine AktivitР“В¤t",
+        "Your activity": "Deine AktivitГ¤t",
         "Your referrals": "Deine Empfehlungen",
 
         "No data available": "Keine Daten verfГјgbar",
@@ -988,7 +988,7 @@ LANGUAGE_TRANSLATIONS = {
         "Sign in": "Anmelden",
         "Sign up": "Registrieren",
         "Password": "Passwort",
-        "Confirm password": "Passwort bestР“В¤tigen",
+        "Confirm password": "Passwort bestГ¤tigen",
         "Remember me": "Angemeldet bleiben",
         "Forgot password?": "Passwort vergessen?",
         "Don't have an account?": "Noch kein Konto?",
@@ -1006,7 +1006,7 @@ LANGUAGE_TRANSLATIONS = {
         "Payment method": "Zahlungsmethode",
 
         "Home": "Startseite",
-        "About": "Р“Сљber uns",
+        "About": "Гњber uns",
         "Contact": "Kontakt",
         "Privacy": "Datenschutz",
         "Terms": "Bedingungen",
@@ -1014,19 +1014,19 @@ LANGUAGE_TRANSLATIONS = {
     },
 
     "ja": {
-        "Total earned": "Р·РЊР†РµС•вЂ”Р·В·РЏР№РЋРЊ",
-        "Total paid": "Р¶вЂќР‡Р¶вЂ°вЂўР·В·РЏР№РЋРЊ",
+        "Total earned": "зЌІеѕ—з·ЏйЎЌ",
+        "Total paid": "ж”Їж‰•з·ЏйЎЌ",
         "Your EasySurf Dashboard": "РіРѓвЂљРіРѓР„РіРѓСџРіРѓВ®EasySurfРіС“Р‚РіС“С“РівЂљВ·РіС“ТђРіС“СљРіС“СРіС“вЂ°",
         "Earn now": "РґВ»Р‰РіРѓв„ўРіРѓС’Р·РЃСРіРѓС’",
         "Available balance": "Рµв‚¬В©Р·вЂќРЃРµРЏР‡РёС“Р…Р¶В®вЂ№Р№В«В",
         "Earned today": "д»Љж—ҐгЃ®зЌІеѕ—йЎЌ",
-        "Pending rewards": "РґС—СњР·вЂўв„ўРґС‘В­РіРѓВ®РµВ В±Р№вЂ¦В¬",
-        "Tasks completed": "РµВ®РЉРґС”вЂ РіРѓвЂ”РіРѓСџРівЂљС—РівЂљв„–РівЂљР‡",
+        "Pending rewards": "дїќз•™дё­гЃ®е ±й…¬",
+        "Tasks completed": "е®Њдє†гЃ—гЃџг‚їг‚№г‚Ї",
         "Daily target": "1ж—ҐгЃ®з›®жЁ™",
         "Today's earning goal": "д»Љж—ҐгЃ®еЏЋз›Љз›®жЁ™",
         "Keep completing available activities to grow your balance.": "Рµв‚¬В©Р·вЂќРЃРµРЏР‡РёС“Р…РіРѓР„РівЂљСћРівЂљР‡РіС“вЂ РівЂљР€РіС“вЂњРіС“вЂ РівЂљР€РівЂљвЂ™Р·В¶С™РіРѓвЂРіРѓВ¦РµВ®РЉРґС”вЂ РіРѓвЂ”РіР‚РѓР¶В®вЂ№Р№В«ВРівЂљвЂ™РµСћвЂ”РівЂљвЂћРіРѓвЂ”РіРѓС•РіРѓвЂ”РівЂљвЂЎРіРѓвЂ РіР‚вЂљ",
-        "Quick access": "РівЂљР‡РівЂљВ¤РіС“С“РівЂљР‡РівЂљСћРівЂљР‡РівЂљВ»РівЂљв„–",
-        "View all": "РіРѓв„ўРіРѓв„–РіРѓВ¦РёРЋРЃР·В¤С”",
+        "Quick access": "г‚Їг‚¤гѓѓг‚Їг‚ўг‚Їг‚»г‚№",
+        "View all": "гЃ™гЃ№гЃ¦иЎЁз¤є",
         "Surveys": "РівЂљСћРіС“С–РівЂљВ±РіС“СРіС“в‚¬",
         "Paid research surveys when inventory is available.": "Рµв‚¬В©Р·вЂќРЃРµРЏР‡РёС“Р…РіРѓР„РµВ Т‘РµС’в‚¬РіРѓВ«РµРЏвЂљРµР‰В РіРѓВ§РіРѓРЊРівЂљвЂ№Р¶СљвЂ°Р¶вЂ“в„ўРіС“Р„РівЂљВµРіС“СРіС“РѓРівЂљСћРіС“С–РівЂљВ±РіС“СРіС“в‚¬РіРѓВ§РіРѓв„ўРіР‚вЂљ",
         "View surveys": "РівЂљСћРіС“С–РівЂљВ±РіС“СРіС“в‚¬РівЂљвЂ™РёВ¦вЂ№РівЂљвЂ№",
@@ -1035,131 +1035,131 @@ LANGUAGE_TRANSLATIONS = {
         "Play approved games and reach milestones.": "Р¶вЂ°С—РёР„РЊРіРѓвЂўРівЂљРЉРіРѓСџРівЂљР†РіС“СРіС“В РівЂљвЂ™РіС“вЂ”РіС“В¬РівЂљВ¤РіРѓвЂ”РіРѓВ¦РіС“С›РівЂљВ¤РіС“В«РівЂљв„–РіС“в‚¬РіС“СРіС“С–РівЂљвЂ™Р№РѓвЂќР¶в‚¬С’РіРѓвЂ”РіРѓС•РіРѓвЂ”РівЂљвЂЎРіРѓвЂ РіР‚вЂљ",
         "View games": "РівЂљР†РіС“СРіС“В РівЂљвЂ™РёВ¦вЂ№РівЂљвЂ№",
         "Discover tracked app opportunities.": "РёС—Р…РёВ·РЋРµР‡С•РёВ±РЋРіРѓВ®РівЂљСћРіС“вЂ”РіС“Р„Р¶РЋв‚¬РґВ»В¶РівЂљвЂ™РёВ¦вЂ№РіРѓВ¤РіРѓвЂРіРѓС•РіРѓвЂ”РівЂљвЂЎРіРѓвЂ РіР‚вЂљ",
-        "View apps": "РівЂљСћРіС“вЂ”РіС“Р„РівЂљвЂ™РёВ¦вЂ№РівЂљвЂ№",
-        "Available now": "Р·РЏС•РµСљРЃРµв‚¬В©Р·вЂќРЃРµРЏР‡РёС“Р…",
-        "Website Tasks": "РівЂљВ¦РівЂљВ§РіС“вЂ“РівЂљВµРівЂљВ¤РіС“в‚¬РівЂљС—РівЂљв„–РівЂљР‡",
-        "Browse earning options": "РµРЏР‹Р·вЂєР‰РівЂљР„РіС“вЂ”РівЂљВ·РіС“В§РіС“С–РівЂљвЂ™РёВ¦вЂ№РівЂљвЂ№",
-        "Your account": "РіРѓвЂљРіРѓР„РіРѓСџРіРѓВ®РівЂљСћРівЂљВ«РівЂљВ¦РіС“С–РіС“в‚¬",
+        "View apps": "г‚ўгѓ—гѓЄг‚’и¦‹г‚‹",
+        "Available now": "зЏѕењЁе€©з”ЁеЏЇиѓЅ",
+        "Website Tasks": "г‚¦г‚§гѓ–г‚µг‚¤гѓ€г‚їг‚№г‚Ї",
+        "Browse earning options": "еЏЋз›Љг‚Єгѓ—г‚·гѓ§гѓіг‚’и¦‹г‚‹",
+        "Your account": "гЃ‚гЃЄгЃџгЃ®г‚ўг‚«г‚¦гѓігѓ€",
         "Recent Activity": "Р¶СљР‚РёС—вЂРіРѓВ®РівЂљСћРівЂљР‡РіС“вЂ РівЂљР€РіС“вЂњРіС“вЂ РівЂљР€",
         "No activity yet. Start earning to see your transactions here.": "РіРѓС•РіРѓВ РівЂљСћРівЂљР‡РіС“вЂ РівЂљР€РіС“вЂњРіС“вЂ РівЂљР€РіРѓР‡РіРѓвЂљРівЂљР‰РіРѓС•РіРѓвЂєРівЂљвЂњРіР‚вЂљР·РЃСРіРѓР‹РµВ§вЂ№РівЂљРѓРівЂљвЂ№РіРѓРЃРіРѓвЂњРіРѓвЂњРіРѓВ«РµРЏвЂ“РµСвЂўРіРѓРЉРёРЋРЃР·В¤С”РіРѓвЂўРівЂљРЉРіРѓС•РіРѓв„ўРіР‚вЂљ",
         "Amount": "Р№вЂЎвЂР№РЋРЊ",
-        "Goal": "Р·вЂєВ®Р¶РЃв„ў",
+        "Goal": "з›®жЁ™",
         "earned today": "д»Љж—ҐгЃ®зЌІеѕ—йЎЌ",
         "Dashboard": "РіС“Р‚РіС“С“РівЂљВ·РіС“ТђРіС“СљРіС“СРіС“вЂ°",
         "Profile": "РіС“вЂ”РіС“В­РіС“вЂўРівЂљР€РіС“СРіС“В«",
         "Earn": "Р·РЃСРіРѓС’",
-        "Rewards": "РµВ В±Р№вЂ¦В¬",
-        "Activity": "РівЂљСћРівЂљР‡РіС“вЂ РівЂљР€РіС“вЂњРіС“вЂ РівЂљР€",
-        "Leaderboard": "РіС“В©РіС“С–РівЂљВ­РіС“С–РівЂљВ°",
-        "Referrals": "Р·Т‘в„–РґВ»вЂ№",
+        "Rewards": "е ±й…¬",
+        "Activity": "г‚ўг‚Їгѓ†г‚Јгѓ“гѓ†г‚Ј",
+        "Leaderboard": "гѓ©гѓіг‚­гѓіг‚°",
+        "Referrals": "зґ№д»‹",
         "Withdraw": "РµвЂЎС”Р№вЂЎвЂ",
-        "Payouts": "Р¶вЂќР‡Р¶вЂ°вЂўРіРѓвЂћ",
+        "Payouts": "ж”Їж‰•гЃ„",
         "Offers": "РівЂљР„РіС“вЂўРівЂљРЋРіС“С",
         "Games": "РівЂљР†РіС“СРіС“В ",
-        "Apps": "РівЂљСћРіС“вЂ”РіС“Р„",
-        "Tasks": "РівЂљС—РівЂљв„–РівЂљР‡",
-        "Microtasks": "РіС“С›РівЂљВ¤РівЂљР‡РіС“В­РівЂљС—РівЂљв„–РівЂљР‡",
-        "Login": "РіС“В­РівЂљВ°РівЂљВ¤РіС“С–",
-        "Register": "Р·в„ўВ»Р№РЉР†",
-        "Get Started": "РµВ§вЂ№РівЂљРѓРівЂљвЂ№",
-        "Logout": "РіС“В­РівЂљВ°РівЂљСћРівЂљВ¦РіС“в‚¬",
+        "Apps": "г‚ўгѓ—гѓЄ",
+        "Tasks": "г‚їг‚№г‚Ї",
+        "Microtasks": "гѓћг‚¤г‚Їгѓ­г‚їг‚№г‚Ї",
+        "Login": "гѓ­г‚°г‚¤гѓі",
+        "Register": "з™»йЊІ",
+        "Get Started": "е§‹г‚Ѓг‚‹",
+        "Logout": "гѓ­г‚°г‚ўг‚¦гѓ€",
 
         "My Profile": "РіС“С›РівЂљВ¤РіС“вЂ”РіС“В­РіС“вЂўРівЂљР€РіС“СРіС“В«",
-        "Personal information": "РµР‚вЂ№РґС”С”Р¶С“вЂ¦РµВ В±",
-        "Display name": "РёРЋРЃР·В¤С”РµС’РЊ",
+        "Personal information": "еЂ‹дєєжѓ…е ±",
+        "Display name": "иЎЁз¤єеђЌ",
         "Username": "РіС“В¦РіС“СРівЂљВ¶РіС“СРµС’РЊ",
         "Email": "РіС“РЋРіС“СРіС“В«РівЂљСћРіС“вЂ°РіС“В¬РівЂљв„–",
-        "Language": "иЁЂиЄћ",
-        "Notifications": "Р№Р‚С™Р·СџТђ",
+        "Language": "言語",
+        "Notifications": "йЂљзџҐ",
         "Receive notifications": "Р№Р‚С™Р·СџТђРівЂљвЂ™РµРЏвЂ”РіРѓвЂРµРЏвЂ“РівЂљвЂ№",
         "Avatar": "РівЂљСћРіС“С’РівЂљС—РіС“С",
         "Save profile": "РіС“вЂ”РіС“В­РіС“вЂўРівЂљР€РіС“СРіС“В«РівЂљвЂ™РґС—СњРµВ­В",
         "Save changes": "РµВ¤вЂ°Р¶вЂєТ‘РівЂљвЂ™РґС—СњРµВ­В",
 
-        "Account": "РівЂљСћРівЂљВ«РівЂљВ¦РіС“С–РіС“в‚¬",
+        "Account": "г‚ўг‚«г‚¦гѓігѓ€",
         "Balance": "Р¶В®вЂ№Р№В«В",
         "Referral code": "Р·Т‘в„–РґВ»вЂ№РівЂљС–РіС“СРіС“вЂ°",
-        "Account ID": "РівЂљСћРівЂљВ«РівЂљВ¦РіС“С–РіС“в‚¬ID",
-        "Admin": "Р·В®РЋР·С’вЂ РёР‚вЂ¦",
-        "Yes": "РіРѓР‡РіРѓвЂћ",
-        "No": "РіРѓвЂћРіРѓвЂћРіРѓв‚¬",
+        "Account ID": "г‚ўг‚«г‚¦гѓігѓ€ID",
+        "Admin": "з®Ўзђ†иЂ…",
+        "Yes": "гЃЇгЃ„",
+        "No": "гЃ„гЃ„гЃ€",
 
-        "English": "и‹±иЄћ",
-        "Russian": "гѓ­г‚·г‚ўиЄћ",
-        "Italian": "г‚¤г‚їгѓЄг‚ўиЄћ",
-        "German": "гѓ‰г‚¤гѓ„иЄћ",
-        "Japanese": "ж—Ґжњ¬иЄћ",
-        "Turkish": "гѓ€гѓ«г‚іиЄћ",
+        "English": "英語",
+        "Russian": "ロシア語",
+        "Italian": "イタリア語",
+        "German": "ドイツ語",
+        "Japanese": "日本語",
+        "Turkish": "トルコ語",
 
-        "Р СѓСЃСЃРєРёР№": "гѓ­г‚·г‚ўиЄћ",
-        "Italiano": "г‚¤г‚їгѓЄг‚ўиЄћ",
-        "Deutsch": "гѓ‰г‚¤гѓ„иЄћ",
-        "ж—Ґжњ¬иЄћ": "ж—Ґжњ¬иЄћ",
-        "TГјrkГ§e": "гѓ€гѓ«г‚іиЄћ",
+        "Русский": "ロシア語",
+        "Italiano": "イタリア語",
+        "Deutsch": "ドイツ語",
+        "日本語": "日本語",
+        "Türkçe": "トルコ語",
 
         "Profile updated successfully.": "РіС“вЂ”РіС“В­РіС“вЂўРівЂљР€РіС“СРіС“В«РівЂљвЂ™Р¶В­Р€РµС‘С‘РіРѓВ«Р¶вЂєТ‘Р¶вЂ“В°РіРѓвЂ”РіРѓС•РіРѓвЂ”РіРѓСџРіР‚вЂљ",
-        "Choose an earning method and get started.": "РµРЏР‹Р·вЂєР‰Р¶вЂ“в„–Р¶С–вЂўРівЂљвЂ™Р№РѓС‘Р¶Р‰С›РіРѓвЂ”РіРѓВ¦РµВ§вЂ№РівЂљРѓРіРѓС•РіРѓвЂ”РівЂљвЂЎРіРѓвЂ РіР‚вЂљ",
+        "Choose an earning method and get started.": "еЏЋз›Љж–№жі•г‚’йЃёжЉћгЃ—гЃ¦е§‹г‚ЃгЃѕгЃ—г‚‡гЃ†гЂ‚",
         "Available offers from connected providers.": "Р¶Р‹ТђР·В¶С™РіРѓвЂўРівЂљРЉРіРѓСџРіС“вЂ”РіС“В­РіС“С’РівЂљВ¤РіС“Р‚РіС“СРіРѓвЂ№РівЂљвЂ°Рµв‚¬В©Р·вЂќРЃРµРЏР‡РёС“Р…РіРѓР„РівЂљР„РіС“вЂўРівЂљРЋРіС“СРіР‚вЂљ",
         "Available games from connected providers.": "Р¶Р‹ТђР·В¶С™РіРѓвЂўРівЂљРЉРіРѓСџРіС“вЂ”РіС“В­РіС“С’РівЂљВ¤РіС“Р‚РіС“СРіРѓвЂ№РівЂљвЂ°Рµв‚¬В©Р·вЂќРЃРµРЏР‡РёС“Р…РіРѓР„РівЂљР†РіС“СРіС“В РіР‚вЂљ",
         "Available apps from connected providers.": "Р¶Р‹ТђР·В¶С™РіРѓвЂўРівЂљРЉРіРѓСџРіС“вЂ”РіС“В­РіС“С’РівЂљВ¤РіС“Р‚РіС“СРіРѓвЂ№РівЂљвЂ°Рµв‚¬В©Р·вЂќРЃРµРЏР‡РёС“Р…РіРѓР„РівЂљСћРіС“вЂ”РіС“Р„РіР‚вЂљ",
 
         "Save": "РґС—СњРµВ­В",
-        "Cancel": "РівЂљВ­РіС“Р€РіС“С–РівЂљВ»РіС“В«",
-        "Back": "Р¶в‚¬В»РівЂљвЂ№",
-        "Continue": "Р·В¶С™РёРЋРЉ",
-        "Submit": "Р№Р‚РѓРґС—РЋ",
-        "Search": "Р¶В¤СљР·Т‘Сћ",
+        "Cancel": "г‚­гѓЈгѓіг‚»гѓ«",
+        "Back": "ж€»г‚‹",
+        "Continue": "з¶љиЎЊ",
+        "Submit": "йЂЃдїЎ",
+        "Search": "ж¤њзґў",
         "Loading": "РёР„В­РіРѓС—РёС•СРіРѓС—РґС‘В­",
-        "Completed": "РµВ®РЉРґС”вЂ ",
-        "Pending": "РґС—СњР·вЂўв„ўРґС‘В­",
-        "Available": "Рµв‚¬В©Р·вЂќРЃРµРЏР‡РёС“Р…",
-        "Total": "РµС’в‚¬РёРЃв‚¬",
+        "Completed": "е®Њдє†",
+        "Pending": "дїќз•™дё­",
+        "Available": "е€©з”ЁеЏЇиѓЅ",
+        "Total": "еђ€иЁ€",
         "Today": "д»Љж—Ґ",
-        "Yesterday": "Р’С‡РµСЂР°",
-        "This week": "РґВ»Р‰Р№Р‚В±",
-        "This month": "РґВ»Р‰Р¶Сљв‚¬",
+        "Yesterday": "Вчера",
+        "This week": "д»ЉйЂ±",
+        "This month": "д»Љжњ€",
 
-        "Welcome": "РівЂљв‚¬РіРѓвЂ РіРѓвЂњРіРѓСњ",
-        "Welcome back": "РіРѓР‰РіРѓвЂ№РіРѓв‚¬РівЂљР‰РіРѓР„РіРѓвЂўРіРѓвЂћ",
+        "Welcome": "г‚€гЃ†гЃ“гЃќ",
+        "Welcome back": "гЃЉгЃ‹гЃ€г‚ЉгЃЄгЃ•гЃ„",
         "Your balance": "РіРѓвЂљРіРѓР„РіРѓСџРіРѓВ®Р¶В®вЂ№Р№В«В",
-        "Start earning": "РµРЏР‹Р·вЂєР‰РівЂљвЂ™Р№вЂ“вЂ№РµВ§вЂ№",
+        "Start earning": "еЏЋз›Љг‚’й–‹е§‹",
         "Earn money": "РіРѓР‰Р№вЂЎвЂРівЂљвЂ™Р·РЃСРіРѓС’",
         "Earn more": "РівЂљвЂљРіРѓР€РіРѓРЃР·РЃСРіРѓС’",
-        "Your rewards": "РіРѓвЂљРіРѓР„РіРѓСџРіРѓВ®РµВ В±Р№вЂ¦В¬",
-        "Your activity": "РіРѓвЂљРіРѓР„РіРѓСџРіРѓВ®РівЂљСћРівЂљР‡РіС“вЂ РівЂљР€РіС“вЂњРіС“вЂ РівЂљР€",
-        "Your referrals": "РіРѓвЂљРіРѓР„РіРѓСџРіРѓВ®Р·Т‘в„–РґВ»вЂ№",
+        "Your rewards": "гЃ‚гЃЄгЃџгЃ®е ±й…¬",
+        "Your activity": "гЃ‚гЃЄгЃџгЃ®г‚ўг‚Їгѓ†г‚Јгѓ“гѓ†г‚Ј",
+        "Your referrals": "гЃ‚гЃЄгЃџгЃ®зґ№д»‹",
 
         "No data available": "Рµв‚¬В©Р·вЂќРЃРµРЏР‡РёС“Р…РіРѓР„РіС“вЂЎРіС“СРівЂљС—РіРѓР‡РіРѓвЂљРівЂљР‰РіРѓС•РіРѓвЂєРівЂљвЂњ",
         "No offers available": "Рµв‚¬В©Р·вЂќРЃРµРЏР‡РёС“Р…РіРѓР„РівЂљР„РіС“вЂўРівЂљРЋРіС“СРіРѓР‡РіРѓвЂљРівЂљР‰РіРѓС•РіРѓвЂєРівЂљвЂњ",
         "No games available": "Рµв‚¬В©Р·вЂќРЃРµРЏР‡РёС“Р…РіРѓР„РівЂљР†РіС“СРіС“В РіРѓР‡РіРѓвЂљРівЂљР‰РіРѓС•РіРѓвЂєРівЂљвЂњ",
-        "No apps available": "Рµв‚¬В©Р·вЂќРЃРµРЏР‡РёС“Р…РіРѓР„РівЂљСћРіС“вЂ”РіС“Р„РіРѓР‡РіРѓвЂљРівЂљР‰РіРѓС•РіРѓвЂєРівЂљвЂњ",
-        "No tasks available": "Рµв‚¬В©Р·вЂќРЃРµРЏР‡РёС“Р…РіРѓР„РівЂљС—РівЂљв„–РівЂљР‡РіРѓР‡РіРѓвЂљРівЂљР‰РіРѓС•РіРѓвЂєРівЂљвЂњ",
+        "No apps available": "е€©з”ЁеЏЇиѓЅгЃЄг‚ўгѓ—гѓЄгЃЇгЃ‚г‚ЉгЃѕгЃ›г‚“",
+        "No tasks available": "е€©з”ЁеЏЇиѓЅгЃЄг‚їг‚№г‚ЇгЃЇгЃ‚г‚ЉгЃѕгЃ›г‚“",
 
-        "Sign in": "РіС“В­РівЂљВ°РівЂљВ¤РіС“С–",
-        "Sign up": "Р·в„ўВ»Р№РЉР†РіРѓв„ўРівЂљвЂ№",
+        "Sign in": "гѓ­г‚°г‚¤гѓі",
+        "Sign up": "з™»йЊІгЃ™г‚‹",
         "Password": "РіС“вЂРівЂљв„–РіС“Р‡РіС“СРіС“вЂ°",
         "Confirm password": "РіС“вЂРівЂљв„–РіС“Р‡РіС“СРіС“вЂ°РівЂљвЂ™Р·СћС”РёР„РЊ",
-        "Remember me": "РіС“В­РівЂљВ°РівЂљВ¤РіС“С–Р·Р‰В¶Р¶вЂ¦вЂ№РівЂљвЂ™РґС—СњР¶РЉРѓ",
+        "Remember me": "гѓ­г‚°г‚¤гѓізЉ¶ж…‹г‚’дїќжЊЃ",
         "Forgot password?": "РіС“вЂРівЂљв„–РіС“Р‡РіС“СРіС“вЂ°РівЂљвЂ™РµС—ВРівЂљРЉРіРѓС•РіРѓвЂ”РіРѓСџРіРѓвЂ№РїССџ",
         "Don't have an account?": "РівЂљСћРівЂљВ«РівЂљВ¦РіС“С–РіС“в‚¬РівЂљвЂ™РіРѓР‰Р¶РЉРѓРіРѓРЋРіРѓВ§РіРѓР„РіРѓвЂћРіРѓВ§РіРѓв„ўРіРѓвЂ№РїССџ",
         "Already have an account?": "РіРѓв„ўРіРѓВ§РіРѓВ«РівЂљСћРівЂљВ«РівЂљВ¦РіС“С–РіС“в‚¬РівЂљвЂ™РіРѓР‰Р¶РЉРѓРіРѓРЋРіРѓВ§РіРѓв„ўРіРѓвЂ№РїССџ",
 
-        "Invite friends": "РµРЏвЂ№Р№РѓвЂќРівЂљвЂ™Р¶вЂ№вЂєРµС•вЂ¦",
-        "Referral program": "Р·Т‘в„–РґВ»вЂ№РіС“вЂ”РіС“В­РівЂљВ°РіС“В©РіС“В ",
-        "Your referral link": "РіРѓвЂљРіРѓР„РіРѓСџРіРѓВ®Р·Т‘в„–РґВ»вЂ№РіС“Р„РіС“С–РівЂљР‡",
+        "Invite friends": "еЏ‹йЃ”г‚’ж‹›еѕ…",
+        "Referral program": "зґ№д»‹гѓ—гѓ­г‚°гѓ©гѓ ",
+        "Your referral link": "гЃ‚гЃЄгЃџгЃ®зґ№д»‹гѓЄгѓіг‚Ї",
         "Copy": "РівЂљС–РіС“вЂќРіС“С",
         "Copied": "РівЂљС–РіС“вЂќРіС“СРіРѓвЂ”РіРѓС•РіРѓвЂ”РіРѓСџ",
 
-        "Request payout": "Р¶вЂќР‡Р¶вЂ°вЂўРіРѓвЂћРівЂљвЂ™Р·вЂќС–РёВ«вЂ№",
-        "Payout history": "Р¶вЂќР‡Р¶вЂ°вЂўРіРѓвЂћРµВ±ТђР¶В­Т‘",
-        "Minimum payout": "Р¶СљР‚РґР…Р‹Р¶вЂќР‡Р¶вЂ°вЂўР№РЋРЊ",
-        "Payment method": "Р¶вЂќР‡Р¶вЂ°вЂўРіРѓвЂћР¶вЂ“в„–Р¶С–вЂў",
+        "Request payout": "ж”Їж‰•гЃ„г‚’з”іи«‹",
+        "Payout history": "ж”Їж‰•гЃ„е±Ґж­ґ",
+        "Minimum payout": "жњЂдЅЋж”Їж‰•йЎЌ",
+        "Payment method": "ж”Їж‰•гЃ„ж–№жі•",
 
         "Home": "РіС“вЂєРіС“СРіС“В ",
-        "About": "Р¶В¦вЂљРёВ¦Рѓ",
-        "Contact": "РіРѓР‰РµвЂўРЏРіРѓвЂћРµС’в‚¬РівЂљРЏРіРѓвЂє",
+        "About": "ж¦‚и¦Ѓ",
+        "Contact": "гЃЉе•ЏгЃ„еђ€г‚ЏгЃ›",
         "Privacy": "РіС“вЂ”РіС“В©РівЂљВ¤РіС“С’РівЂљВ·РіС“С",
-        "Terms": "Рµв‚¬В©Р·вЂќРЃРёВ¦РЏР·Т‘вЂћ",
+        "Terms": "е€©з”Ёи¦Џзґ„",
         "Help": "РіС“ВРіС“В«РіС“вЂ”",
     },
 
@@ -1167,31 +1167,31 @@ LANGUAGE_TRANSLATIONS = {
         "Total earned": "Toplam kazanГ§",
         "Total paid": "Toplam Г¶deme",
         "Your EasySurf Dashboard": "EasySurf Kontrol Paneliniz",
-        "Earn now": "Р•С›imdi kazan",
-        "Available balance": "KullanР”В±labilir bakiye",
+        "Earn now": "Ећimdi kazan",
+        "Available balance": "KullanД±labilir bakiye",
         "Earned today": "BugГјn kazanД±lan",
         "Pending rewards": "Bekleyen Г¶dГјller",
         "Tasks completed": "Tamamlanan gГ¶revler",
         "Daily target": "GГјnlГјk hedef",
         "Today's earning goal": "BugГјnГјn kazanГ§ hedefi",
         "Keep completing available activities to grow your balance.": "Bakiyenizi artД±rmak iГ§in mevcut etkinlikleri tamamlamaya devam edin.",
-        "Quick access": "HР”В±zlР”В± eriР•Сџim",
+        "Quick access": "HД±zlД± eriЕџim",
         "View all": "TГјmГјnГј gГ¶rГјntГјle",
         "Surveys": "Anketler",
-        "Paid research surveys when inventory is available.": "Kontenjan olduДџunda Гјcretli araЕџtД±rma anketleri.",
+        "Paid research surveys when inventory is available.": "Kontenjan olduğunda ücretli araştırma anketleri.",
         "View surveys": "Anketleri gГ¶rГјntГјle",
         "Advertiser offers and tracked activities.": "Reklamveren teklifleri ve takip edilen etkinlikler.",
         "View offers": "Teklifleri gГ¶rГјntГјle",
-        "Play approved games and reach milestones.": "OnaylР”В± oyunlarР”В± oynayР”В±n ve kilometre taР•СџlarР”В±na ulaР•СџР”В±n.",
+        "Play approved games and reach milestones.": "OnaylД± oyunlarД± oynayД±n ve kilometre taЕџlarД±na ulaЕџД±n.",
         "View games": "OyunlarД± gГ¶rГјntГјle",
-        "Discover tracked app opportunities.": "Takip edilen uygulama fР”В±rsatlarР”В±nР”В± keР•Сџfedin.",
+        "Discover tracked app opportunities.": "Takip edilen uygulama fД±rsatlarД±nД± keЕџfedin.",
         "View apps": "UygulamalarД± gГ¶rГјntГјle",
-        "Available now": "Р•С›imdi mevcut",
+        "Available now": "Ећimdi mevcut",
         "Website Tasks": "Web Sitesi GГ¶revleri",
         "Browse earning options": "KazanГ§ seГ§eneklerine gГ¶z at",
-        "Your account": "HesabР”В±nР”В±z",
+        "Your account": "HesabД±nД±z",
         "Recent Activity": "Son Etkinlikler",
-        "No activity yet. Start earning to see your transactions here.": "HenГјz etkinlik yok. Д°Еџlem geГ§miЕџinizi burada gГ¶rmek iГ§in kazanmaya baЕџlayД±n.",
+        "No activity yet. Start earning to see your transactions here.": "Henüz etkinlik yok. İşlem geçmişinizi burada görmek için kazanmaya başlayın.",
         "Amount": "Tutar",
         "Goal": "Hedef",
         "earned today": "bugГјn kazanД±lan",
@@ -1202,29 +1202,29 @@ LANGUAGE_TRANSLATIONS = {
         "Activity": "Aktivite",
         "Leaderboard": "Liderlik Tablosu",
         "Referrals": "Referanslar",
-        "Withdraw": "Para Р“вЂЎekme",
-        "Payouts": "Р“вЂ“demeler",
+        "Withdraw": "Para Г‡ekme",
+        "Payouts": "Г–demeler",
         "Offers": "Teklifler",
         "Games": "Oyunlar",
         "Apps": "Uygulamalar",
         "Tasks": "GГ¶revler",
         "Microtasks": "Mikro GГ¶revler",
-        "Login": "GiriР•Сџ Yap",
-        "Register": "KayР”В±t Ol",
-        "Get Started": "BaР•Сџla",
-        "Logout": "Р“вЂЎР”В±kР”В±Р•Сџ Yap",
+        "Login": "GiriЕџ Yap",
+        "Register": "KayД±t Ol",
+        "Get Started": "BaЕџla",
+        "Logout": "Г‡Д±kД±Еџ Yap",
 
         "My Profile": "Profilim",
-        "Personal information": "KiР•Сџisel bilgiler",
+        "Personal information": "KiЕџisel bilgiler",
         "Display name": "GГ¶rГјnen ad",
-        "Username": "KullanР”В±cР”В± adР”В±",
+        "Username": "KullanД±cД± adД±",
         "Email": "E-posta",
         "Language": "Dil",
         "Notifications": "Bildirimler",
         "Receive notifications": "Bildirimleri al",
         "Avatar": "Avatar",
         "Save profile": "Profili kaydet",
-        "Save changes": "DeР”СџiР•Сџiklikleri kaydet",
+        "Save changes": "DeДџiЕџiklikleri kaydet",
 
         "Account": "Hesap",
         "Balance": "Bakiye",
@@ -1232,35 +1232,35 @@ LANGUAGE_TRANSLATIONS = {
         "Account ID": "Hesap ID",
         "Admin": "YГ¶netici",
         "Yes": "Evet",
-        "No": "HayР”В±r",
+        "No": "HayД±r",
 
-        "English": "Р”В°ngilizce",
+        "English": "Д°ngilizce",
         "Russian": "RusГ§a",
-        "Italian": "Р”В°talyanca",
+        "Italian": "Д°talyanca",
         "German": "Almanca",
         "Japanese": "Japonca",
         "Turkish": "TГјrkГ§e",
 
-        "Р СѓСЃСЃРєРёР№": "RusГ§a",
-        "Italiano": "Р”В°talyanca",
+        "Русский": "Rusça",
+        "Italiano": "Д°talyanca",
         "Deutsch": "Almanca",
-        "ж—Ґжњ¬иЄћ": "Japonca",
+        "日本語": "Japonca",
         "TГјrkГ§e": "TГјrkГ§e",
 
-        "Profile updated successfully.": "Profil baЕџarД±yla gГјncellendi.",
-        "Choose an earning method and get started.": "Bir kazanГ§ yГ¶ntemi seГ§in ve baЕџlayД±n.",
-        "Available offers from connected providers.": "BaР”СџlР”В± saР”СџlayР”В±cР”В±lardan mevcut teklifler.",
-        "Available games from connected providers.": "BaР”СџlР”В± saР”СџlayР”В±cР”В±lardan mevcut oyunlar.",
-        "Available apps from connected providers.": "BaР”СџlР”В± saР”СџlayР”В±cР”В±lardan mevcut uygulamalar.",
+        "Profile updated successfully.": "Profil başarıyla güncellendi.",
+        "Choose an earning method and get started.": "Bir kazanç yöntemi seçin ve başlayın.",
+        "Available offers from connected providers.": "BaДџlД± saДџlayД±cД±lardan mevcut teklifler.",
+        "Available games from connected providers.": "BaДџlД± saДџlayД±cД±lardan mevcut oyunlar.",
+        "Available apps from connected providers.": "BaДџlД± saДџlayД±cД±lardan mevcut uygulamalar.",
 
         "Save": "Kaydet",
-        "Cancel": "Р”В°ptal",
+        "Cancel": "Д°ptal",
         "Back": "Geri",
         "Continue": "Devam Et",
         "Submit": "GГ¶nder",
         "Search": "Ara",
         "Loading": "YГјkleniyor",
-        "Completed": "TamamlandР”В±",
+        "Completed": "TamamlandД±",
         "Pending": "Beklemede",
         "Available": "Mevcut",
         "Total": "Toplam",
@@ -1269,48 +1269,48 @@ LANGUAGE_TRANSLATIONS = {
         "This week": "Bu hafta",
         "This month": "Bu ay",
 
-        "Welcome": "HoР•Сџ geldiniz",
-        "Welcome back": "Tekrar hoР•Сџ geldiniz",
+        "Welcome": "HoЕџ geldiniz",
+        "Welcome back": "Tekrar hoЕџ geldiniz",
         "Your balance": "Bakiyeniz",
-        "Start earning": "Kazanmaya baР•Сџla",
+        "Start earning": "Kazanmaya baЕџla",
         "Earn money": "Para kazan",
         "Earn more": "Daha fazla kazan",
         "Your rewards": "Г–dГјlleriniz",
         "Your activity": "Aktiviteleriniz",
-        "Your referrals": "ReferanslarР”В±nР”В±z",
+        "Your referrals": "ReferanslarД±nД±z",
 
-        "No data available": "Veri bulunamadР”В±",
-        "No offers available": "Teklif bulunamadР”В±",
-        "No games available": "Oyun bulunamadР”В±",
-        "No apps available": "Uygulama bulunamadР”В±",
+        "No data available": "Veri bulunamadД±",
+        "No offers available": "Teklif bulunamadД±",
+        "No games available": "Oyun bulunamadД±",
+        "No apps available": "Uygulama bulunamadД±",
         "No tasks available": "GГ¶rev bulunamadД±",
 
-        "Sign in": "GiriР•Сџ Yap",
-        "Sign up": "KayР”В±t Ol",
-        "Password": "Р•С›ifre",
-        "Confirm password": "Р•С›ifreyi onayla",
-        "Remember me": "Beni hatР”В±rla",
-        "Forgot password?": "Р•С›ifrenizi mi unuttunuz?",
-        "Don't have an account?": "HesabР”В±nР”В±z yok mu?",
-        "Already have an account?": "Zaten hesabР”В±nР”В±z var mР”В±?",
+        "Sign in": "GiriЕџ Yap",
+        "Sign up": "KayД±t Ol",
+        "Password": "Ећifre",
+        "Confirm password": "Ећifreyi onayla",
+        "Remember me": "Beni hatД±rla",
+        "Forgot password?": "Ећifrenizi mi unuttunuz?",
+        "Don't have an account?": "HesabД±nД±z yok mu?",
+        "Already have an account?": "Zaten hesabД±nД±z var mД±?",
 
-        "Invite friends": "ArkadaР•СџlarР”В±nР”В± davet et",
-        "Referral program": "Referans programР”В±",
-        "Your referral link": "Referans baР”СџlantР”В±nР”В±z",
+        "Invite friends": "ArkadaЕџlarД±nД± davet et",
+        "Referral program": "Referans programД±",
+        "Your referral link": "Referans baДџlantД±nД±z",
         "Copy": "Kopyala",
-        "Copied": "KopyalandР”В±",
+        "Copied": "KopyalandД±",
 
-        "Request payout": "Р“вЂ“deme talep et",
-        "Payout history": "Г–deme geГ§miЕџi",
+        "Request payout": "Г–deme talep et",
+        "Payout history": "Ödeme geçmişi",
         "Minimum payout": "Minimum Г¶deme",
         "Payment method": "Г–deme yГ¶ntemi",
 
         "Home": "Ana Sayfa",
-        "About": "HakkР”В±mР”В±zda",
-        "Contact": "Р”В°letiР•Сџim",
+        "About": "HakkД±mД±zda",
+        "Contact": "Д°letiЕџim",
         "Privacy": "Gizlilik",
-        "Terms": "KoР•Сџullar",
-        "Help": "YardР”В±m",
+        "Terms": "KoЕџullar",
+        "Help": "YardД±m",
     },
 }
 
@@ -1372,7 +1372,7 @@ def layout(title, body, u=None):
         '<div class="language-switcher" style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;position:relative;z-index:1000;">'
         '<a href="/language?language=en&amp;next=' + current_path + '" style="display:inline-block;position:relative;z-index:1001;padding:4px 2px;color:' + ('#ffffff' if language == 'en' else '#94a3b8') + ';text-decoration:none;cursor:pointer;">English</a>'
         '<span style="opacity:.45;position:relative;z-index:1001;">|</span>'
-        '<a href="/language?language=ru&amp;next=' + current_path + '" style="display:inline-block;position:relative;z-index:1001;padding:4px 2px;color:' + ('#ffffff' if language == 'ru' else '#94a3b8') + ';text-decoration:none;cursor:pointer;">Р СѓСЃСЃРєРёР№</a>'
+        '<a href="/language?language=ru&amp;next=' + current_path + '" style="display:inline-block;position:relative;z-index:1001;padding:4px 2px;color:' + ('#ffffff' if language == 'ru' else '#94a3b8') + ';text-decoration:none;cursor:pointer;">Русский</a>'
         '</div>'
     )
     if not u:
@@ -1402,7 +1402,7 @@ def layout(title, body, u=None):
 <head><link rel="icon" type="image/png" href="/static/images/favicon.png">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>{escape(title)} Р’В· EasySurf</title>
+<title>{escape(title)} В· EasySurf</title>
 
 <style>
 *{{box-sizing:border-box}}.language-form{{display:inline-flex;align-items:center;margin:0 8px 0 0}}.language-form select{{display:block}}.language-selector{{appearance:none;-webkit-appearance:none;background:#111f33;color:#fff;border:1px solid rgba(255,255,255,.16);border-radius:10px;padding:8px 34px 8px 12px;min-width:135px;font-size:14px;font-weight:600;cursor:pointer;outline:none;margin-right:10px}}.language-selector:hover{{border-color:rgba(255,255,255,.35);background-color:#162942}}.language-selector:focus{{border-color:#4da3ff;box-shadow:0 0 0 3px rgba(77,163,255,.15)}}.language-selector option{{background:#111f33;color:#fff}}
@@ -1555,7 +1555,7 @@ header{{
 }}
 
 .brand::before{{
- content:"вљЎ";
+ content:"⚡";
  width:38px;
  height:38px;
  display:grid;
@@ -2271,7 +2271,7 @@ footer{{
 
   <div class="footer-bottom">
     <div>
-      Р’В© 2026 EasySurf. {tr('All rights reserved.', u)}
+      В© 2026 EasySurf. {tr('All rights reserved.', u)}
     </div>
 
     <div class="footer-bottom-links">
@@ -2292,7 +2292,7 @@ footer{{
 
 
 # ============================================================
-# SECURITY V2 РІР‚вЂќ AUTHENTICATION RATE LIMITING
+# SECURITY V2 вЂ” AUTHENTICATION RATE LIMITING
 # ============================================================
 
 _LOGIN_WINDOW_SECONDS = 600
@@ -2396,7 +2396,7 @@ def home(r:Request):
     <section class="hero" style="position:relative;overflow:hidden;background-image:linear-gradient(90deg,rgba(15,23,42,.96) 0%,rgba(15,23,42,.82) 48%,rgba(15,23,42,.35) 100%),url('/static/images/hero-banner.png');background-size:cover;background-position:center;min-height:460px;display:flex;align-items:center;">
         <div style="position:relative;z-index:2;max-width:760px;">
             <div style="display:inline-flex;align-items:center;gap:8px;padding:7px 13px;border:1px solid rgba(96,165,250,.25);border-radius:999px;background:rgba(59,130,246,.10);font-size:13px;color:#93c5fd;margin-bottom:18px;">
-                вљЎ EasySurf Rewards Platform
+                ⚡ EasySurf Rewards Platform
             </div>
 
             <h1 style="font-size:clamp(38px,6vw,68px);line-height:1.02;margin:0 0 18px;">
@@ -2410,14 +2410,14 @@ def home(r:Request):
             </p>
 
             <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:28px;">
-                <a class="btn" href="/register">рџљЂ {tr('Start earning', u)}</a>
+                <a class="btn" href="/register">🚀 {tr('Start earning', u)}</a>
                 <a class="btn secondary" href="/login">Login</a>
             </div>
 
             <div style="display:flex;gap:28px;flex-wrap:wrap;margin-top:30px;color:#94a3b8;font-size:13px;">
-                <span>вњ“ {tr('Simple tasks', u)}</span>
-                <span>вњ“ {tr('Daily rewards', u)}</span>
-                <span>вњ“ {tr('Referral bonuses', u)}</span>
+                <span>✓ {tr('Simple tasks', u)}</span>
+                <span>✓ {tr('Daily rewards', u)}</span>
+                <span>✓ {tr('Referral bonuses', u)}</span>
             </div>
         </div>
 
@@ -2438,68 +2438,68 @@ def home(r:Request):
 
             <div class="card earn-card" style="min-height:190px;">
                 <div>
-                    <div class="earn-icon" style="font-size:32px;">рџ“‹</div>
+                    <div class="earn-icon" style="font-size:32px;">📋</div>
                     <h3>{tr('Surveys', u)}</h3>
                     <p class="muted">
                         {tr('Paid research surveys when real inventory is available.', u)}
                     </p>
                 </div>
-                <a href="/surveys">{tr('Explore в†’', u)}</a>
+                <a href="/surveys">{tr('Explore →', u)}</a>
             </div>
 
             <div class="card earn-card" style="min-height:190px;">
                 <div>
-                    <div class="earn-icon" style="font-size:32px;">рџЋЃ</div>
+                    <div class="earn-icon" style="font-size:32px;">🎁</div>
                     <h3>{tr('Offers', u)}</h3>
                     <p class="muted">
                         {tr('Advertiser-approved offers and tracked activities.', u)}
                     </p>
                 </div>
-                <a href="/offers">{tr('Explore в†’', u)}</a>
+                <a href="/offers">{tr('Explore →', u)}</a>
             </div>
 
             <div class="card earn-card" style="min-height:190px;">
                 <div>
-                    <div class="earn-icon" style="font-size:32px;">рџЋ®</div>
+                    <div class="earn-icon" style="font-size:32px;">🎮</div>
                     <h3>{tr('Games', u)}</h3>
                     <p class="muted">
                         {tr('Game-based rewards through approved providers.', u)}
                     </p>
                 </div>
-                <a href="/games">{tr('Explore в†’', u)}</a>
+                <a href="/games">{tr('Explore →', u)}</a>
             </div>
 
             <div class="card earn-card" style="min-height:190px;">
                 <div>
-                    <div class="earn-icon" style="font-size:32px;">рџ“±</div>
+                    <div class="earn-icon" style="font-size:32px;">📱</div>
                     <h3>{tr('Apps', u)}</h3>
                     <p class="muted">
                         {tr('App-based earning opportunities.', u)}
                     </p>
                 </div>
-                <a href="/apps">{tr('Explore в†’', u)}</a>
+                <a href="/apps">{tr('Explore →', u)}</a>
             </div>
 
             <div class="card earn-card" style="min-height:190px;">
                 <div>
-                    <div class="earn-icon" style="font-size:32px;">в–¶пёЏ</div>
+                    <div class="earn-icon" style="font-size:32px;">▶️</div>
                     <h3>{tr('Videos', u)}</h3>
                     <p class="muted">
                         {tr('Watch approved video tasks and activities.', u)}
                     </p>
                 </div>
-                <a href="/videos">{tr('Explore в†’', u)}</a>
+                <a href="/videos">{tr('Explore →', u)}</a>
             </div>
 
             <div class="card earn-card" style="min-height:190px;">
                 <div>
-                    <div class="earn-icon" style="font-size:32px;">рџЊђ</div>
+                    <div class="earn-icon" style="font-size:32px;">🌐</div>
                     <h3>{tr('Tasks', u)}</h3>
                     <p class="muted">
                         {tr('Complete verified website and microtasks.', u)}
                     </p>
                 </div>
-                <a href="/earn">Start в†’</a>
+                <a href="/earn">Start →</a>
             </div>
 
         </div>
@@ -2519,7 +2519,7 @@ def home(r:Request):
             </div>
 
             <a class="btn" href="/register" style="white-space:nowrap;">
-                {tr('Create free account в†’', u)}
+                {tr('Create free account →', u)}
             </a>
         </div>
 
@@ -3004,7 +3004,7 @@ def profile_page(r:Request):
         + '<input name="username" value="' + username.replace('"','&quot;') + '" maxlength="30" required>'
 
         + '<div class="muted" style="margin-bottom:12px;">'
-        + f'{tr('3РІР‚вЂњ30 characters: letters, numbers and underscore.', u)}'
+        + f'{tr('3вЂ“30 characters: letters, numbers and underscore.', u)}'
         + '</div>'
 
         + f'<label>{tr("Email")}</label>'
@@ -3013,7 +3013,7 @@ def profile_page(r:Request):
         + f'<label>{tr('Language', u)}</label>'
         + '<select name="language">'
         + '<option value="en"' + (' selected' if language=="en" else '') + '>English</option>'
-        + '<option value="ru"' + (' selected' if language=="ru" else '') + '>Р СѓСЃСЃРєРёР№</option>'
+        + '<option value="ru"' + (' selected' if language=="ru" else '') + '>Русский</option>'
         + '<option value="uz"' + (' selected' if language=="uz" else '') + '>' + tr('OРІР‚Вzbekcha', u) + '</option>'
         + '</select>'
 
@@ -3041,7 +3041,7 @@ def profile_page(r:Request):
         + '<div class="card" style="margin-top:20px;">'
         + f'<h2>{tr('Account', u)}</h2>'
         + f'<p><strong>{tr('Balance', u)}:</strong> ' + str(int(row["balance"] or 0)) + '</p>'
-        + f'<p><strong>{tr('Referral code', u)}:</strong> ' + str(row["referral_code"] or "РІР‚вЂќ") + '</p>'
+        + f'<p><strong>{tr('Referral code', u)}:</strong> ' + str(row["referral_code"] or "вЂ”") + '</p>'
         + f'<p><strong>{tr('Account ID', u)}:</strong> ' + str(int(row["id"])) + '</p>'
         + f'<p><strong>{tr('Admin', u)}:</strong> ' + ('Yes' if int(row["is_admin"] or 0) else 'No') + '</p>'
         + '</div>'
@@ -3292,18 +3292,18 @@ def dash(r:Request):
         f"""
         <div class="card earn-card" style="min-height:190px;">
             <div>
-                <div class="earn-icon" style="font-size:32px;">рџЊђ</div>
+                <div class="earn-icon" style="font-size:32px;">🌐</div>
                 <div style="display:inline-flex;padding:5px 9px;border-radius:999px;background:rgba(59,130,246,.10);color:#93c5fd;font-size:11px;margin-bottom:8px;">
                     Website Task
                 </div>
                 <h3 style="margin:4px 0 8px;">{escape(x["title"])}</h3>
                 <p class="muted">
-                    РІРЏВ± {x["seconds"]} sec
-                    &nbsp;Р’В·&nbsp;
-                    рџ’° {money(x["reward"])}
+                    вЏ± {x["seconds"]} sec
+                    &nbsp;В·&nbsp;
+                    💰 {money(x["reward"])}
                 </p>
             </div>
-            <a class="btn" href="/task/{x["id"]}">Start task в†’</a>
+            <a class="btn" href="/task/{x["id"]}">Start task →</a>
         </div>
         """
         for x in tasks[:6]
@@ -3312,12 +3312,12 @@ def dash(r:Request):
     if not task_cards:
         task_cards=f"""
         <div class="card empty" style="grid-column:1/-1;text-align:center;padding:36px;">
-            <div class="earn-icon" style="font-size:38px;">рџ”Ћ</div>
+            <div class="earn-icon" style="font-size:38px;">🔎</div>
             <h3>{tr('No website tasks available', u)}</h3>
             <p class="muted">
                 {tr('New tasks may appear later. Explore other earning categories in the meantime.', u)}
             </p>
-            <a class="btn" href="/earn">{tr('Explore Earn в†’', u)}</a>
+            <a class="btn" href="/earn">{tr('Explore Earn →', u)}</a>
         </div>
         """
 
@@ -3351,7 +3351,7 @@ def dash(r:Request):
     <section class="hero" style="position:relative;overflow:hidden;background-image:linear-gradient(90deg,rgba(15,23,42,.96) 0%,rgba(15,23,42,.82) 48%,rgba(15,23,42,.35) 100%),url('/static/images/hero-banner.png');background-size:cover;background-position:center;min-height:460px;display:flex;align-items:center;">
         <div style="position:relative;z-index:2;">
             <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border:1px solid rgba(96,165,250,.25);border-radius:999px;background:rgba(59,130,246,.10);font-size:12px;color:#93c5fd;margin-bottom:14px;">
-                вљЎ {tr('Your EasySurf Dashboard', u)}
+                ⚡ {tr('Your EasySurf Dashboard', u)}
             </div>
 
             <h1 style="margin:0 0 8px;">
@@ -3363,8 +3363,8 @@ def dash(r:Request):
             </p>
 
             <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:22px;">
-                <a class="btn" href="/earn">рџљЂ {tr('Earn now', u)}</a>
-                <a class="btn secondary" href="/rewards">рџЋЃ {tr('Rewards', u)}</a>
+                <a class="btn" href="/earn">🚀 {tr('Earn now', u)}</a>
+                <a class="btn secondary" href="/rewards">🎁 {tr('Rewards', u)}</a>
             </div>
         </div>
 
@@ -3376,25 +3376,25 @@ def dash(r:Request):
         <div class="grid">
 
             <div class="card" style="min-height:150px;">
-                <div class="earn-icon" style="font-size:30px;">рџ’°</div>
+                <div class="earn-icon" style="font-size:30px;">💰</div>
                 <div class="muted">{tr('Available balance', u)}</div>
                 <div class="metric" style="font-size:32px;margin-top:5px;">{money(u["balance"])}</div>
             </div>
 
             <div class="card" style="min-height:150px;">
-                <div class="earn-icon" style="font-size:30px;">рџ“€</div>
+                <div class="earn-icon" style="font-size:30px;">📈</div>
                 <div class="muted">{tr('Earned today', u)}</div>
                 <div class="metric" style="font-size:32px;margin-top:5px;">{money(today_earned)}</div>
             </div>
 
             <div class="card" style="min-height:150px;">
-                <div class="earn-icon" style="font-size:30px;">РІРЏС–</div>
+                <div class="earn-icon" style="font-size:30px;">вЏі</div>
                 <div class="muted">{tr('Pending rewards', u)}</div>
                 <div class="metric" style="font-size:32px;margin-top:5px;">{money(pending)}</div>
             </div>
 
             <div class="card" style="min-height:150px;">
-                <div class="earn-icon" style="font-size:30px;">рџ”Ґ</div>
+                <div class="earn-icon" style="font-size:30px;">🔥</div>
                 <div class="muted">{tr('Tasks completed', u)}</div>
                 <div class="metric" style="font-size:32px;margin-top:5px;">{done}</div>
             </div>
@@ -3437,45 +3437,45 @@ def dash(r:Request):
                 </div>
                 <h2 style="margin:5px 0 0;">{tr('Start earning', u)}</h2>
             </div>
-            <a href="/earn" class="muted">{tr('View all', u)} в†’</a>
+            <a href="/earn" class="muted">{tr('View all', u)} →</a>
         </div>
 
         <div class="grid">
 
             <div class="card earn-card" style="min-height:175px;">
                 <div>
-                    <div class="earn-icon" style="font-size:32px;">рџ“‹</div>
+                    <div class="earn-icon" style="font-size:32px;">📋</div>
                     <h3>{tr('Surveys', u)}</h3>
                     <p class="muted">{tr('Paid research surveys when inventory is available.', u)}</p>
                 </div>
-                <a href="/surveys">{tr('View surveys', u)} в†’</a>
+                <a href="/surveys">{tr('View surveys', u)} →</a>
             </div>
 
             <div class="card earn-card" style="min-height:175px;">
                 <div>
-                    <div class="earn-icon" style="font-size:32px;">рџЋЃ</div>
+                    <div class="earn-icon" style="font-size:32px;">🎁</div>
                     <h3>{tr('Offers', u)}</h3>
                     <p class="muted">{tr('Advertiser offers and tracked activities.', u)}</p>
                 </div>
-                <a href="/offers">{tr('View offers', u)} в†’</a>
+                <a href="/offers">{tr('View offers', u)} →</a>
             </div>
 
             <div class="card earn-card" style="min-height:175px;">
                 <div>
-                    <div class="earn-icon" style="font-size:32px;">рџЋ®</div>
+                    <div class="earn-icon" style="font-size:32px;">🎮</div>
                     <h3>{tr('Games', u)}</h3>
                     <p class="muted">{tr('Play approved games and reach milestones.', u)}</p>
                 </div>
-                <a href="/games">{tr('View games', u)} в†’</a>
+                <a href="/games">{tr('View games', u)} →</a>
             </div>
 
             <div class="card earn-card" style="min-height:175px;">
                 <div>
-                    <div class="earn-icon" style="font-size:32px;">рџ“±</div>
+                    <div class="earn-icon" style="font-size:32px;">📱</div>
                     <h3>{tr('Apps', u)}</h3>
                     <p class="muted">{tr('Discover tracked app opportunities.', u)}</p>
                 </div>
-                <a href="/apps">{tr('View apps', u)} в†’</a>
+                <a href="/apps">{tr('View apps', u)} →</a>
             </div>
 
         </div>
@@ -3489,7 +3489,7 @@ def dash(r:Request):
                 </div>
                 <h2 style="margin:5px 0 0;">{tr('Website Tasks', u)}</h2>
             </div>
-            <a href="/earn" class="muted">{tr('Browse earning options', u)} в†’</a>
+            <a href="/earn" class="muted">{tr('Browse earning options', u)} →</a>
         </div>
 
         <div class="grid">
@@ -3505,7 +3505,7 @@ def dash(r:Request):
                 </div>
                 <h2 style="margin:5px 0 0;">{tr('Recent Activity', u)}</h2>
             </div>
-            <a href="/activity" class="muted">{tr('View all', u)} в†’</a>
+            <a href="/activity" class="muted">{tr('View all', u)} →</a>
         </div>
 
         <table>
@@ -3550,7 +3550,7 @@ def dash(r:Request):
                 </p>
             </div>
 
-            <a class="btn" href="/earn">{tr('Explore Earn в†’', u)}</a>
+            <a class="btn" href="/earn">{tr('Explore Earn →', u)}</a>
         </div>
 
         <div style="position:absolute;right:-80px;top:-100px;width:240px;height:240px;border-radius:50%;background:rgba(59,130,246,.08);"></div>
@@ -3610,7 +3610,7 @@ def task(r:Request,tid:int):
  function runTimer(){{
    timer.textContent=n;
    if(n<=0){{
-     timer.textContent="вњ“ Completed";
+     timer.textContent="✓ Completed";
      completeBtn.disabled=false;
      status.textContent="Time completed. You can now claim your reward.";
      return;
@@ -3726,7 +3726,7 @@ def referrals(r:Request):
         trs="""
         <tr>
             <td colspan="2" style="padding:35px 15px;text-align:center;">
-                <div style="font-size:32px;margin-bottom:8px;">рџ‘Ґ</div>
+                <div style="font-size:32px;margin-bottom:8px;">👥</div>
                 <strong>{tr('No referrals yet', u)}</strong>
                 <div class="muted" style="margin-top:6px;">
                     {tr('Share your referral code to start building your network.', u)}
@@ -3740,7 +3740,7 @@ def referrals(r:Request):
         <div style="position:relative;z-index:2;">
 
             <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border:1px solid rgba(34,197,94,.25);border-radius:999px;background:rgba(34,197,94,.09);font-size:12px;color:#86efac;margin-bottom:14px;">
-                рџ¤ќ EasySurf Referral Program
+                🤝 EasySurf Referral Program
             </div>
 
             <h1 style="margin:0 0 10px;">
@@ -3754,11 +3754,11 @@ def referrals(r:Request):
 
             <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:22px;">
                 <a class="btn" href="/earn">
-                    вљЎ {tr('Start earning', u)}
+                    ⚡ {tr('Start earning', u)}
                 </a>
 
                 <a class="btn secondary" href="/activity">
-                    рџ“Љ {tr('View activity', u)}
+                    📊 {tr('View activity', u)}
                 </a>
             </div>
 
@@ -3789,7 +3789,7 @@ def referrals(r:Request):
                     <button type="button"
                             class="btn secondary"
                             onclick="copyReferralCode()">
-                        рџ“‹ {tr('Copy code', u)}
+                        📋 {tr('Copy code', u)}
                     </button>
 
                 </div>
@@ -3800,7 +3800,7 @@ def referrals(r:Request):
 
                 <div id="copy-message"
                      style="display:none;margin-top:10px;color:#86efac;font-size:13px;">
-                    вњ“ Referral code copied
+                    ✓ Referral code copied
                 </div>
 
             </div>
@@ -3816,7 +3816,7 @@ def referrals(r:Request):
         <div class="grid">
 
             <div class="card" style="min-height:150px;">
-                <div class="earn-icon" style="font-size:34px;">рџ‘Ґ</div>
+                <div class="earn-icon" style="font-size:34px;">👥</div>
 
                 <div class="muted" style="font-size:12px;text-transform:uppercase;letter-spacing:.07em;">
                     Referrals
@@ -3832,7 +3832,7 @@ def referrals(r:Request):
             </div>
 
             <div class="card" style="min-height:150px;">
-                <div class="earn-icon" style="font-size:34px;">рџ’°</div>
+                <div class="earn-icon" style="font-size:34px;">💰</div>
 
                 <div class="muted" style="font-size:12px;text-transform:uppercase;letter-spacing:.07em;">
                     {tr('Referral earnings', u)}
@@ -3848,7 +3848,7 @@ def referrals(r:Request):
             </div>
 
             <div class="card" style="min-height:150px;">
-                <div class="earn-icon" style="font-size:34px;">рџЋЃ</div>
+                <div class="earn-icon" style="font-size:34px;">🎁</div>
 
                 <div class="muted" style="font-size:12px;text-transform:uppercase;letter-spacing:.07em;">
                     {tr('Referral reward', u)}
@@ -3926,7 +3926,7 @@ def referrals(r:Request):
                 <button type="button"
                         class="btn"
                         onclick="copyReferralCode()">
-                    рџ“‹ Copy referral code
+                    📋 Copy referral code
                 </button>
 
                 <a class="btn secondary" href="/earn">
@@ -4243,7 +4243,7 @@ def earn(r:Request):
         f"""
         <div class="card earn-card" style="min-height:205px;">
             <div>
-                <div class="earn-icon" style="font-size:34px;">рџЊђ</div>
+                <div class="earn-icon" style="font-size:34px;">🌐</div>
 
                 <div style="display:inline-flex;align-items:center;padding:5px 9px;border-radius:999px;background:rgba(59,130,246,.10);color:#93c5fd;font-size:11px;margin-bottom:8px;">
                     Website Task
@@ -4253,16 +4253,16 @@ def earn(r:Request):
 
                 <div style="display:flex;gap:8px;flex-wrap:wrap;font-size:13px;">
                     <span style="padding:5px 9px;border-radius:8px;background:rgba(148,163,184,.08);">
-                        РІРЏВ± {x["seconds"]} sec
+                        вЏ± {x["seconds"]} sec
                     </span>
                     <span style="padding:5px 9px;border-radius:8px;background:rgba(34,197,94,.09);color:#86efac;">
-                        рџ’° {money(x["reward"])}
+                        💰 {money(x["reward"])}
                     </span>
                 </div>
             </div>
 
             <a class="btn" href="/task/{x["id"]}">
-                Start task в†’
+                Start task →
             </a>
         </div>
         """
@@ -4272,7 +4272,7 @@ def earn(r:Request):
     if not cards:
         cards="""
         <div class="card empty" style="grid-column:1/-1;text-align:center;padding:42px;">
-            <div class="earn-icon" style="font-size:42px;">рџ”Ћ</div>
+            <div class="earn-icon" style="font-size:42px;">🔎</div>
             <h3>{tr('No website tasks available right now', u)}</h3>
             <p class="muted" style="max-width:560px;margin:8px auto 20px;">
                 {tr('There are currently no available website tasks for your account.', u)}
@@ -4289,7 +4289,7 @@ def earn(r:Request):
     <section class="hero" style="position:relative;overflow:hidden;background-image:linear-gradient(90deg,rgba(15,23,42,.96) 0%,rgba(15,23,42,.82) 48%,rgba(15,23,42,.35) 100%),url('/static/images/hero-banner.png');background-size:cover;background-position:center;min-height:460px;display:flex;align-items:center;">
         <div style="position:relative;z-index:2;">
             <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border:1px solid rgba(96,165,250,.25);border-radius:999px;background:rgba(59,130,246,.10);font-size:12px;color:#93c5fd;margin-bottom:14px;">
-                вљЎ EasySurf Earning Center
+                ⚡ EasySurf Earning Center
             </div>
 
             <h1 style="margin:0 0 10px;">
@@ -4302,8 +4302,8 @@ def earn(r:Request):
             </p>
 
             <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:24px;">
-                <a class="btn" href="#tasks">рџЊђ {tr('Browse tasks', u)}</a>
-                <a class="btn secondary" href="/rewards">рџЋЃ {tr('View rewards', u)}</a>
+                <a class="btn" href="#tasks">🌐 {tr('Browse tasks', u)}</a>
+                <a class="btn secondary" href="/rewards">🎁 {tr('View rewards', u)}</a>
             </div>
         </div>
 
@@ -4329,68 +4329,68 @@ def earn(r:Request):
 
             <div class="card earn-card" style="min-height:185px;">
                 <div>
-                    <div class="earn-icon" style="font-size:34px;">рџ“‹</div>
+                    <div class="earn-icon" style="font-size:34px;">📋</div>
                     <h3>{tr('Surveys', u)}</h3>
                     <p class="muted">
                         {tr('Share your opinion through paid research surveys when inventory is available.', u)}
                     </p>
                 </div>
-                <a href="/surveys">{tr('Explore surveys', u)} в†’</a>
+                <a href="/surveys">{tr('Explore surveys', u)} →</a>
             </div>
 
             <div class="card earn-card" style="min-height:185px;">
                 <div>
-                    <div class="earn-icon" style="font-size:34px;">рџЋЃ</div>
+                    <div class="earn-icon" style="font-size:34px;">🎁</div>
                     <h3>{tr('Offers', u)}</h3>
                     <p class="muted">
                         {tr('Complete advertiser-approved activities and tracked offers.', u)}
                     </p>
                 </div>
-                <a href="/offers">{tr('Explore offers', u)} в†’</a>
+                <a href="/offers">{tr('Explore offers', u)} →</a>
             </div>
 
             <div class="card earn-card" style="min-height:185px;">
                 <div>
-                    <div class="earn-icon" style="font-size:34px;">рџЋ®</div>
+                    <div class="earn-icon" style="font-size:34px;">🎮</div>
                     <h3>{tr('Games', u)}</h3>
                     <p class="muted">
                         Discover game-based opportunities and milestone rewards.
                     </p>
                 </div>
-                <a href="/games">{tr('Explore games', u)} в†’</a>
+                <a href="/games">{tr('Explore games', u)} →</a>
             </div>
 
             <div class="card earn-card" style="min-height:185px;">
                 <div>
-                    <div class="earn-icon" style="font-size:34px;">рџ“±</div>
+                    <div class="earn-icon" style="font-size:34px;">📱</div>
                     <h3>{tr('Apps', u)}</h3>
                     <p class="muted">
                         Find tracked app activities and approved earning opportunities.
                     </p>
                 </div>
-                <a href="/apps">{tr('Explore apps', u)} в†’</a>
+                <a href="/apps">{tr('Explore apps', u)} →</a>
             </div>
 
             <div class="card earn-card" style="min-height:185px;">
                 <div>
-                    <div class="earn-icon" style="font-size:34px;">в–¶пёЏ</div>
+                    <div class="earn-icon" style="font-size:34px;">▶️</div>
                     <h3>{tr('Videos', u)}</h3>
                     <p class="muted">
                         {tr('Watch approved video activities when available.', u)}
                     </p>
                 </div>
-                <a href="/videos">{tr('Explore videos', u)} в†’</a>
+                <a href="/videos">{tr('Explore videos', u)} →</a>
             </div>
 
             <div class="card earn-card" style="min-height:185px;">
                 <div>
-                    <div class="earn-icon" style="font-size:34px;">рџ§©</div>
+                    <div class="earn-icon" style="font-size:34px;">🧩</div>
                     <h3>{tr('Micro Tasks', u)}</h3>
                     <p class="muted">
                         Complete small verified activities and simple tasks.
                     </p>
                 </div>
-                <a href="/microtasks">Explore tasks в†’</a>
+                <a href="/microtasks">Explore tasks →</a>
             </div>
 
         </div>
@@ -4429,8 +4429,8 @@ def earn(r:Request):
             </div>
 
             <div style="display:flex;gap:10px;flex-wrap:wrap;">
-                <a class="btn" href="/rewards">Rewards в†’</a>
-                <a class="btn secondary" href="/referrals">Referrals в†’</a>
+                <a class="btn" href="/rewards">Rewards →</a>
+                <a class="btn secondary" href="/referrals">Referrals →</a>
             </div>
         </div>
 
@@ -4506,7 +4506,7 @@ def games_page(r:Request):
     <section class="hero" style="position:relative;overflow:hidden;background-image:linear-gradient(90deg,rgba(15,23,42,.96) 0%,rgba(15,23,42,.78) 48%,rgba(15,23,42,.28) 100%),url('/static/images/hero-banner.png');background-size:cover;background-position:center;min-height:360px;display:flex;align-items:center;margin-bottom:24px;">
         <div style="position:relative;z-index:2;max-width:760px;">
             <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border:1px solid rgba(139,92,246,.35);border-radius:999px;background:rgba(139,92,246,.10);font-size:12px;color:#c4b5fd;margin-bottom:14px;">
-                рџЋ® EasySurf Games
+                🎮 EasySurf Games
             </div>
             <h1 style="margin:0 0 10px;">
                 """ + tr("Games", u) + """
@@ -4559,7 +4559,7 @@ def offers_page(r:Request):
     <section class="hero" style="position:relative;overflow:hidden;background-image:linear-gradient(90deg,rgba(15,23,42,.96) 0%,rgba(15,23,42,.78) 48%,rgba(15,23,42,.28) 100%),url('/static/images/offers-banner.png');background-size:cover;background-position:center;min-height:360px;display:flex;align-items:center;margin-bottom:24px;">
         <div style="position:relative;z-index:2;max-width:760px;">
             <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border:1px solid rgba(245,158,11,.35);border-radius:999px;background:rgba(245,158,11,.10);font-size:12px;color:#fcd34d;margin-bottom:14px;">
-                рџ’° EasySurf Offers
+                💰 EasySurf Offers
             </div>
             <h1 style="margin:0 0 10px;">
                 """ + tr("Offers", u) + """
@@ -4596,7 +4596,7 @@ def microtasks_page(r:Request):
         <div style="position:relative;z-index:2;">
 
             <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border:1px solid rgba(245,158,11,.28);border-radius:999px;background:rgba(245,158,11,.09);font-size:12px;color:#fcd34d;margin-bottom:14px;">
-                рџ§© {tr('EasySurf Microtasks', u)}
+                🧩 {tr('EasySurf Microtasks', u)}
             </div>
 
             <h1 style="margin:0 0 10px;">
@@ -4610,11 +4610,11 @@ def microtasks_page(r:Request):
 
             <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:22px;">
                 <a class="btn" href="/earn">
-                    вљЎ {tr('Browse all tasks', u)}
+                    ⚡ {tr('Browse all tasks', u)}
                 </a>
 
                 <a class="btn secondary" href="/activity">
-                    рџ“Љ {tr('View activity', u)}
+                    📊 {tr('View activity', u)}
                 </a>
             </div>
 
@@ -4630,7 +4630,7 @@ def microtasks_page(r:Request):
         <div class="grid">
 
             <div class="card" style="min-height:150px;">
-                <div class="earn-icon" style="font-size:34px;">рџ§©</div>
+                <div class="earn-icon" style="font-size:34px;">🧩</div>
 
                 <div class="muted" style="font-size:12px;text-transform:uppercase;letter-spacing:.07em;">
                     {tr('Microtasks', u)}
@@ -4646,7 +4646,7 @@ def microtasks_page(r:Request):
             </div>
 
             <div class="card" style="min-height:150px;">
-                <div class="earn-icon" style="font-size:34px;">вЏ±пёЏ</div>
+                <div class="earn-icon" style="font-size:34px;">⏱️</div>
 
                 <div class="muted" style="font-size:12px;text-transform:uppercase;letter-spacing:.07em;">
                     {tr('Task style', u)}
@@ -4662,7 +4662,7 @@ def microtasks_page(r:Request):
             </div>
 
             <div class="card" style="min-height:150px;">
-                <div class="earn-icon" style="font-size:34px;">рџ›ЎпёЏ</div>
+                <div class="earn-icon" style="font-size:34px;">🛡️</div>
 
                 <div class="muted" style="font-size:12px;text-transform:uppercase;letter-spacing:.07em;">
                     {tr('Rewards', u)}
@@ -4688,7 +4688,7 @@ def microtasks_page(r:Request):
             <div style="position:relative;z-index:2;max-width:720px;margin:0 auto;">
 
                 <div style="width:78px;height:78px;margin:0 auto 18px;border-radius:24px;display:flex;align-items:center;justify-content:center;font-size:40px;background:linear-gradient(135deg,rgba(245,158,11,.18),rgba(59,130,246,.10));border:1px solid rgba(245,158,11,.25);box-shadow:0 15px 45px rgba(0,0,0,.18);">
-                    рџ§©
+                    🧩
                 </div>
 
                 <div style="font-size:12px;color:#fbbf24;text-transform:uppercase;letter-spacing:.09em;font-weight:700;">
@@ -4707,11 +4707,11 @@ def microtasks_page(r:Request):
 
                 <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:22px;">
                     <a class="btn" href="/earn">
-                        вљЎ {tr('Browse earning tasks', u)}
+                        ⚡ {tr('Browse earning tasks', u)}
                     </a>
 
                     <a class="btn secondary" href="/offers">
-                        рџ’Ћ {tr('Explore offers', u)}
+                        💎 {tr('Explore offers', u)}
                     </a>
                 </div>
 
@@ -4730,7 +4730,7 @@ def microtasks_page(r:Request):
         <div class="grid">
 
             <div class="card">
-                <div style="font-size:28px;margin-bottom:10px;">рџ”Ћ</div>
+                <div style="font-size:28px;margin-bottom:10px;">🔎</div>
 
                 <h3 style="margin:0 0 7px;">
                     {tr('Choose a task', u)}
@@ -4742,7 +4742,7 @@ def microtasks_page(r:Request):
             </div>
 
             <div class="card">
-                <div style="font-size:28px;margin-bottom:10px;">вњЌпёЏ</div>
+                <div style="font-size:28px;margin-bottom:10px;">✍️</div>
 
                 <h3 style="margin:0 0 7px;">
                     {tr('Complete it', u)}
@@ -4754,7 +4754,7 @@ def microtasks_page(r:Request):
             </div>
 
             <div class="card">
-                <div style="font-size:28px;margin-bottom:10px;">рџ’°</div>
+                <div style="font-size:28px;margin-bottom:10px;">💰</div>
 
                 <h3 style="margin:0 0 7px;">
                     {tr('Get credited', u)}
@@ -4801,7 +4801,7 @@ def videos_page(r:Request):
 
                 <div>
                     <div style="width:52px;height:52px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:27px;background:rgba(239,68,68,.10);border:1px solid rgba(239,68,68,.18);margin-bottom:14px;">
-                        в–¶пёЏ
+                        ▶️
                     </div>
 
                     <h3 style="margin:0 0 7px;">
@@ -4822,15 +4822,15 @@ def videos_page(r:Request):
             <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:18px;">
 
                 <span style="padding:6px 9px;border-radius:999px;background:rgba(148,163,184,.08);color:#cbd5e1;font-size:12px;">
-                    вЏ±пёЏ {int(x["seconds"])} sec
+                    ⏱️ {int(x["seconds"])} sec
                 </span>
 
                 <span style="padding:6px 9px;border-radius:999px;background:rgba(148,163,184,.08);color:#cbd5e1;font-size:12px;">
-                    рџЋҐ Video
+                    🎥 Video
                 </span>
 
                 <span style="padding:6px 9px;border-radius:999px;background:rgba(59,130,246,.08);color:#93c5fd;font-size:12px;">
-                    вњ“ Available
+                    ✓ Available
                 </span>
 
             </div>
@@ -4838,7 +4838,7 @@ def videos_page(r:Request):
             <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:20px;">
 
                 <a class="btn" href="/complete/{int(x["id"])}">
-                    в–¶пёЏ Start video
+                    ▶️ Start video
                 </a>
 
             </div>
@@ -4855,7 +4855,7 @@ def videos_page(r:Request):
             <div style="position:relative;z-index:2;max-width:720px;margin:0 auto;">
 
                 <div style="width:78px;height:78px;margin:0 auto 18px;border-radius:24px;display:flex;align-items:center;justify-content:center;font-size:40px;background:linear-gradient(135deg,rgba(239,68,68,.16),rgba(59,130,246,.10));border:1px solid rgba(239,68,68,.22);box-shadow:0 15px 45px rgba(0,0,0,.18);">
-                    в–¶пёЏ
+                    ▶️
                 </div>
 
                 <div style="font-size:12px;color:#fca5a5;text-transform:uppercase;letter-spacing:.09em;font-weight:700;">
@@ -4874,11 +4874,11 @@ def videos_page(r:Request):
                 <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:22px;">
 
                     <a class="btn" href="/earn">
-                        вљЎ {tr('Browse earning tasks', u)}
+                        ⚡ {tr('Browse earning tasks', u)}
                     </a>
 
                     <a class="btn secondary" href="/games">
-                        рџЋ® Explore games
+                        🎮 Explore games
                     </a>
 
                 </div>
@@ -4898,7 +4898,7 @@ def videos_page(r:Request):
         <div style="position:relative;z-index:2;">
 
             <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border:1px solid rgba(239,68,68,.28);border-radius:999px;background:rgba(239,68,68,.09);font-size:12px;color:#fca5a5;margin-bottom:14px;">
-                рџЋҐ EasySurf Videos
+                🎥 EasySurf Videos
             </div>
 
             <h1 style="margin:0 0 10px;">
@@ -4913,11 +4913,11 @@ def videos_page(r:Request):
             <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:22px;">
 
                 <a class="btn" href="/earn">
-                    вљЎ {tr('Browse all tasks', u)}
+                    ⚡ {tr('Browse all tasks', u)}
                 </a>
 
                 <a class="btn secondary" href="/activity">
-                    рџ“Љ {tr('View activity', u)}
+                    📊 {tr('View activity', u)}
                 </a>
 
             </div>
@@ -4937,7 +4937,7 @@ def videos_page(r:Request):
             <div class="card" style="min-height:150px;">
 
                 <div class="earn-icon" style="font-size:34px;">
-                    рџЋҐ
+                    🎥
                 </div>
 
                 <div class="muted" style="font-size:12px;text-transform:uppercase;letter-spacing:.07em;">
@@ -4957,7 +4957,7 @@ def videos_page(r:Request):
             <div class="card" style="min-height:150px;">
 
                 <div class="earn-icon" style="font-size:34px;">
-                    вЏ±пёЏ
+                    ⏱️
                 </div>
 
                 <div class="muted" style="font-size:12px;text-transform:uppercase;letter-spacing:.07em;">
@@ -4977,7 +4977,7 @@ def videos_page(r:Request):
             <div class="card" style="min-height:150px;">
 
                 <div class="earn-icon" style="font-size:34px;">
-                    рџ’°
+                    💰
                 </div>
 
                 <div class="muted" style="font-size:12px;text-transform:uppercase;letter-spacing:.07em;">
@@ -5013,7 +5013,7 @@ def videos_page(r:Request):
         <div style="display:flex;align-items:center;gap:15px;">
 
             <div style="width:48px;height:48px;border-radius:15px;display:flex;align-items:center;justify-content:center;font-size:24px;background:rgba(59,130,246,.10);">
-                в„№пёЏ
+                ℹ️
             </div>
 
             <div>
@@ -5391,7 +5391,7 @@ def apps_page(r:Request):
     <section class="hero" style="position:relative;overflow:hidden;background-image:linear-gradient(90deg,rgba(15,23,42,.96) 0%,rgba(15,23,42,.78) 48%,rgba(15,23,42,.28) 100%),url('/static/images/apps-banner.png');background-size:cover;background-position:center;min-height:360px;display:flex;align-items:center;margin-bottom:24px;">
         <div style="position:relative;z-index:2;max-width:760px;">
             <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border:1px solid rgba(59,130,246,.35);border-radius:999px;background:rgba(59,130,246,.10);font-size:12px;color:#93c5fd;margin-bottom:14px;">
-                рџ“± EasySurf Apps
+                📱 EasySurf Apps
             </div>
             <h1 style="margin:0 0 10px;">
                 """ + tr("Apps", u) + """
@@ -5457,7 +5457,7 @@ def rewards(r:Request):
         <div class="card" style="border-color:rgba(34,197,94,.25);background:linear-gradient(135deg,rgba(34,197,94,.10),rgba(15,23,42,.82));">
             <div style="display:flex;align-items:flex-start;gap:16px;">
                 <div style="width:54px;height:54px;min-width:54px;border-radius:16px;display:flex;align-items:center;justify-content:center;background:rgba(34,197,94,.14);font-size:28px;">
-                    вњ“
+                    ✓
                 </div>
 
                 <div>
@@ -5485,7 +5485,7 @@ def rewards(r:Request):
 
                 <div style="display:flex;align-items:flex-start;gap:16px;">
                     <div style="width:58px;height:58px;min-width:58px;border-radius:18px;display:flex;align-items:center;justify-content:center;background:rgba(59,130,246,.16);font-size:30px;">
-                        рџЋЃ
+                        🎁
                     </div>
 
                     <div>
@@ -5509,7 +5509,7 @@ def rewards(r:Request):
                            value="{token}">
 
                     <button class="btn" style="min-width:190px;">
-                        рџЋЃ Claim {tr('Daily Bonus', u)}
+                        🎁 Claim {tr('Daily Bonus', u)}
                     </button>
                 </form>
 
@@ -5524,7 +5524,7 @@ def rewards(r:Request):
         <div style="position:relative;z-index:2;">
 
             <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border:1px solid rgba(168,85,247,.25);border-radius:999px;background:rgba(168,85,247,.10);font-size:12px;color:#c4b5fd;margin-bottom:14px;">
-                вњЁ EasySurf Rewards Center
+                ✨ EasySurf Rewards Center
             </div>
 
             <h1 style="margin:0 0 10px;">
@@ -5538,11 +5538,11 @@ def rewards(r:Request):
 
             <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:22px;">
                 <a class="btn" href="/earn">
-                    вљЎ {tr('Start earning', u)}
+                    ⚡ {tr('Start earning', u)}
                 </a>
 
                 <a class="btn secondary" href="/activity">
-                    рџ“Љ {tr('View activity', u)}
+                    📊 {tr('View activity', u)}
                 </a>
             </div>
 
@@ -5656,7 +5656,7 @@ def rewards(r:Request):
 
             <div class="card earn-card" style="min-height:205px;">
                 <div>
-                    <div class="earn-icon" style="font-size:38px;">рџ”Ґ</div>
+                    <div class="earn-icon" style="font-size:38px;">🔥</div>
 
                     <div style="display:inline-flex;padding:5px 9px;border-radius:999px;background:rgba(249,115,22,.10);color:#fdba74;font-size:11px;margin-bottom:8px;">
                         {tr('Daily streak', u)}
@@ -5672,13 +5672,13 @@ def rewards(r:Request):
                 </div>
 
                 <a href="/activity">
-                    {tr('View activity в†’', u)}
+                    {tr('View activity →', u)}
                 </a>
             </div>
 
             <div class="card earn-card" style="min-height:205px;">
                 <div>
-                    <div class="earn-icon" style="font-size:38px;">рџЏ†</div>
+                    <div class="earn-icon" style="font-size:38px;">🏆</div>
 
                     <div style="display:inline-flex;padding:5px 9px;border-radius:999px;background:rgba(168,85,247,.10);color:#c4b5fd;font-size:11px;margin-bottom:8px;">
                         {tr('Milestones', u)}
@@ -5694,13 +5694,13 @@ def rewards(r:Request):
                 </div>
 
                 <a href="/activity">
-                    View progress в†’
+                    View progress →
                 </a>
             </div>
 
             <div class="card earn-card" style="min-height:205px;">
                 <div>
-                    <div class="earn-icon" style="font-size:38px;">рџҐ‡</div>
+                    <div class="earn-icon" style="font-size:38px;">🥇</div>
 
                     <div style="display:inline-flex;padding:5px 9px;border-radius:999px;background:rgba(234,179,8,.10);color:#fde68a;font-size:11px;margin-bottom:8px;">
                         {tr('Community', u)}
@@ -5716,7 +5716,7 @@ def rewards(r:Request):
                 </div>
 
                 <a href="/leaderboard">
-                    {tr('Open leaderboard в†’', u)}
+                    {tr('Open leaderboard →', u)}
                 </a>
             </div>
 
@@ -5939,7 +5939,7 @@ def activity(r:Request):
 
     body=f"""
     <section class="hero">
-        <h1>рџ“Љ {tr('Activity', u)}</h1>
+        <h1>📊 {tr('Activity', u)}</h1>
         <p class="muted">
             {tr('Track your completed and pending rewards.', u)}
         </p>
@@ -6032,7 +6032,7 @@ def leaderboard(r:Request):
 
     body=f"""
     <section class="hero">
-        <h1>рџЏ† {tr('Leaderboard', u)}</h1>
+        <h1>🏆 {tr('Leaderboard', u)}</h1>
         <p class="muted">
             {tr('Top EasySurf earners.', u)}
         </p>
@@ -6055,7 +6055,7 @@ def leaderboard(r:Request):
 
 
 # ============================================================
-# SECURITY V4 РІР‚вЂќ OFFERWALL.GG SECURE POSTBACK
+# SECURITY V4 вЂ” OFFERWALL.GG SECURE POSTBACK
 # ============================================================
 
 def _init_offerwall_v4():
@@ -6524,7 +6524,7 @@ async def offerwall_callback(r:Request):
             )
 
         # ----------------------------------------------------
-        # CREDITED РІР‚вЂќ DATABASE UNIQUE CONSTRAINT IS THE
+        # CREDITED вЂ” DATABASE UNIQUE CONSTRAINT IS THE
         # CONCURRENCY-SAFE IDEMPOTENCY CHECK
         # ----------------------------------------------------
 
