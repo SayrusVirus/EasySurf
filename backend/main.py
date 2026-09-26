@@ -3544,6 +3544,7 @@ def loginp(r:Request):
         body
     )
 @app.post('/login')
+@app.post('/login')
 def login(
     r:Request,
     email:str=Form(...),
@@ -3600,92 +3601,144 @@ def login(
 
     try:
         u=c.execute(
-            'SELECT * FROM users WHERE email=?',
+            'SELECT * FROM users WHERE lower(email)=lower(?)',
             (normalized_email,)
         ).fetchone()
-    finally:
+
+        if not u:
+            print(
+                "LOGIN RESULT: user_not_found",
+                normalized_email,
+                flush=True
+            )
+
+            _rate_record(
+                _login_failures,
+                ip_key,
+                _LOGIN_WINDOW_SECONDS,
+                _LOGIN_MAX_FAILURES
+            )
+
+            _rate_record(
+                _login_failures,
+                email_key,
+                _LOGIN_WINDOW_SECONDS,
+                _LOGIN_MAX_FAILURES
+            )
+
+            c.close()
+
+            return RedirectResponse(
+                '/login?error=invalid',
+                303
+            )
+
+        if not vp(
+            password,
+            u['password_hash']
+        ):
+            print(
+                "LOGIN RESULT: password_mismatch",
+                normalized_email,
+                flush=True
+            )
+
+            _rate_record(
+                _login_failures,
+                ip_key,
+                _LOGIN_WINDOW_SECONDS,
+                _LOGIN_MAX_FAILURES
+            )
+
+            _rate_record(
+                _login_failures,
+                email_key,
+                _LOGIN_WINDOW_SECONDS,
+                _LOGIN_MAX_FAILURES
+            )
+
+            c.close()
+
+            return RedirectResponse(
+                '/login?error=invalid',
+                303
+            )
+
+        # =================================================
+        # ADMIN AUTO-ASSIGN
+        # =================================================
+        admin_email=os.getenv(
+            'EASYSURF_ADMIN_EMAIL',
+            ''
+        ).strip().lower()
+
+        if (
+            admin_email
+            and normalized_email == admin_email
+        ):
+            c.execute(
+                'UPDATE users SET is_admin=1,email_verified=1 WHERE id=?',
+                (u['id'],)
+            )
+            c.commit()
+
+            u=c.execute(
+                'SELECT * FROM users WHERE id=?',
+                (u['id'],)
+            ).fetchone()
+
+            print(
+                "ADMIN RESULT: user promoted to admin",
+                normalized_email,
+                flush=True
+            )
+
+        _rate_reset(
+            _login_failures,
+            ip_key
+        )
+
+        _rate_reset(
+            _login_failures,
+            email_key
+        )
+
+        r.session.clear()
+        r.session['user_id']=u['id']
+        r.session['csrf']=secrets.token_urlsafe(32)
+
+        print(
+            "LOGIN RESULT: success",
+            normalized_email,
+            "user_id=" + str(u['id']),
+            "is_admin=" + str(
+                int(u['is_admin'] or 0)
+            ),
+            flush=True
+        )
+
         c.close()
 
-    if not u:
-        _rate_record(
-            _login_failures,
-            ip_key,
-            _LOGIN_WINDOW_SECONDS,
-            _LOGIN_MAX_FAILURES
+        return RedirectResponse(
+            '/dashboard',
+            303
         )
 
-        _rate_record(
-            _login_failures,
-            email_key,
-            _LOGIN_WINDOW_SECONDS,
-            _LOGIN_MAX_FAILURES
-        )
+    except Exception as e:
+        try:
+            c.close()
+        except Exception:
+            pass
 
         print(
-            "LOGIN RESULT: user_not_found",
-            normalized_email,
+            f"LOGIN RESULT: server_error {type(e).__name__}: {e}",
             flush=True
         )
 
         return RedirectResponse(
-            '/login?error=invalid',
+            '/login?error=server',
             303
         )
-
-    if not vp(
-        password,
-        u['password_hash']
-    ):
-        _rate_record(
-            _login_failures,
-            ip_key,
-            _LOGIN_WINDOW_SECONDS,
-            _LOGIN_MAX_FAILURES
-        )
-
-        _rate_record(
-            _login_failures,
-            email_key,
-            _LOGIN_WINDOW_SECONDS,
-            _LOGIN_MAX_FAILURES
-        )
-
-        print(
-            "LOGIN RESULT: password_mismatch",
-            normalized_email,
-            flush=True
-        )
-
-        return RedirectResponse(
-            '/login?error=invalid',
-            303
-        )
-
-    _rate_reset(
-        _login_failures,
-        ip_key
-    )
-
-    _rate_reset(
-        _login_failures,
-        email_key
-    )
-
-    r.session.clear()
-    r.session['user_id']=u['id']
-    r.session['csrf']=secrets.token_urlsafe(32)
-
-    print(
-        "LOGIN RESULT: success",
-        normalized_email,
-        "user_id=" + str(u['id']),
-        flush=True
-    )
-
-    return RedirectResponse(
-        '/dashboard',
-        303
-    )
 
 @app.get('/profile',response_class=HTMLResponse)
 def profile_page(r:Request):
