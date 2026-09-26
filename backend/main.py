@@ -1,3 +1,6 @@
+import json
+import urllib.parse
+import urllib.request
 from fastapi import FastAPI, Request, Form, UploadFile, File
 from fastapi.staticfiles import StaticFiles
 from services.provider_core import (
@@ -2529,6 +2532,471 @@ def home(r:Request):
 
     return layout("Home",body,u)
 @app.get('/register',response_class=HTMLResponse)
+@app.get('/auth/google')
+@app.get('/register',response_class=HTMLResponse)
+def regp(r:Request):
+    if user(r):
+        return RedirectResponse(
+            '/dashboard',
+            303
+        )
+
+    t=csrf(r)
+
+    status=r.query_params.get(
+        'email',
+        ''
+    ).strip().lower()
+
+    google_status=r.query_params.get(
+        'google',
+        ''
+    ).strip().lower()
+
+    message=''
+
+    if status=='exists':
+        message=(
+            '<div class="auth-message error">'
+            'An account with this email already exists. '
+            '<a href="/login">Log in instead.</a>'
+            '</div>'
+        )
+    elif status=='mismatch':
+        message=(
+            '<div class="auth-message error">'
+            'Passwords do not match.'
+            '</div>'
+        )
+    elif status=='short':
+        message=(
+            '<div class="auth-message error">'
+            'Password must be at least 8 characters.'
+            '</div>'
+        )
+    elif status=='long':
+        message=(
+            '<div class="auth-message error">'
+            'Password cannot exceed 64 characters.'
+            '</div>'
+        )
+    elif status=='invalid':
+        message=(
+            '<div class="auth-message error">'
+            'Please enter a valid email address.'
+            '</div>'
+        )
+    elif status=='error':
+        message=(
+            '<div class="auth-message error">'
+            'Registration could not be completed. '
+            'Please try again.'
+            '</div>'
+        )
+
+    if google_status=='not_configured':
+        message=(
+            '<div class="auth-message info">'
+            'Google sign-in is not configured yet. '
+            'You can register with email.'
+            '</div>'
+        )
+    elif google_status in (
+        'state',
+        'token',
+        'email',
+        'error'
+    ):
+        message=(
+            '<div class="auth-message error">'
+            'Google sign-in could not be completed. '
+            'Please use email registration.'
+            '</div>'
+        )
+
+    ref=urllib.parse.quote(
+        r.query_params.get(
+            'ref',
+            ''
+        ).strip(),
+        safe=''
+    )
+
+    body=(
+        '<style>'
+        '.auth-page{max-width:1080px;margin:24px auto;'
+        'display:grid;grid-template-columns:1fr 1fr;gap:24px;}'
+        '.auth-hero{padding:42px;border-radius:28px;'
+        'background:linear-gradient(145deg,#102b52,#071827);'
+        'border:1px solid rgba(96,165,250,.18);'
+        'box-shadow:0 24px 70px rgba(0,0,0,.25);}'
+        '.auth-hero h1{font-size:43px;line-height:1.05;'
+        'letter-spacing:-1.5px;margin:35px 0 15px;color:#fff;}'
+        '.auth-hero p{color:#cbd5e1;line-height:1.65;}'
+        '.auth-brand{font-weight:900;color:#fff;font-size:19px;}'
+        '.auth-brand span{display:inline-grid;place-items:center;'
+        'width:36px;height:36px;border-radius:11px;'
+        'background:linear-gradient(135deg,#38bdf8,#2563eb);'
+        'margin-right:8px;}'
+        '.auth-points{display:grid;gap:13px;margin-top:30px;}'
+        '.auth-point{color:#dbeafe;font-size:14px;}'
+        '.auth-point b{color:#4ade80;margin-right:8px;}'
+        '.auth-card{padding:34px;border-radius:28px;'
+        'background:rgba(15,31,52,.96);'
+        'border:1px solid var(--border);box-shadow:var(--shadow);}'
+        '.auth-card h2{font-size:30px;margin:0 0 7px;}'
+        '.auth-sub{color:#94a3b8;margin:0 0 22px;}'
+        '.auth-message{padding:12px 14px;border-radius:11px;'
+        'margin-bottom:18px;font-size:14px;}'
+        '.auth-message.error{background:rgba(251,113,133,.10);'
+        'border:1px solid rgba(251,113,133,.22);color:#fecdd3;}'
+        '.auth-message.info{background:rgba(56,189,248,.10);'
+        'border:1px solid rgba(56,189,248,.22);color:#bae6fd;}'
+        '.auth-message a{color:#93c5fd;font-weight:800;}'
+        '.google-btn{height:50px;display:flex;align-items:center;'
+        'justify-content:center;gap:12px;border-radius:12px;'
+        'background:#fff;color:#172033;text-decoration:none;'
+        'font-weight:800;}'
+        '.google-g{font-size:21px;font-weight:900;color:#4285f4;}'
+        '.or-line{display:flex;align-items:center;gap:12px;'
+        'margin:20px 0;color:#64748b;font-size:11px;font-weight:800;}'
+        '.or-line:before,.or-line:after{content:"";height:1px;'
+        'flex:1;background:rgba(148,163,184,.18);}'
+        '.auth-card input[type=email],'
+        '.auth-card input[type=password]{min-height:49px;margin-bottom:15px;}'
+        '.auth-help{font-size:12px;color:#64748b;margin:-6px 0 15px;}'
+        '.auth-card button{width:100%;min-height:51px;border:0;'
+        'border-radius:12px;background:linear-gradient(135deg,#2563eb,#0ea5e9);'
+        'color:#fff;font-size:16px;font-weight:900;cursor:pointer;}'
+        '.auth-terms{margin-top:16px;color:#64748b;font-size:12px;'
+        'line-height:1.55;text-align:center;}'
+        '.auth-terms a,.auth-footer a{color:#93c5fd;font-weight:800;}'
+        '.auth-footer{text-align:center;color:#94a3b8;font-size:14px;margin-top:20px;}'
+        '.security-note{margin:3px 0 17px;padding:10px 12px;'
+        'border-radius:10px;background:rgba(34,197,94,.05);'
+        'border:1px solid rgba(34,197,94,.12);color:#94a3b8;font-size:12px;}'
+        '@media(max-width:820px){'
+        '.auth-page{grid-template-columns:1fr;}'
+        '.auth-hero{display:none;}'
+        '.auth-card{padding:25px 20px;}'
+        '}'
+        '</style>'
+        '<div class="auth-page">'
+        '<section class="auth-hero">'
+        '<div class="auth-brand">'
+        '<span>?</span>EasySurf'
+        '</div>'
+        '<h1>Start earning in under 30 seconds.</h1>'
+        '<p>Create your free account and explore surveys, offers, '
+        'games, apps and tasks from one dashboard.</p>'
+        '<div class="auth-points">'
+        '<div class="auth-point"><b>?</b>Free to join</div>'
+        '<div class="auth-point"><b>?</b>No deposit required</div>'
+        '<div class="auth-point"><b>?</b>Multiple ways to earn</div>'
+        '<div class="auth-point"><b>?</b>Track rewards in one place</div>'
+        '</div>'
+        '</section>'
+        '<section class="auth-card">'
+        '<h2>Create your account</h2>'
+        '<p class="auth-sub">Choose Google or register with your email.</p>'
+        + message +
+        '<a class="google-btn" href="/auth/google?ref='
+        + ref +
+        '"><span class="google-g">G</span>'
+        '<span>Continue with Google</span></a>'
+        '<div class="or-line"><span>OR</span></div>'
+        '<form method="post" action="/register">'
+        '<input type="hidden" name="csrf_token" value="'
+        + t +
+        '">'
+        '<input type="hidden" name="ref" value="'
+        + ref +
+        '">'
+        '<label>Email</label>'
+        '<input name="email" type="email" required '
+        'maxlength="320" autocomplete="email" '
+        'placeholder="you@example.com">'
+        '<label>Password</label>'
+        '<input name="password" type="password" required '
+        'minlength="8" maxlength="64" '
+        'autocomplete="new-password" '
+        'placeholder="Create a password">'
+        '<div class="auth-help">'
+        'Minimum 8, maximum 64 characters.'
+        '</div>'
+        '<label>Confirm password</label>'
+        '<input name="password_confirm" type="password" required '
+        'minlength="8" maxlength="64" '
+        'autocomplete="new-password" '
+        'placeholder="Repeat your password">'
+        '<div class="security-note">'
+        '? Protected by EasySurf security controls.'
+        '</div>'
+        '<button type="submit">Sign Up Now</button>'
+        '</form>'
+        '<div class="auth-terms">'
+        'By clicking <strong>Sign Up Now</strong>, you agree to '
+        '<a href="/terms">Terms of Service</a> and '
+        '<a href="/privacy">Privacy Policy</a>.'
+        '</div>'
+        '<div class="auth-footer">'
+        'Already have an account? '
+        '<a href="/login">Log in</a>'
+        '</div>'
+        '</section>'
+        '</div>'
+    )
+
+    return layout(
+        'Create account',
+        body
+    )
+
+
+@app.get('/auth/google/callback')
+def google_callback(r:Request):
+    code_value=r.query_params.get(
+        'code',
+        ''
+    ).strip()
+
+    state=r.query_params.get(
+        'state',
+        ''
+    ).strip()
+
+    expected=r.session.pop(
+        'google_oauth_state',
+        ''
+    )
+
+    referral_code=r.session.pop(
+        'google_ref',
+        ''
+    )
+
+    if (
+        not code_value
+        or not state
+        or not expected
+        or not secrets.compare_digest(
+            state,
+            expected
+        )
+    ):
+        return RedirectResponse(
+            '/register?google=state',
+            303
+        )
+
+    client_id=os.getenv(
+        'GOOGLE_CLIENT_ID',
+        ''
+    ).strip()
+
+    client_secret=os.getenv(
+        'GOOGLE_CLIENT_SECRET',
+        ''
+    ).strip()
+
+    if not client_id or not client_secret:
+        return RedirectResponse(
+            '/register?google=not_configured',
+            303
+        )
+
+    public_url=os.getenv(
+        'EASYSURF_PUBLIC_URL',
+        'http://127.0.0.1:8000'
+    ).strip().rstrip('/')
+
+    redirect_uri=os.getenv(
+        'GOOGLE_REDIRECT_URI',
+        public_url + '/auth/google/callback'
+    ).strip()
+
+    try:
+        payload=urllib.parse.urlencode(
+            {
+                'code':code_value,
+                'client_id':client_id,
+                'client_secret':client_secret,
+                'redirect_uri':redirect_uri,
+                'grant_type':'authorization_code'
+            }
+        ).encode()
+
+        request=urllib.request.Request(
+            'https://oauth2.googleapis.com/token',
+            data=payload,
+            headers={
+                'Content-Type':
+                'application/x-www-form-urlencoded'
+            },
+            method='POST'
+        )
+
+        with urllib.request.urlopen(
+            request,
+            timeout=15
+        ) as response:
+            token=json.loads(
+                response.read().decode(
+                    'utf-8'
+                )
+            )
+
+        access_token=str(
+            token.get(
+                'access_token',
+                ''
+            )
+        ).strip()
+
+        if not access_token:
+            return RedirectResponse(
+                '/register?google=token',
+                303
+            )
+
+        profile_request=urllib.request.Request(
+            'https://www.googleapis.com/oauth2/v3/userinfo',
+            headers={
+                'Authorization':
+                'Bearer ' + access_token
+            }
+        )
+
+        with urllib.request.urlopen(
+            profile_request,
+            timeout=15
+        ) as response:
+            profile=json.loads(
+                response.read().decode(
+                    'utf-8'
+                )
+            )
+
+        email=str(
+            profile.get(
+                'email',
+                ''
+            )
+        ).strip().lower()
+
+        if not email or not bool(
+            profile.get(
+                'email_verified',
+                False
+            )
+        ):
+            return RedirectResponse(
+                '/register?google=email',
+                303
+            )
+
+        c=db()
+
+        existing=c.execute(
+            'SELECT id FROM users WHERE email=?',
+            (email,)
+        ).fetchone()
+
+        if existing:
+            user_id=int(
+                existing['id']
+            )
+
+        else:
+            rr=c.execute(
+                'SELECT id FROM users WHERE referral_code=?',
+                (referral_code,)
+            ).fetchone() if referral_code else None
+
+            cur=c.execute(
+                'INSERT INTO users(email,password_hash,created_at,referral_code,referred_by,email_verified) VALUES(?,?,?,?,?,?)',
+                (
+                    email,
+                    hp(
+                        secrets.token_urlsafe(
+                            48
+                        )
+                    ),
+                    now(),
+                    code(c),
+                    rr['id'] if rr else None,
+                    1
+                )
+            )
+
+            user_id=int(
+                cur.lastrowid
+            )
+
+            if rr:
+                bonus=50
+
+                c.execute(
+                    'UPDATE users SET balance=balance+? WHERE id=?',
+                    (
+                        bonus,
+                        rr['id']
+                    )
+                )
+
+                c.execute(
+                    'INSERT INTO transactions(user_id,amount,kind,description,created_at) VALUES(?,?,?,?,?)',
+                    (
+                        rr['id'],
+                        bonus,
+                        'referral_bonus',
+                        'Referral signup bonus',
+                        now()
+                    )
+                )
+
+                c.execute(
+                    'INSERT INTO referrals(referrer_id,referred_id,bonus,created_at) VALUES(?,?,?,?)',
+                    (
+                        rr['id'],
+                        user_id,
+                        bonus,
+                        now()
+                    )
+                )
+
+        c.execute(
+            'UPDATE users SET email_verified=1 WHERE id=?',
+            (user_id,)
+        )
+
+        c.commit()
+        c.close()
+
+        r.session.clear()
+        r.session['user_id']=user_id
+        r.session['csrf']=secrets.token_urlsafe(32)
+
+        return RedirectResponse(
+            '/dashboard',
+            303
+        )
+
+    except Exception as e:
+        print(
+            f"GOOGLE AUTH ERROR: {type(e).__name__}: {e}",
+            flush=True
+        )
+
+        try:
+            c.close()
+        except Exception:
+            pass
+
+        return RedirectResponse(
+            '/register?google=error',
+            303
+        )
 def regp(r:Request):
  if user(r):
   return RedirectResponse('/dashboard',303)
@@ -2583,7 +3051,7 @@ def reg(r:Request,email:str=Form(...),password:str=Form(...),password_confirm:st
  if not email or len(email)>320 or '@' not in email:
   return RedirectResponse('/register?email=invalid',303)
 
- if len(password)<6:
+ if len(password)<8:
   return RedirectResponse('/register?email=short',303)
 
  if password!=password_confirm:
@@ -2846,20 +3314,104 @@ def resend_verification(
  )
 
 @app.get('/login',response_class=HTMLResponse)
+@app.get('/login',response_class=HTMLResponse)
 def loginp(r:Request):
- if user(r):
-  return RedirectResponse('/dashboard',303)
- t=csrf(r)
- verification=r.query_params.get('verification','').strip().lower()
- message=''
- if verification=='required':
-  message='<div class="alert">Email verification required. Please verify your email before logging in.</div>'
- elif verification=='resent':
-  message='<div class="alert">Verification email sent. Please check your inbox.</div>'
- elif verification=='failed':
-  message='<div class="alert">We could not send the verification email. Please try again later.</div>'
- resend='<p style="margin-top:12px"><a href="/resend-verification">Resend verification email</a></p>'
- return layout('Login',f'<div class="center card auth-card"><h2>Login</h2>{message}<form method="post"><input type="hidden" name="csrf_token" value="{t}"><label>{tr("Email")}</label><input name="email" type="email" required><label>Password</label><input name="password" type="password" required><button>Login</button></form>{resend}</div>')
+    if user(r):
+        return RedirectResponse(
+            '/dashboard',
+            303
+        )
+
+    t=csrf(r)
+
+    registered=r.query_params.get(
+        'registered',
+        ''
+    ).strip()
+
+    google_status=r.query_params.get(
+        'google',
+        ''
+    ).strip().lower()
+
+    message=''
+
+    if registered=='1':
+        message=(
+            '<div class="auth-message success">'
+            'Account created successfully. '
+            'You can now log in.'
+            '</div>'
+        )
+
+    if google_status:
+        message=(
+            '<div class="auth-message info">'
+            'Google sign-in is not configured or could not be completed. '
+            'You can log in with email and password.'
+            '</div>'
+        )
+
+    body=(
+        '<style>'
+        '.login-wrap{max-width:540px;margin:35px auto;}'
+        '.login-card{padding:34px;border-radius:28px;'
+        'background:rgba(15,31,52,.96);border:1px solid var(--border);'
+        'box-shadow:var(--shadow);}'
+        '.login-card h1{margin:0 0 8px;font-size:32px;}'
+        '.login-sub{margin:0 0 22px;color:#94a3b8;}'
+        '.auth-message{padding:12px 14px;border-radius:11px;'
+        'margin-bottom:18px;font-size:14px;}'
+        '.auth-message.success{background:rgba(34,197,94,.10);'
+        'color:#bbf7d0;}'
+        '.auth-message.info{background:rgba(56,189,248,.10);'
+        'color:#bae6fd;}'
+        '.google-btn{height:50px;display:flex;align-items:center;'
+        'justify-content:center;gap:12px;border-radius:12px;'
+        'background:#fff;color:#172033;text-decoration:none;font-weight:800;}'
+        '.google-g{font-size:21px;font-weight:900;color:#4285f4;}'
+        '.or-line{display:flex;align-items:center;gap:12px;margin:20px 0;'
+        'color:#64748b;font-size:11px;font-weight:800;}'
+        '.or-line:before,.or-line:after{content:"";height:1px;flex:1;'
+        'background:rgba(148,163,184,.18);}'
+        '.login-card button{width:100%;min-height:51px;border:0;'
+        'border-radius:12px;background:linear-gradient(135deg,#2563eb,#0ea5e9);'
+        'color:#fff;font-size:16px;font-weight:900;cursor:pointer;}'
+        '.login-footer{text-align:center;color:#94a3b8;margin-top:20px;font-size:14px;}'
+        '.login-footer a{color:#93c5fd;font-weight:800;}'
+        '</style>'
+        '<div class="login-wrap">'
+        '<div class="login-card">'
+        '<h1>Welcome back</h1>'
+        '<p class="login-sub">Sign in to continue with EasySurf.</p>'
+        + message +
+        '<a class="google-btn" href="/auth/google">'
+        '<span class="google-g">G</span>'
+        '<span>Continue with Google</span>'
+        '</a>'
+        '<div class="or-line"><span>OR</span></div>'
+        '<form method="post" action="/login">'
+        '<input type="hidden" name="csrf_token" value="'
+        + t +
+        '">'
+        '<label>Email</label>'
+        '<input name="email" type="email" required autocomplete="email">'
+        '<label>Password</label>'
+        '<input name="password" type="password" required autocomplete="current-password">'
+        '<button type="submit">Log In</button>'
+        '</form>'
+        '<div class="login-footer">'
+        'Don\'t have an account? '
+        '<a href="/register">Sign up</a>'
+        '</div>'
+        '</div>'
+        '</div>'
+    )
+
+    return layout(
+        'Login',
+        body
+    )
 @app.post('/login')
 def login(r:Request,email:str=Form(...),password:str=Form(...),csrf_token:str=Form(...)):
  ip=_client_ip(r)
