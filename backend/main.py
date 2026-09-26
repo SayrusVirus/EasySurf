@@ -2553,6 +2553,11 @@ def regp(r:Request):
         ''
     ).strip().lower()
 
+    login_error=r.query_params.get(
+        'error',
+        ''
+    ).strip().lower()
+
     message=''
 
     if status=='exists':
@@ -3021,138 +3026,198 @@ def regp(r:Request):
  return layout('Register',f'<div class="center card auth-card"><h2>Create account</h2>{message}<form method="post"><input type="hidden" name="csrf_token" value="{t}"><label>{tr("Email")}</label><input name="email" type="email" required><label>{tr("Password")}</label><input name="password" type="password" required minlength="6" autocomplete="new-password"><label>{tr("Confirm password")}</label><input name="password_confirm" type="password" required minlength="6" autocomplete="new-password"><button>{tr("Register")}</button></form></div>')
 
 @app.post('/register')
-def reg(r:Request,email:str=Form(...),password:str=Form(...),password_confirm:str=Form(...),csrf_token:str=Form(...),ref:str=Form('')):
- ip=_client_ip(r)
- rate_key=f"ip:{ip}"
+def reg(
+    r:Request,
+    email:str=Form(...),
+    password:str=Form(...),
+    password_confirm:str=Form(...),
+    csrf_token:str=Form(...),
+    ref:str=Form('')
+):
+    ip=_client_ip(r)
+    rate_key=f"ip:{ip}"
 
- allowed,retry=_rate_allowed(
-  _register_attempts,
-  rate_key,
-  _REGISTER_WINDOW_SECONDS,
-  _REGISTER_MAX_ATTEMPTS
- )
-
- if not allowed:
-  return _rate_limited_response(retry)
-
- _rate_record(
-  _register_attempts,
-  rate_key,
-  _REGISTER_WINDOW_SECONDS,
-  _REGISTER_MAX_ATTEMPTS
- )
-
- if not okcsrf(r,csrf_token):
-  return RedirectResponse('/register',303)
-
- email=email.strip().lower()
- ref=ref.strip().upper()
-
- if not email or len(email)>320 or '@' not in email:
-  return RedirectResponse('/register?email=invalid',303)
-
- if len(password)<8:
-  return RedirectResponse('/register?email=short',303)
-
- if password!=password_confirm:
-  return RedirectResponse('/register?email=mismatch',303)
-
- public_url=os.getenv(
-  'EASYSURF_PUBLIC_URL',
-  'http://127.0.0.1:8000'
- ).strip().rstrip('/')
-
- c=db()
-
- try:
-  c.execute('BEGIN IMMEDIATE')
-
-  existing=c.execute(
-   'SELECT id FROM users WHERE email=?',
-   (email,)
-  ).fetchone()
-
-  if existing:
-   c.rollback()
-   c.close()
-   return RedirectResponse('/register?email=exists',303)
-
-  rr=c.execute(
-   'SELECT id FROM users WHERE referral_code=?',
-   (ref,)
-  ).fetchone() if ref else None
-
-  cur=c.execute(
-   'INSERT INTO users(email,password_hash,created_at,referral_code,referred_by,email_verified) VALUES(?,?,?,?,?,?)',
-   (
-    email,
-    hp(password),
-    now(),
-    code(c),
-    rr['id'] if rr else None,
-    0
-   )
-  )
-
-  nid=cur.lastrowid
-
-  token=create_token(c,nid)
-
-  verification_url=build_verification_url(
-   public_url,
-   token
-  )
-
-  if rr:
-   bonus=50
-
-   c.execute(
-    'UPDATE users SET balance=balance+? WHERE id=?',
-    (bonus,rr['id'])
-   )
-
-   c.execute(
-    'INSERT INTO transactions(user_id,amount,kind,description,created_at) VALUES(?,?,?,?,?)',
-    (
-     rr['id'],
-     bonus,
-     'referral_bonus',
-     'Referral signup bonus',
-     now()
+    allowed,retry=_rate_allowed(
+        _register_attempts,
+        rate_key,
+        _REGISTER_WINDOW_SECONDS,
+        _REGISTER_MAX_ATTEMPTS
     )
-   )
 
-   c.execute(
-    'INSERT INTO referrals(referrer_id,referred_id,bonus,created_at) VALUES(?,?,?,?)',
-    (
-     rr['id'],
-     nid,
-     bonus,
-     now()
+    if not allowed:
+        return _rate_limited_response(retry)
+
+    _rate_record(
+        _register_attempts,
+        rate_key,
+        _REGISTER_WINDOW_SECONDS,
+        _REGISTER_MAX_ATTEMPTS
     )
-   )
 
-  c.commit()
+    if not okcsrf(r,csrf_token):
+        print(
+            "REGISTER RESULT: csrf_failed",
+            flush=True
+        )
+        return RedirectResponse(
+            '/register?email=csrf',
+            303
+        )
 
- except sqlite3.IntegrityError:
-  try:
-   c.rollback()
-  except Exception:
-   pass
-  c.close()
-  return RedirectResponse('/register?email=exists',303)
+    email=email.strip().lower()
+    ref=ref.strip().upper()
 
- except Exception as e:
-  try:
-   c.rollback()
-  except Exception:
-   pass
-  c.close()
-  print(f"REGISTER DB ERROR: {type(e).__name__}: {e}", flush=True)
-  return RedirectResponse('/register?email=error',303)
- c.close()
+    if not email or len(email)>320 or '@' not in email:
+        return RedirectResponse(
+            '/register?email=invalid',
+            303
+        )
 
- return RedirectResponse('/login',303)
+    if len(password)<8:
+        return RedirectResponse(
+            '/register?email=short',
+            303
+        )
+
+    if len(password)>64:
+        return RedirectResponse(
+            '/register?email=long',
+            303
+        )
+
+    if password!=password_confirm:
+        return RedirectResponse(
+            '/register?email=mismatch',
+            303
+        )
+
+    c=db()
+
+    try:
+        c.execute('BEGIN IMMEDIATE')
+
+        existing=c.execute(
+            'SELECT id FROM users WHERE email=?',
+            (email,)
+        ).fetchone()
+
+        if existing:
+            c.rollback()
+            c.close()
+
+            print(
+                "REGISTER RESULT: exists",
+                email,
+                flush=True
+            )
+
+            return RedirectResponse(
+                '/register?email=exists',
+                303
+            )
+
+        rr=c.execute(
+            'SELECT id FROM users WHERE referral_code=?',
+            (ref,)
+        ).fetchone() if ref else None
+
+        cur=c.execute(
+            'INSERT INTO users(email,password_hash,created_at,referral_code,referred_by,email_verified) VALUES(?,?,?,?,?,?)',
+            (
+                email,
+                hp(password),
+                now(),
+                code(c),
+                rr['id'] if rr else None,
+                1
+            )
+        )
+
+        nid=int(cur.lastrowid)
+
+        if rr:
+            bonus=50
+
+            c.execute(
+                'UPDATE users SET balance=balance+? WHERE id=?',
+                (
+                    bonus,
+                    rr['id']
+                )
+            )
+
+            c.execute(
+                'INSERT INTO transactions(user_id,amount,kind,description,created_at) VALUES(?,?,?,?,?)',
+                (
+                    rr['id'],
+                    bonus,
+                    'referral_bonus',
+                    'Referral signup bonus',
+                    now()
+                )
+            )
+
+            c.execute(
+                'INSERT INTO referrals(referrer_id,referred_id,bonus,created_at) VALUES(?,?,?,?)',
+                (
+                    rr['id'],
+                    nid,
+                    bonus,
+                    now()
+                )
+            )
+
+        c.commit()
+        c.close()
+
+        print(
+            "REGISTER RESULT: success",
+            email,
+            "user_id=" + str(nid),
+            flush=True
+        )
+
+        return RedirectResponse(
+            '/login?registered=1',
+            303
+        )
+
+    except sqlite3.IntegrityError:
+        try:
+            c.rollback()
+        except Exception:
+            pass
+
+        c.close()
+
+        print(
+            "REGISTER RESULT: integrity_error",
+            email,
+            flush=True
+        )
+
+        return RedirectResponse(
+            '/register?email=exists',
+            303
+        )
+
+    except Exception as e:
+        try:
+            c.rollback()
+        except Exception:
+            pass
+
+        c.close()
+
+        print(
+            f"REGISTER RESULT: db_error {type(e).__name__}: {e}",
+            flush=True
+        )
+
+        return RedirectResponse(
+            '/register?email=error',
+            303
+        )
 
 @app.get('/verify-email',response_class=HTMLResponse)
 def verify_email(r:Request,token:str=''):
@@ -3344,6 +3409,19 @@ def loginp(r:Request):
             '</div>'
         )
 
+    if login_error=='invalid':
+        message=(
+            '<div class="auth-message error">'
+            'Invalid email or password.'
+            '</div>'
+        )
+    elif login_error=='csrf':
+        message=(
+            '<div class="auth-message error">'
+            'Your session expired. Please try logging in again.'
+            '</div>'
+        )
+
     if google_status:
         message=(
             '<div class="auth-message info">'
@@ -3413,58 +3491,148 @@ def loginp(r:Request):
         body
     )
 @app.post('/login')
-def login(r:Request,email:str=Form(...),password:str=Form(...),csrf_token:str=Form(...)):
- ip=_client_ip(r)
- normalized_email=email.strip().lower()
+def login(
+    r:Request,
+    email:str=Form(...),
+    password:str=Form(...),
+    csrf_token:str=Form(...)
+):
+    ip=_client_ip(r)
+    normalized_email=email.strip().lower()
 
- ip_key=f"ip:{ip}"
- email_key=f"email:{normalized_email}"
+    ip_key=f"ip:{ip}"
+    email_key=f"email:{normalized_email}"
 
- allowed,retry=_rate_allowed(
-  _login_failures,
-  ip_key,
-  _LOGIN_WINDOW_SECONDS,
-  _LOGIN_MAX_FAILURES
- )
+    allowed,retry=_rate_allowed(
+        _login_failures,
+        ip_key,
+        _LOGIN_WINDOW_SECONDS,
+        _LOGIN_MAX_FAILURES
+    )
 
- if not allowed:
-  return _rate_limited_response(retry)
+    if not allowed:
+        print(
+            "LOGIN RESULT: ip_rate_limited",
+            ip,
+            flush=True
+        )
+        return _rate_limited_response(retry)
 
- allowed,retry=_rate_allowed(
-  _login_failures,
-  email_key,
-  _LOGIN_WINDOW_SECONDS,
-  _LOGIN_MAX_FAILURES
- )
+    allowed,retry=_rate_allowed(
+        _login_failures,
+        email_key,
+        _LOGIN_WINDOW_SECONDS,
+        _LOGIN_MAX_FAILURES
+    )
 
- if not allowed:
-  return _rate_limited_response(retry)
+    if not allowed:
+        print(
+            "LOGIN RESULT: email_rate_limited",
+            normalized_email,
+            flush=True
+        )
+        return _rate_limited_response(retry)
 
- if not okcsrf(r,csrf_token):return RedirectResponse('/login',303)
+    if not okcsrf(r,csrf_token):
+        print(
+            "LOGIN RESULT: csrf_failed",
+            flush=True
+        )
+        return RedirectResponse(
+            '/login?error=csrf',
+            303
+        )
 
- c=db();u=c.execute('SELECT * FROM users WHERE email=?',(normalized_email,)).fetchone();c.close()
+    c=db()
 
- if not u or not vp(password,u['password_hash']):
-  _rate_record(
-   _login_failures,
-   ip_key,
-   _LOGIN_WINDOW_SECONDS,
-   _LOGIN_MAX_FAILURES
-  )
+    try:
+        u=c.execute(
+            'SELECT * FROM users WHERE email=?',
+            (normalized_email,)
+        ).fetchone()
+    finally:
+        c.close()
 
-  _rate_record(
-   _login_failures,
-   email_key,
-   _LOGIN_WINDOW_SECONDS,
-   _LOGIN_MAX_FAILURES
-  )
+    if not u:
+        _rate_record(
+            _login_failures,
+            ip_key,
+            _LOGIN_WINDOW_SECONDS,
+            _LOGIN_MAX_FAILURES
+        )
 
-  return RedirectResponse('/login',303)
+        _rate_record(
+            _login_failures,
+            email_key,
+            _LOGIN_WINDOW_SECONDS,
+            _LOGIN_MAX_FAILURES
+        )
 
- _rate_reset(_login_failures,ip_key)
- _rate_reset(_login_failures,email_key)
+        print(
+            "LOGIN RESULT: user_not_found",
+            normalized_email,
+            flush=True
+        )
 
- r.session.clear();r.session['user_id']=u['id'];r.session['csrf']=secrets.token_urlsafe(32);return RedirectResponse('/dashboard',303)
+        return RedirectResponse(
+            '/login?error=invalid',
+            303
+        )
+
+    if not vp(
+        password,
+        u['password_hash']
+    ):
+        _rate_record(
+            _login_failures,
+            ip_key,
+            _LOGIN_WINDOW_SECONDS,
+            _LOGIN_MAX_FAILURES
+        )
+
+        _rate_record(
+            _login_failures,
+            email_key,
+            _LOGIN_WINDOW_SECONDS,
+            _LOGIN_MAX_FAILURES
+        )
+
+        print(
+            "LOGIN RESULT: password_mismatch",
+            normalized_email,
+            flush=True
+        )
+
+        return RedirectResponse(
+            '/login?error=invalid',
+            303
+        )
+
+    _rate_reset(
+        _login_failures,
+        ip_key
+    )
+
+    _rate_reset(
+        _login_failures,
+        email_key
+    )
+
+    r.session.clear()
+    r.session['user_id']=u['id']
+    r.session['csrf']=secrets.token_urlsafe(32)
+
+    print(
+        "LOGIN RESULT: success",
+        normalized_email,
+        "user_id=" + str(u['id']),
+        flush=True
+    )
+
+    return RedirectResponse(
+        '/dashboard',
+        303
+    )
 
 @app.get('/profile',response_class=HTMLResponse)
 def profile_page(r:Request):
