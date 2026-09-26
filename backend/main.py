@@ -31,6 +31,10 @@ from services.email_verification import (
 BASE_DIR=Path(__file__).resolve().parent.parent; from services.db_config import DB_PATH
 app=FastAPI(title='EasySurf',version='0.5.0')
 CURRENT_LANGUAGE = ContextVar('current_language', default='en')
+SUPPORTED_LANGUAGES = {
+    "en": "English",
+    "ru": "Русский",
+}
 app.mount("/static", StaticFiles(directory=BASE_DIR / "backend" / "static"), name="static")
 AVATAR_DIR = BASE_DIR / "backend" / "static" / "uploads" / "avatars"
 AVATAR_DIR.mkdir(parents=True, exist_ok=True)
@@ -1311,14 +1315,6 @@ LANGUAGE_TRANSLATIONS = {
 }
 
 
-SUPPORTED_LANGUAGES = {
-    "en": "English",
-    "ru": "Р СѓСЃСЃРєРёР№",
-    "it": "Italiano",
-    "de": "Deutsch",
-    "ja": "ж—Ґжњ¬иЄћ",
-    "tr": "TГјrkГ§e",
-}
 
 
 
