@@ -193,8 +193,8 @@ def user(r):
 
 def init():
  c=db()
- ensure_schema(c)
  c.executescript('''CREATE TABLE IF NOT EXISTS users(id INTEGER PRIMARY KEY AUTOINCREMENT,email TEXT UNIQUE NOT NULL,password_hash TEXT NOT NULL,balance INTEGER NOT NULL DEFAULT 0,is_admin INTEGER NOT NULL DEFAULT 0,created_at INTEGER NOT NULL,referral_code TEXT,referred_by INTEGER);CREATE TABLE IF NOT EXISTS tasks(id INTEGER PRIMARY KEY AUTOINCREMENT,title TEXT NOT NULL,url TEXT NOT NULL,seconds INTEGER NOT NULL,reward INTEGER NOT NULL,active INTEGER NOT NULL DEFAULT 1,created_at INTEGER NOT NULL,task_type TEXT NOT NULL DEFAULT 'visit',video_url TEXT);CREATE TABLE IF NOT EXISTS attempts(id INTEGER PRIMARY KEY AUTOINCREMENT,user_id INTEGER NOT NULL,task_id INTEGER NOT NULL,started_at INTEGER NOT NULL,completed_at INTEGER,rewarded INTEGER NOT NULL DEFAULT 0);CREATE TABLE IF NOT EXISTS transactions(id INTEGER PRIMARY KEY AUTOINCREMENT,user_id INTEGER NOT NULL,amount INTEGER NOT NULL,kind TEXT NOT NULL,description TEXT NOT NULL,created_at INTEGER NOT NULL);CREATE TABLE IF NOT EXISTS referrals(id INTEGER PRIMARY KEY AUTOINCREMENT,referrer_id INTEGER NOT NULL,referred_id INTEGER UNIQUE NOT NULL,bonus INTEGER NOT NULL,created_at INTEGER NOT NULL);CREATE TABLE IF NOT EXISTS payouts(id INTEGER PRIMARY KEY AUTOINCREMENT,user_id INTEGER NOT NULL,amount INTEGER NOT NULL,method TEXT NOT NULL,account TEXT NOT NULL,status TEXT NOT NULL DEFAULT 'pending',created_at INTEGER NOT NULL,updated_at INTEGER NOT NULL);''')
+ ensure_schema(c)
  uc={x[1] for x in c.execute('PRAGMA table_info(users)')}
  if 'referral_code' not in uc:c.execute('ALTER TABLE users ADD COLUMN referral_code TEXT')
  if 'referred_by' not in uc:c.execute('ALTER TABLE users ADD COLUMN referred_by INTEGER')
