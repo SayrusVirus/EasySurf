@@ -2684,16 +2684,7 @@ def reg(r:Request,email:str=Form(...),password:str=Form(...),password_confirm:st
   return RedirectResponse('/register?email=error',303)
  c.close()
 
- try:
-  send_verification_email(
-   email,
-   verification_url
-  )
- except Exception as e:
-  print(f"REGISTER EMAIL ERROR: {type(e).__name__}: {e}", flush=True)
-  return RedirectResponse("/register?email=failed",303)
-
- return RedirectResponse('/login?verification=sent',303)
+ return RedirectResponse('/login',303)
 
 @app.get('/verify-email',response_class=HTMLResponse)
 def verify_email(r:Request,token:str=''):
@@ -2921,8 +2912,6 @@ def login(r:Request,email:str=Form(...),password:str=Form(...),csrf_token:str=Fo
  _rate_reset(_login_failures,ip_key)
  _rate_reset(_login_failures,email_key)
 
- if not int(u['email_verified'] or 0):
-  return RedirectResponse('/login?verification=required',303)
  r.session.clear();r.session['user_id']=u['id'];r.session['csrf']=secrets.token_urlsafe(32);return RedirectResponse('/dashboard',303)
 
 @app.get('/profile',response_class=HTMLResponse)
