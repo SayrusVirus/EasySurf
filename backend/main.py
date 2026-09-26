@@ -2690,6 +2690,7 @@ def reg(r:Request,email:str=Form(...),password:str=Form(...),password_confirm:st
    verification_url
   )
  except Exception as e:
+  print(f"REGISTER EMAIL ERROR: {type(e).__name__}: {e}", flush=True)
   return RedirectResponse("/register?email=failed",303)
 
  return RedirectResponse('/login?verification=sent',303)
