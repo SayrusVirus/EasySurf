@@ -1450,9 +1450,8 @@ LANGUAGE_TRANSLATIONS = {
 
 
 
-@app.on_event('startup')
-def _run_startup():
-    startup()
+# Initialize the database schema immediately when the application module is loaded.
+init()
 
 def get_language(u=None):
     language = CURRENT_LANGUAGE.get()
