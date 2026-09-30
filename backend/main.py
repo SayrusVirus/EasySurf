@@ -1,4 +1,4 @@
-from services.auth import create_user, authenticate_user, hash_password
+﻿from services.auth import create_user, authenticate_user, hash_password
 from fastapi import FastAPI, Request, Form, UploadFile, File
 from fastapi.staticfiles import StaticFiles
 from services.provider_core import (
@@ -32,10 +32,7 @@ from services.email_verification import (
 BASE_DIR=Path(__file__).resolve().parent.parent; from services.db_config import DB_PATH
 app=FastAPI(title='EasySurf',version='0.5.0')
 CURRENT_LANGUAGE = ContextVar('current_language', default='en')
-SUPPORTED_LANGUAGES = {
-    "en": "English",
-    "ru": "Русский",
-}
+SUPPORTED_LANGUAGES = {"en": "English"}
 app.mount("/static", StaticFiles(directory=BASE_DIR / "backend" / "static"), name="static")
 AVATAR_DIR = BASE_DIR / "backend" / "static" / "uploads" / "avatars"
 AVATAR_DIR.mkdir(parents=True, exist_ok=True)
@@ -1689,22 +1686,8 @@ def esc_attr(value):
 
 
 def layout(title, body, u=None):
-    language = get_language(u)
-    language_options = "".join(
-        '<option value="' + code + '"' + (' selected' if code == language else '') + '>' + label + '</option>'
-        for code, label in SUPPORTED_LANGUAGES.items()
-    )
-    current_path = "/"
-    if u is not None:
-        current_path = "/dashboard"
-
-    language_form = (
-        '<div class="language-switcher" style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;position:relative;z-index:1000;">'
-        '<a href="/language?language=en&amp;next=' + current_path + '" style="display:inline-block;position:relative;z-index:1001;padding:4px 2px;color:' + ('#ffffff' if language == 'en' else '#94a3b8') + ';text-decoration:none;cursor:pointer;">English</a>'
-        '<span style="opacity:.45;position:relative;z-index:1001;">|</span>'
-        '<a href="/language?language=ru&amp;next=' + current_path + '" style="display:inline-block;position:relative;z-index:1001;padding:4px 2px;color:' + ('#ffffff' if language == 'ru' else '#94a3b8') + ';text-decoration:none;cursor:pointer;">Русский</a>'
-        '</div>'
-    )
+    language = "en"
+    language_form = ""
     if not u:
         nav = (
             '<a href="/">' + tr('Home', u) + '</a>'
@@ -1724,7 +1707,7 @@ def layout(title, body, u=None):
             '<a href="/payouts">' + tr('Withdraw', u) + '</a>'
             + admin_link +
             '<span class="balance-pill">&#128176; ' + money(u["balance"]) + '</span>'
-            '<a href="/logout">' + tr('Logout', u) + '</a>' + language_form
+            '<a href="/logout">' + tr('Logout', u) + '</a>'
         )
     return f"""<!doctype html>
 
@@ -3561,12 +3544,6 @@ def profile_page(r:Request):
         + f'<label>{tr("Email")}</label>'
         + '<input value="' + str(row["email"]).replace('"','&quot;') + '" disabled>'
 
-        + f'<label>{tr('Language', u)}</label>'
-        + '<select name="language">'
-        + '<option value="en"' + (' selected' if language=="en" else '') + '>English</option>'
-        + '<option value="ru"' + (' selected' if language=="ru" else '') + '>Русский</option>'
-        + '<option value="uz"' + (' selected' if language=="uz" else '') + '>' + tr('OРІР‚Вzbekcha', u) + '</option>'
-        + '</select>'
 
         + '<label style="display:flex;align-items:center;gap:10px;margin-top:14px;">'
         + '<input type="checkbox" name="notifications" value="1"'
@@ -3730,30 +3707,14 @@ async def profile_update(
 
 @app.get('/language')
 def change_language(r: Request):
-    language = (r.query_params.get('language') or 'en').lower()
     next_path = r.query_params.get('next') or '/'
-
-    if language not in SUPPORTED_LANGUAGES:
-        language = 'en'
 
     if not next_path.startswith('/') or next_path.startswith('//'):
         next_path = '/'
 
-    user_id = r.session.get('user_id')
-
-    if user_id:
-        conn = db()
-        try:
-            conn.execute(
-                "UPDATE users SET language=? WHERE id=?",
-                (language, int(user_id))
-            )
-            conn.commit()
-        finally:
-            conn.close()
-
-    r.session['language'] = language
     return RedirectResponse(next_path, status_code=303)
+
+
 @app.get('/logout')
 def logout(r:Request):r.session.clear();return RedirectResponse('/',303)
 
@@ -7244,3 +7205,4 @@ _init_offerwall_v4()
 # ============================================================
 # END SECURITY V4
 # ============================================================
+
