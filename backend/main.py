@@ -773,7 +773,7 @@ LANGUAGE_TRANSLATIONS = {
 "Community": "Сообщество",
 "Leaderboard": "Таблица лидеров",
 "See how your total earnings compare with other EasySurf users.": "Сравните свой общий заработок с другими пользователями EasySurf.",
-"Open leaderboard →": "РћС‚РєСЂС‹С‚СЊ С‚Р°Р±Р»РёС†Сѓ Р»РёРґРµСЂРѕРІ →",
+"Open leaderboard →": "Открыть таблицу лидеров →",
 "More ways to earn": "Больше способов заработать",
 "Turn activity into rewards": "Превращайте активность в награды",
 "Explore available tasks, surveys, offers, games and other earning sections.": "Р ВР В·РЎС“РЎвЂЎР В°Р в„–РЎвЂљР Вµ Р Т‘Р С•РЎРѓРЎвЂљРЎС“Р С—Р Р…РЎвЂ№Р Вµ Р В·Р В°Р Т‘Р В°Р Р…Р С‘РЎРЏ, Р С•Р С—РЎР‚Р С•РЎРѓРЎвЂ№, Р С—РЎР‚Р ВµР Т‘Р В»Р С•Р В¶Р ВµР Р…Р С‘РЎРЏ, Р С‘Р С–РЎР‚РЎвЂ№ Р С‘ Р Т‘РЎР‚РЎС“Р С–Р С‘Р Вµ РЎР‚Р В°Р В·Р Т‘Р ВµР В»РЎвЂ№ Р В·Р В°РЎР‚Р В°Р В±Р С•РЎвЂљР С”Р В°.",
@@ -799,6 +799,7 @@ LANGUAGE_TRANSLATIONS = {
 "Description": "Описание",
 "Type": "Тип",
 "Amount": "Сумма",
+         "Bonus": "Бонус",
 "Top EasySurf earners.": "Лидеры по заработку EasySurf.",
 "Rank": "Место",
 "User": "Пользователь",
@@ -4273,7 +4274,7 @@ def referrals(r:Request):
     )
 
     if not trs:
-        trs="""
+        trs=f"""
         <tr>
             <td colspan="2" style="padding:35px 15px;text-align:center;">
                 <div style="font-size:32px;margin-bottom:8px;">👥</div>
@@ -4284,6 +4285,12 @@ def referrals(r:Request):
             </td>
         </tr>
         """
+
+    referral_total_label = tr("0 total", u).replace(
+        "0",
+        str(referral_count),
+        1
+    )
 
     body=f"""
     <section class="hero" style="position:relative;overflow:hidden;background-image:linear-gradient(90deg,rgba(15,23,42,.96) 0%,rgba(15,23,42,.82) 48%,rgba(15,23,42,.35) 100%),url('/static/images/hero-banner.png');background-size:cover;background-position:center;min-height:460px;display:flex;align-items:center;">
@@ -4443,7 +4450,7 @@ def referrals(r:Request):
                 <table style="margin:0;">
                     <tr>
                         <th>{tr('User', u)}</th>
-                        <th>Bonus</th>
+                        <th>{tr('Bonus', u)}</th>
                     </tr>
 
                     {trs}
@@ -6572,7 +6579,7 @@ def leaderboard(r:Request):
         """
 
     if not table:
-        table="""
+        table=f"""
         <tr>
             <td colspan="3">
                 {tr('No rankings yet.', u)}
