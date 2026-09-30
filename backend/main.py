@@ -2509,7 +2509,7 @@ footer{{
 /* EasySurf larger action buttons */
 form[action="/profile"] button,
 form[action="/payouts"] button,
-form[action="/admin/task"] button {
+form[action="/admin/task"] button {{
     min-height: 50px !important;
     padding: 13px 24px !important;
     font-size: 16px !important;
@@ -2517,7 +2517,7 @@ form[action="/admin/task"] button {
     line-height: 1.2 !important;
     border-radius: 10px !important;
     cursor: pointer !important;
-}
+}}
 </style>
 </head>
 
