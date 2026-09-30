@@ -197,20 +197,151 @@ def user(r):
  c=db(); u=c.execute('SELECT * FROM users WHERE id=?',(uid,)).fetchone(); c.close(); return u
 
 def init():
- c=db()
- c.executescript('''CREATE TABLE IF NOT EXISTS users(id INTEGER PRIMARY KEY AUTOINCREMENT,email TEXT UNIQUE NOT NULL,password_hash TEXT NOT NULL,balance INTEGER NOT NULL DEFAULT 0,is_admin INTEGER NOT NULL DEFAULT 0,created_at INTEGER NOT NULL,referral_code TEXT,referred_by INTEGER);CREATE TABLE IF NOT EXISTS tasks(id INTEGER PRIMARY KEY AUTOINCREMENT,title TEXT NOT NULL,url TEXT NOT NULL,seconds INTEGER NOT NULL,reward INTEGER NOT NULL,active INTEGER NOT NULL DEFAULT 1,created_at INTEGER NOT NULL,task_type TEXT NOT NULL DEFAULT 'visit',video_url TEXT);CREATE TABLE IF NOT EXISTS attempts(id INTEGER PRIMARY KEY AUTOINCREMENT,user_id INTEGER NOT NULL,task_id INTEGER NOT NULL,started_at INTEGER NOT NULL,completed_at INTEGER,rewarded INTEGER NOT NULL DEFAULT 0);CREATE TABLE IF NOT EXISTS transactions(id INTEGER PRIMARY KEY AUTOINCREMENT,user_id INTEGER NOT NULL,amount INTEGER NOT NULL,kind TEXT NOT NULL,description TEXT NOT NULL,created_at INTEGER NOT NULL);CREATE TABLE IF NOT EXISTS referrals(id INTEGER PRIMARY KEY AUTOINCREMENT,referrer_id INTEGER NOT NULL,referred_id INTEGER UNIQUE NOT NULL,bonus INTEGER NOT NULL,created_at INTEGER NOT NULL);CREATE TABLE IF NOT EXISTS payouts(id INTEGER PRIMARY KEY AUTOINCREMENT,user_id INTEGER NOT NULL,amount INTEGER NOT NULL,method TEXT NOT NULL,account TEXT NOT NULL,status TEXT NOT NULL DEFAULT 'pending',created_at INTEGER NOT NULL,updated_at INTEGER NOT NULL);''')
- ensure_schema(c)
- uc={x[1] for x in c.execute('PRAGMA table_info(users)')}
- if 'referral_code' not in uc:c.execute('ALTER TABLE users ADD COLUMN referral_code TEXT')
- if 'referred_by' not in uc:c.execute('ALTER TABLE users ADD COLUMN referred_by INTEGER')
- tc={x[1] for x in c.execute('PRAGMA table_info(tasks)')}
- if 'task_type' not in tc:c.execute("ALTER TABLE tasks ADD COLUMN task_type TEXT NOT NULL DEFAULT 'visit'")
- if 'video_url' not in tc:c.execute('ALTER TABLE tasks ADD COLUMN video_url TEXT')
- for u in c.execute("SELECT id FROM users WHERE referral_code IS NULL OR referral_code='' ").fetchall(): c.execute('UPDATE users SET referral_code=? WHERE id=?',(code(c),u['id']))
- if not c.execute('SELECT id FROM tasks LIMIT 1').fetchone(): c.execute('INSERT INTO tasks(title,url,seconds,reward,created_at,task_type) VALUES(?,?,?,?,?,?)',('Demo website visit','https://example.com',20,5,now(),'visit'))
- c.commit()
- c.close()
+    c = db()
 
+    c.executescript(
+        """
+        CREATE TABLE IF NOT EXISTS users(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            email TEXT UNIQUE NOT NULL,
+            password_hash TEXT NOT NULL,
+            balance INTEGER NOT NULL DEFAULT 0,
+            is_admin INTEGER NOT NULL DEFAULT 0,
+            created_at INTEGER NOT NULL,
+            referral_code TEXT,
+            referred_by INTEGER
+        );
+
+        CREATE TABLE IF NOT EXISTS tasks(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT NOT NULL,
+            url TEXT NOT NULL,
+            seconds INTEGER NOT NULL,
+            reward INTEGER NOT NULL,
+            active INTEGER NOT NULL DEFAULT 1,
+            created_at INTEGER NOT NULL,
+            task_type TEXT NOT NULL DEFAULT 'visit',
+            video_url TEXT,
+            budget INTEGER NOT NULL DEFAULT 1000,
+            spent INTEGER NOT NULL DEFAULT 0
+        );
+
+        CREATE TABLE IF NOT EXISTS attempts(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            task_id INTEGER NOT NULL,
+            started_at INTEGER,
+            completed_at INTEGER,
+            rewarded INTEGER NOT NULL DEFAULT 0
+        );
+
+        CREATE TABLE IF NOT EXISTS transactions(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            amount INTEGER NOT NULL,
+            kind TEXT NOT NULL,
+            description TEXT NOT NULL,
+            created_at INTEGER NOT NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS referrals(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            referrer_id INTEGER NOT NULL,
+            referred_id INTEGER UNIQUE NOT NULL,
+            bonus INTEGER NOT NULL,
+            created_at INTEGER NOT NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS payouts(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            amount INTEGER NOT NULL,
+            method TEXT NOT NULL,
+            account TEXT NOT NULL,
+            status TEXT NOT NULL DEFAULT 'pending',
+            created_at INTEGER NOT NULL,
+            updated_at INTEGER NOT NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS reward_events(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            source_type TEXT NOT NULL,
+            amount INTEGER NOT NULL DEFAULT 0,
+            status TEXT NOT NULL DEFAULT 'pending',
+            created_at INTEGER NOT NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS daily_bonus_claims(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            day TEXT NOT NULL,
+            streak_day INTEGER NOT NULL DEFAULT 1,
+            amount INTEGER NOT NULL DEFAULT 0,
+            created_at INTEGER NOT NULL,
+            UNIQUE(user_id, day)
+        );
+
+        CREATE TABLE IF NOT EXISTS activity_log(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            activity_type TEXT NOT NULL,
+            title TEXT NOT NULL,
+            amount INTEGER NOT NULL DEFAULT 0,
+            status TEXT NOT NULL DEFAULT 'completed',
+            created_at INTEGER NOT NULL
+        );
+        """
+    )
+
+    ensure_schema(c)
+
+    uc = {x[1] for x in c.execute("PRAGMA table_info(users)")}
+    if "referral_code" not in uc:
+        c.execute("ALTER TABLE users ADD COLUMN referral_code TEXT")
+    if "referred_by" not in uc:
+        c.execute("ALTER TABLE users ADD COLUMN referred_by INTEGER")
+
+    tc = {x[1] for x in c.execute("PRAGMA table_info(tasks)")}
+    if "task_type" not in tc:
+        c.execute("ALTER TABLE tasks ADD COLUMN task_type TEXT NOT NULL DEFAULT 'visit'")
+    if "video_url" not in tc:
+        c.execute("ALTER TABLE tasks ADD COLUMN video_url TEXT")
+    if "budget" not in tc:
+        c.execute("ALTER TABLE tasks ADD COLUMN budget INTEGER NOT NULL DEFAULT 1000")
+    if "spent" not in tc:
+        c.execute("ALTER TABLE tasks ADD COLUMN spent INTEGER NOT NULL DEFAULT 0")
+
+    for u in c.execute(
+        "SELECT id FROM users WHERE referral_code IS NULL OR referral_code=''"
+    ).fetchall():
+        c.execute(
+            "UPDATE users SET referral_code=? WHERE id=?",
+            (code(c), u["id"])
+        )
+
+    if not c.execute("SELECT id FROM tasks LIMIT 1").fetchone():
+        c.execute(
+            """
+            INSERT INTO tasks(
+                title,url,seconds,reward,created_at,task_type,budget,spent
+            )
+            VALUES(?,?,?,?,?,?,?,?)
+            """,
+            (
+                "Demo website visit",
+                "https://example.com",
+                20,
+                5,
+                now(),
+                "visit",
+                1000,
+                0,
+            )
+        )
+
+    c.commit()
+    c.close()
 def startup():init()
 
 
