@@ -444,18 +444,14 @@ def init():
             c.execute(
                 """
                 UPDATE users
-                SET password_hash=?,
-                    is_admin=1,
+                SET is_admin=1,
                     email_verified=1
                 WHERE id=?
                 """,
-                (
-                    hash_password(admin_password),
-                    int(admin_row["id"])
-                )
+                (int(admin_row["id"]),)
             )
             print(
-                "ADMIN BOOTSTRAP: updated",
+                "ADMIN BOOTSTRAP: verified",
                 admin_email,
                 "user_id=" + str(int(admin_row["id"])),
                 flush=True
