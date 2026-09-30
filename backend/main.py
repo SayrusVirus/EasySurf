@@ -296,6 +296,80 @@ def init():
 
     ensure_schema(c)
 
+    # PROFILE SCHEMA MIGRATION
+    # Required by /profile and /language for existing production databases.
+    profile_columns = {x[1] for x in c.execute("PRAGMA table_info(users)")}
+
+    if "username" not in profile_columns:
+        c.execute("ALTER TABLE users ADD COLUMN username TEXT")
+
+    if "display_name" not in profile_columns:
+        c.execute("ALTER TABLE users ADD COLUMN display_name TEXT")
+
+    if "avatar" not in profile_columns:
+        c.execute("ALTER TABLE users ADD COLUMN avatar TEXT")
+
+    if "language" not in profile_columns:
+        c.execute("ALTER TABLE users ADD COLUMN language TEXT DEFAULT 'en'")
+
+    if "notifications" not in profile_columns:
+        c.execute("ALTER TABLE users ADD COLUMN notifications INTEGER NOT NULL DEFAULT 1")
+
+    import re
+
+    profile_rows = c.execute(
+        "SELECT id,email,username,display_name,language,notifications FROM users"
+    ).fetchall()
+
+    for row in profile_rows:
+        username = row["username"]
+
+        if not username:
+            base = re.sub(
+                r"[^A-Za-z0-9_]+",
+                "_",
+                str(row["email"]).split("@", 1)[0]
+            ).strip("_").lower()
+
+            if len(base) < 3:
+                base = "user" + str(row["id"])
+
+            base = base[:24]
+            candidate = base
+            suffix = 1
+
+            while c.execute(
+                "SELECT 1 FROM users WHERE lower(username)=lower(?) AND id<>?",
+                (candidate, row["id"])
+            ).fetchone():
+                tail = "_" + str(suffix)
+                candidate = base[:30 - len(tail)] + tail
+                suffix += 1
+
+            username = candidate
+            display_name = row["display_name"] or username
+
+            c.execute(
+                "UPDATE users SET username=?,display_name=? WHERE id=?",
+                (username, display_name, row["id"])
+            )
+
+        if not row["display_name"]:
+            c.execute(
+                "UPDATE users SET display_name=? WHERE id=?",
+                (username or ("user" + str(row["id"])), row["id"])
+            )
+
+    c.execute(
+        "UPDATE users SET language='en' "
+        "WHERE language IS NULL OR language NOT IN ('en','ru')"
+    )
+
+    c.execute(
+        "UPDATE users SET notifications=1 WHERE notifications IS NULL"
+    )
+
+
     uc = {x[1] for x in c.execute("PRAGMA table_info(users)")}
     if "referral_code" not in uc:
         c.execute("ALTER TABLE users ADD COLUMN referral_code TEXT")
