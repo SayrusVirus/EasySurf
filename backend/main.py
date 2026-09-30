@@ -1,4 +1,4 @@
-from services.auth import create_user, authenticate_user
+from services.auth import create_user, authenticate_user, hash_password
 from fastapi import FastAPI, Request, Form, UploadFile, File
 from fastapi.staticfiles import StaticFiles
 from services.provider_core import (
@@ -412,6 +412,113 @@ def init():
                 1000,
                 0,
             )
+        )
+
+    # ADMIN BOOTSTRAP
+    # Keeps the configured Render admin account available after a fresh
+    # deployment or a new SQLite database.
+    admin_email = os.getenv("EASYSURF_ADMIN_EMAIL", "").strip().lower()
+    admin_password = os.getenv("EASYSURF_ADMIN_PASSWORD", "")
+
+    if admin_email and len(admin_password) >= 8:
+        admin_row = c.execute(
+            "SELECT id FROM users WHERE lower(email)=lower(?)",
+            (admin_email,)
+        ).fetchone()
+
+        if admin_row:
+            c.execute(
+                """
+                UPDATE users
+                SET password_hash=?,
+                    is_admin=1,
+                    email_verified=1
+                WHERE id=?
+                """,
+                (
+                    hash_password(admin_password),
+                    int(admin_row["id"])
+                )
+            )
+            print(
+                "ADMIN BOOTSTRAP: updated",
+                admin_email,
+                "user_id=" + str(int(admin_row["id"])),
+                flush=True
+            )
+        else:
+            admin_username = admin_email.split("@", 1)[0]
+            admin_username = "".join(
+                ch if ch.isalnum() or ch == "_" else "_"
+                for ch in admin_username.lower()
+            ).strip("_")
+
+            if len(admin_username) < 3:
+                admin_username = "admin"
+
+            admin_username = admin_username[:30]
+            candidate = admin_username
+            suffix = 1
+
+            while c.execute(
+                """
+                SELECT 1
+                FROM users
+                WHERE lower(username)=lower(?)
+                """,
+                (candidate,)
+            ).fetchone():
+                suffix_text = "_" + str(suffix)
+                candidate = (
+                    admin_username[:30 - len(suffix_text)]
+                    + suffix_text
+                )
+                suffix += 1
+
+            admin_referral_code = code(c)
+
+            cursor = c.execute(
+                """
+                INSERT INTO users(
+                    email,
+                    password_hash,
+                    created_at,
+                    referral_code,
+                    referred_by,
+                    email_verified,
+                    is_admin,
+                    username,
+                    display_name,
+                    language,
+                    notifications
+                )
+                VALUES(?,?,?,?,?,?,?,?,?,?,?)
+                """,
+                (
+                    admin_email,
+                    hash_password(admin_password),
+                    now(),
+                    admin_referral_code,
+                    None,
+                    1,
+                    1,
+                    candidate,
+                    candidate,
+                    "en",
+                    1,
+                )
+            )
+
+            print(
+                "ADMIN BOOTSTRAP: created",
+                admin_email,
+                "user_id=" + str(int(cursor.lastrowid)),
+                flush=True
+            )
+    elif admin_email:
+        print(
+            "ADMIN BOOTSTRAP: password missing or too short",
+            flush=True
         )
 
     c.commit()
