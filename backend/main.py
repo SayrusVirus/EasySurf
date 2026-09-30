@@ -320,6 +320,23 @@ def init():
     profile_rows = c.execute(
         "SELECT id,email,username,display_name,language,notifications FROM users"
     ).fetchall()
+    for row in profile_rows:
+        current_display = str(row["display_name"] or "")
+        if any(
+            marker in current_display
+            for marker in ("Р ", "РЎ", "Рџ", "Рђ", "вЂ", "Г")
+        ):
+            fallback_name = str(row["username"] or "")
+            if fallback_name:
+                c.execute(
+                    "UPDATE users SET display_name=? WHERE id=?",
+                    (fallback_name, row["id"])
+                )
+                print(
+                    "PROFILE ENCODING FIX: repaired display_name",
+                    "user_id=" + str(int(row["id"])),
+                    flush=True
+                )
 
     for row in profile_rows:
         username = row["username"]
@@ -3537,7 +3554,7 @@ def profile_page(r:Request):
         + '<input name="username" value="' + username.replace('"','&quot;') + '" maxlength="30" required>'
 
         + '<div class="muted" style="margin-bottom:12px;">'
-        + f'{tr('3вЂ“30 characters: letters, numbers and underscore.', u)}'
+        + f'{tr('3–30 characters: letters, numbers and underscore.', u)}'
         + '</div>'
 
         + f'<label>{tr("Email")}</label>'
@@ -3574,7 +3591,7 @@ def profile_page(r:Request):
         + '<div class="card" style="margin-top:20px;">'
         + f'<h2>{tr('Account', u)}</h2>'
         + f'<p><strong>{tr('Balance', u)}:</strong> ' + str(int(row["balance"] or 0)) + '</p>'
-        + f'<p><strong>{tr('Referral code', u)}:</strong> ' + str(row["referral_code"] or "вЂ”") + '</p>'
+        + f'<p><strong>{tr('Referral code', u)}:</strong> ' + str(row["referral_code"] or "—") + '</p>'
         + f'<p><strong>{tr('Account ID', u)}:</strong> ' + str(int(row["id"])) + '</p>'
         + f'<p><strong>{tr('Admin', u)}:</strong> ' + ('Yes' if int(row["is_admin"] or 0) else 'No') + '</p>'
         + '</div>'
