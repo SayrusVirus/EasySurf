@@ -2514,6 +2514,284 @@ form[action="/admin/task"] button {{
     border-radius: 10px !important;
     cursor: pointer !important;
 }}
+
+
+/* EasySurf mobile responsive v1 */
+
+@media (max-width:700px){{
+    html{{
+        overflow-x:hidden;
+    }}
+
+    body{{
+        overflow-x:hidden;
+    }}
+
+    header{{
+        min-height:auto;
+        padding:12px 10px !important;
+        gap:10px;
+    }}
+
+    .brand{{
+        font-size:21px !important;
+        gap:8px;
+    }}
+
+    .brand::before{{
+        width:34px;
+        height:34px;
+        border-radius:10px;
+        font-size:18px;
+    }}
+
+    nav{{
+        width:100% !important;
+        max-width:none !important;
+        display:flex !important;
+        justify-content:flex-start !important;
+        align-items:center;
+        gap:5px !important;
+        overflow-x:auto !important;
+        overflow-y:hidden;
+        flex-wrap:nowrap !important;
+        white-space:nowrap;
+        padding:4px 0 8px !important;
+        -webkit-overflow-scrolling:touch;
+        scrollbar-width:none;
+    }}
+
+    nav::-webkit-scrollbar{{
+        display:none;
+    }}
+
+    nav a,
+    nav .nav-btn{{
+        flex:0 0 auto;
+        font-size:12px !important;
+        padding:9px 10px !important;
+        min-height:40px;
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+    }}
+
+    .balance-pill{{
+        flex:0 0 auto;
+        margin-left:0 !important;
+        min-height:40px;
+        padding:8px 10px;
+        font-size:12px;
+    }}
+
+    main{{
+        width:100%;
+        max-width:100%;
+        padding:16px 10px 40px !important;
+        overflow-x:hidden;
+    }}
+
+    .hero{{
+        padding:22px 16px !important;
+        margin-bottom:14px;
+        border-radius:18px !important;
+    }}
+
+    .hero h1{{
+        font-size:28px !important;
+        line-height:1.1;
+        letter-spacing:-.8px;
+    }}
+
+    .hero p{{
+        font-size:15px !important;
+        line-height:1.55;
+    }}
+
+    .grid{{
+        width:100%;
+        grid-template-columns:1fr !important;
+        gap:12px !important;
+    }}
+
+    .card{{
+        width:100%;
+        min-width:0;
+        padding:16px !important;
+        border-radius:16px !important;
+        margin-bottom:12px !important;
+    }}
+
+    .card h2{{
+        font-size:21px;
+        line-height:1.25;
+    }}
+
+    .card h3{{
+        font-size:18px;
+        line-height:1.3;
+    }}
+
+    .metric{{
+        font-size:26px !important;
+    }}
+
+    .earn-card{{
+        min-height:150px;
+    }}
+
+    .earn-icon{{
+        width:48px;
+        height:48px;
+        font-size:25px;
+        border-radius:13px;
+    }}
+
+    .btn,
+    form[action="/profile"] button,
+    form[action="/payouts"] button,
+    form[action="/admin/task"] button{{
+        width:100% !important;
+        min-height:50px !important;
+        padding:13px 16px !important;
+        font-size:16px !important;
+        border-radius:11px !important;
+        justify-content:center;
+    }}
+
+    form{{
+        width:100%;
+        min-width:0;
+    }}
+
+    input,
+    select,
+    textarea{{
+        width:100% !important;
+        max-width:100%;
+        min-height:48px;
+        font-size:16px !important;
+        box-sizing:border-box;
+    }}
+
+    input[type="checkbox"],
+    input[type="radio"]{{
+        width:auto !important;
+        min-height:auto;
+    }}
+
+    img,
+    video,
+    iframe{{
+        max-width:100%;
+        height:auto;
+    }}
+
+    table{{
+        display:block !important;
+        width:100% !important;
+        max-width:100%;
+        overflow-x:auto !important;
+        overflow-y:hidden;
+        white-space:nowrap;
+        -webkit-overflow-scrolling:touch;
+    }}
+
+    th,
+    td{{
+        padding:10px 9px !important;
+        font-size:13px;
+    }}
+
+    .timer{{
+        font-size:42px !important;
+        margin:16px 8px !important;
+    }}
+
+    .notice{{
+        padding:13px 14px;
+        font-size:14px;
+    }}
+
+    .empty{{
+        padding:34px 16px;
+    }}
+
+    .footer-grid{{
+        width:100%;
+    }}
+
+    .footer-description{{
+        max-width:100%;
+    }}
+}}
+
+@media (max-width:430px){{
+    header{{
+        padding:10px 8px !important;
+    }}
+
+    .brand{{
+        font-size:20px !important;
+    }}
+
+    nav a,
+    nav .nav-btn{{
+        font-size:11px !important;
+        padding:8px 9px !important;
+        min-height:38px;
+    }}
+
+    .balance-pill{{
+        font-size:11px;
+        padding:7px 9px;
+    }}
+
+    main{{
+        padding:12px 8px 32px !important;
+    }}
+
+    .hero{{
+        padding:20px 14px !important;
+        border-radius:16px !important;
+    }}
+
+    .hero h1{{
+        font-size:25px !important;
+    }}
+
+    .card{{
+        padding:14px !important;
+        border-radius:14px !important;
+    }}
+
+    .card h2{{
+        font-size:19px;
+    }}
+
+    .card h3{{
+        font-size:17px;
+    }}
+
+    .metric{{
+        font-size:24px !important;
+    }}
+
+    th,
+    td{{
+        padding:9px 8px !important;
+        font-size:12px;
+    }}
+
+    .btn,
+    form[action="/profile"] button,
+    form[action="/payouts"] button,
+    form[action="/admin/task"] button{{
+        min-height:48px !important;
+        font-size:15px !important;
+    }}
+}}
+
 </style>
 </head>
 
