@@ -1,0 +1,110 @@
+    payload = _bitlabs_get(
+        "surveys",
+        user_id,
+        {
+            "platform": "WEB",
+            "os": "DESKTOP",
+            "sdk": "CUSTOM",
+        },
+    )
+
+    data = payload.get("data", {})
+    surveys = data.get("surveys", []) if isinstance(data, dict) else []
+
+    if not isinstance(surveys, list):
+        return []
+
+    return surveys[: max(0, int(limit))]
+
+
+def get_bitlabs_offers(
+    user_id,
+    limit: int = 100,
+    games_only: bool = False,
+) -> list[dict[str, Any]]:
+    """
+    Return current BitLabs offers for one EasySurf user.
+
+    games_only=True returns only gaming offers.
+    """
+    params: dict[str, Any] = {
+        "limit": max(1, min(int(limit), 200)),
+        "sdk": "CUSTOM",
+    }
+
+    if games_only:
+        params["is_game"] = "true"
+
+    payload = _bitlabs_get(
+        "offers",
+        user_id,
+        params,
+    )
+
+    data = payload.get("data", {})
+    offers = data.get("offers", []) if isinstance(data, dict) else []
+
+    if not isinstance(offers, list):
+        return []
+
+    if games_only:
+        offers = [
+            offer
+            for offer in offers
+            if isinstance(offer, dict) and bool(offer.get("is_game"))
+        ]
+
+    return offers[: max(0, int(limit))]
+
+
+def get_bitlabs_games(user_id, limit: int = 100) -> list[dict[str, Any]]:
+    return get_bitlabs_offers(
+        user_id=user_id,
+        limit=limit,
+        games_only=True,
+    )
+
+
+def get_bitlabs_status(user_id=None) -> dict[str, Any]:
+    """
+    Lightweight provider status used by diagnostics/admin code.
+    Does not expose the API token.
+    """
+    result = {
+        "provider": "BitLabs",
+        "configured": bitlabs_configured(),
+        "api_base": BITLABS_API_BASE,
+        "offerwall_base": BITLABS_WEB_BASE,
+    }
+
+    if user_id is not None and bitlabs_configured():
+        result["user_id"] = str(user_id)
+
+    return result
+
+
+# ==========================================================
+# PROVIDER STATUS
+# ==========================================================
+
+def provider_status():
+    c = db()
+
+    try:
+        rows = c.execute(
+            """
+            SELECT
+                id,
+                name,
+                provider_type,
+                active,
+                created_at
+            FROM providers
+            ORDER BY id
+            """
+        ).fetchall()
+
+        return [dict(r) for r in rows]
+
+    finally:
+        c.close()

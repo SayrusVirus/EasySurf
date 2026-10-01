@@ -13,7 +13,7 @@ from services.offerwall_gg import OfferwallGG
 from fastapi.responses import HTMLResponse, RedirectResponse
 from starlette.middleware.sessions import SessionMiddleware
 import os
-import sqlite3, hashlib, secrets, time
+import hashlib, secrets, time, re
 import threading
 from contextvars import ContextVar
 
@@ -29,7 +29,7 @@ from services.email_verification import (
     send_verification_email,
 )
 
-BASE_DIR=Path(__file__).resolve().parent.parent; from services.db_config import DB_PATH
+BASE_DIR=Path(__file__).resolve().parent.parent
 app=FastAPI(title='EasySurf',version='0.5.0')
 CURRENT_LANGUAGE = ContextVar('current_language', default='en')
 SUPPORTED_LANGUAGES = {"en": "English"}
@@ -123,8 +123,9 @@ app.add_middleware(
 )
 app.add_middleware(EasySurfSecurityHeadersMiddleware)
 
-def db():
- c=sqlite3.connect(DB_PATH,timeout=10); c.row_factory=sqlite3.Row; c.execute('PRAGMA busy_timeout=10000'); return c
+from services.pg_compat import db
+from admin_routes import router as admin_router
+app.include_router(admin_router)
 def now(): return int(time.time())
 def hp(p,s=None):
  s=s or secrets.token_bytes(16); return s.hex()+':'+hashlib.scrypt(p.encode(),salt=s,n=2**14,r=8,p=1).hex()
@@ -196,145 +197,116 @@ def user(r):
 def init():
     c = db()
 
-    c.executescript(
-        """
-        CREATE TABLE IF NOT EXISTS users(
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            email TEXT UNIQUE NOT NULL,
-            password_hash TEXT NOT NULL,
-            balance INTEGER NOT NULL DEFAULT 0,
-            is_admin INTEGER NOT NULL DEFAULT 0,
-            created_at INTEGER NOT NULL,
-            referral_code TEXT,
-            referred_by INTEGER
-        );
+    # PostgreSQL schema was already created and migrated in Supabase.
+    # Runtime initialization must only verify/update existing application data.
 
-        CREATE TABLE IF NOT EXISTS tasks(
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            title TEXT NOT NULL,
-            url TEXT NOT NULL,
-            seconds INTEGER NOT NULL,
-            reward INTEGER NOT NULL,
-            active INTEGER NOT NULL DEFAULT 1,
-            created_at INTEGER NOT NULL,
-            task_type TEXT NOT NULL DEFAULT 'visit',
-            video_url TEXT,
-            budget INTEGER NOT NULL DEFAULT 1000,
-            spent INTEGER NOT NULL DEFAULT 0
-        );
+    required_user_columns = {
+        "id",
+        "email",
+        "password_hash",
+        "balance",
+        "is_admin",
+        "created_at",
+        "referral_code",
+        "referred_by",
+        "email_verified",
+        "username",
+        "display_name",
+        "avatar",
+        "language",
+        "notifications",
+    }
 
-        CREATE TABLE IF NOT EXISTS attempts(
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL,
-            task_id INTEGER NOT NULL,
-            started_at INTEGER,
-            completed_at INTEGER,
-            rewarded INTEGER NOT NULL DEFAULT 0
-        );
+    user_columns = {
+        row["column_name"]
+        for row in c.execute(
+            """
+            SELECT column_name
+            FROM information_schema.columns
+            WHERE table_schema='public'
+              AND table_name='users'
+            """
+        ).fetchall()
+    }
 
-        CREATE TABLE IF NOT EXISTS transactions(
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL,
-            amount INTEGER NOT NULL,
-            kind TEXT NOT NULL,
-            description TEXT NOT NULL,
-            created_at INTEGER NOT NULL
-        );
+    missing_user_columns = required_user_columns - user_columns
 
-        CREATE TABLE IF NOT EXISTS referrals(
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            referrer_id INTEGER NOT NULL,
-            referred_id INTEGER UNIQUE NOT NULL,
-            bonus INTEGER NOT NULL,
-            created_at INTEGER NOT NULL
-        );
+    if missing_user_columns:
+        raise RuntimeError(
+            "PostgreSQL users table is missing columns: "
+            + ", ".join(sorted(missing_user_columns))
+        )
 
-        CREATE TABLE IF NOT EXISTS payouts(
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL,
-            amount INTEGER NOT NULL,
-            method TEXT NOT NULL,
-            account TEXT NOT NULL,
-            status TEXT NOT NULL DEFAULT 'pending',
-            created_at INTEGER NOT NULL,
-            updated_at INTEGER NOT NULL
-        );
+    required_task_columns = {
+        "id",
+        "title",
+        "url",
+        "seconds",
+        "reward",
+        "active",
+        "created_at",
+        "task_type",
+        "video_url",
+        "budget",
+        "spent",
+    }
 
-        CREATE TABLE IF NOT EXISTS reward_events(
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL,
-            source_type TEXT NOT NULL,
-            amount INTEGER NOT NULL DEFAULT 0,
-            status TEXT NOT NULL DEFAULT 'pending',
-            created_at INTEGER NOT NULL
-        );
+    task_columns = {
+        row["column_name"]
+        for row in c.execute(
+            """
+            SELECT column_name
+            FROM information_schema.columns
+            WHERE table_schema='public'
+              AND table_name='tasks'
+            """
+        ).fetchall()
+    }
 
-        CREATE TABLE IF NOT EXISTS daily_bonus_claims(
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL,
-            day TEXT NOT NULL,
-            streak_day INTEGER NOT NULL DEFAULT 1,
-            amount INTEGER NOT NULL DEFAULT 0,
-            created_at INTEGER NOT NULL,
-            UNIQUE(user_id, day)
-        );
+    missing_task_columns = required_task_columns - task_columns
 
-        CREATE TABLE IF NOT EXISTS activity_log(
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL,
-            activity_type TEXT NOT NULL,
-            title TEXT NOT NULL,
-            amount INTEGER NOT NULL DEFAULT 0,
-            status TEXT NOT NULL DEFAULT 'completed',
-            created_at INTEGER NOT NULL
-        );
-        """
-    )
+    if missing_task_columns:
+        raise RuntimeError(
+            "PostgreSQL tasks table is missing columns: "
+            + ", ".join(sorted(missing_task_columns))
+        )
 
-    ensure_schema(c)
-
-    # PROFILE SCHEMA MIGRATION
-    # Required by /profile and /language for existing production databases.
-    profile_columns = {x[1] for x in c.execute("PRAGMA table_info(users)")}
-
-    if "username" not in profile_columns:
-        c.execute("ALTER TABLE users ADD COLUMN username TEXT")
-
-    if "display_name" not in profile_columns:
-        c.execute("ALTER TABLE users ADD COLUMN display_name TEXT")
-
-    if "avatar" not in profile_columns:
-        c.execute("ALTER TABLE users ADD COLUMN avatar TEXT")
-
-    if "language" not in profile_columns:
-        c.execute("ALTER TABLE users ADD COLUMN language TEXT DEFAULT 'en'")
-
-    if "notifications" not in profile_columns:
-        c.execute("ALTER TABLE users ADD COLUMN notifications INTEGER NOT NULL DEFAULT 1")
-
-    import re
-
+    # Repair obviously corrupted display names from the old UTF-8 issue.
     profile_rows = c.execute(
-        "SELECT id,email,username,display_name,language,notifications FROM users"
+        """
+        SELECT
+            id,
+            email,
+            username,
+            display_name,
+            language,
+            notifications
+        FROM users
+        """
     ).fetchall()
+
     for row in profile_rows:
         current_display = str(row["display_name"] or "")
+
         if any(
             marker in current_display
-            for marker in ("Р ", "РЎ", "Рџ", "Рђ", "вЂ", "Г")
+            for marker in ("? ", "??", "??", "??", "??", "?")
         ):
             fallback_name = str(row["username"] or "")
+
             if fallback_name:
                 c.execute(
-                    "UPDATE users SET display_name=? WHERE id=?",
+                    "UPDATE users SET display_name=%s WHERE id=%s",
                     (fallback_name, row["id"])
                 )
+
                 print(
                     "PROFILE ENCODING FIX: repaired display_name",
                     "user_id=" + str(int(row["id"])),
                     flush=True
                 )
 
+    # Ensure existing users have usable usernames/display names.
     for row in profile_rows:
         username = row["username"]
 
@@ -353,7 +325,12 @@ def init():
             suffix = 1
 
             while c.execute(
-                "SELECT 1 FROM users WHERE lower(username)=lower(?) AND id<>?",
+                """
+                SELECT 1
+                FROM users
+                WHERE lower(username)=lower(%s)
+                  AND id<>%s
+                """,
                 (candidate, row["id"])
             ).fetchone():
                 tail = "_" + str(suffix)
@@ -364,57 +341,83 @@ def init():
             display_name = row["display_name"] or username
 
             c.execute(
-                "UPDATE users SET username=?,display_name=? WHERE id=?",
+                """
+                UPDATE users
+                SET username=%s,
+                    display_name=%s
+                WHERE id=%s
+                """,
                 (username, display_name, row["id"])
             )
 
         if not row["display_name"]:
             c.execute(
-                "UPDATE users SET display_name=? WHERE id=?",
-                (username or ("user" + str(row["id"])), row["id"])
+                """
+                UPDATE users
+                SET display_name=%s
+                WHERE id=%s
+                """,
+                (
+                    username or ("user" + str(row["id"])),
+                    row["id"],
+                )
             )
 
     c.execute(
-        "UPDATE users SET language='en' "
-        "WHERE language IS NULL OR language NOT IN ('en','ru')"
+        """
+        UPDATE users
+        SET language='en'
+        WHERE language IS NULL
+           OR language NOT IN ('en','ru')
+        """
     )
 
     c.execute(
-        "UPDATE users SET notifications=1 WHERE notifications IS NULL"
+        """
+        UPDATE users
+        SET notifications=1
+        WHERE notifications IS NULL
+        """
     )
 
+    # Existing PostgreSQL migration already contains these columns.
+    # Fill referral codes only where they are missing.
+    users_without_referral = c.execute(
+        """
+        SELECT id
+        FROM users
+        WHERE referral_code IS NULL
+           OR referral_code=''
+        """
+    ).fetchall()
 
-    uc = {x[1] for x in c.execute("PRAGMA table_info(users)")}
-    if "referral_code" not in uc:
-        c.execute("ALTER TABLE users ADD COLUMN referral_code TEXT")
-    if "referred_by" not in uc:
-        c.execute("ALTER TABLE users ADD COLUMN referred_by INTEGER")
-
-    tc = {x[1] for x in c.execute("PRAGMA table_info(tasks)")}
-    if "task_type" not in tc:
-        c.execute("ALTER TABLE tasks ADD COLUMN task_type TEXT NOT NULL DEFAULT 'visit'")
-    if "video_url" not in tc:
-        c.execute("ALTER TABLE tasks ADD COLUMN video_url TEXT")
-    if "budget" not in tc:
-        c.execute("ALTER TABLE tasks ADD COLUMN budget INTEGER NOT NULL DEFAULT 1000")
-    if "spent" not in tc:
-        c.execute("ALTER TABLE tasks ADD COLUMN spent INTEGER NOT NULL DEFAULT 0")
-
-    for u in c.execute(
-        "SELECT id FROM users WHERE referral_code IS NULL OR referral_code=''"
-    ).fetchall():
+    for row in users_without_referral:
         c.execute(
-            "UPDATE users SET referral_code=? WHERE id=?",
-            (code(c), u["id"])
+            """
+            UPDATE users
+            SET referral_code=%s
+            WHERE id=%s
+            """,
+            (code(c), row["id"])
         )
 
-    if not c.execute("SELECT id FROM tasks LIMIT 1").fetchone():
+    # Keep the demo task only when the migrated database has no tasks.
+    if not c.execute(
+        "SELECT id FROM tasks LIMIT 1"
+    ).fetchone():
         c.execute(
             """
             INSERT INTO tasks(
-                title,url,seconds,reward,created_at,task_type,budget,spent
+                title,
+                url,
+                seconds,
+                reward,
+                created_at,
+                task_type,
+                budget,
+                spent
             )
-            VALUES(?,?,?,?,?,?,?,?)
+            VALUES(%s,%s,%s,%s,%s,%s,%s,%s)
             """,
             (
                 "Demo website visit",
@@ -429,14 +432,24 @@ def init():
         )
 
     # ADMIN BOOTSTRAP
-    # Keeps the configured Render admin account available after a fresh
-    # deployment or a new SQLite database.
-    admin_email = os.getenv("EASYSURF_ADMIN_EMAIL", "").strip().lower()
-    admin_password = os.getenv("EASYSURF_ADMIN_PASSWORD", "")
+    # Keeps the configured admin account available after deployment.
+    admin_email = os.getenv(
+        "EASYSURF_ADMIN_EMAIL",
+        ""
+    ).strip().lower()
+
+    admin_password = os.getenv(
+        "EASYSURF_ADMIN_PASSWORD",
+        ""
+    )
 
     if admin_email and len(admin_password) >= 8:
         admin_row = c.execute(
-            "SELECT id FROM users WHERE lower(email)=lower(?)",
+            """
+            SELECT id
+            FROM users
+            WHERE lower(email)=lower(%s)
+            """,
             (admin_email,)
         ).fetchone()
 
@@ -446,18 +459,21 @@ def init():
                 UPDATE users
                 SET is_admin=1,
                     email_verified=1
-                WHERE id=?
+                WHERE id=%s
                 """,
                 (int(admin_row["id"]),)
             )
+
             print(
                 "ADMIN BOOTSTRAP: verified",
                 admin_email,
                 "user_id=" + str(int(admin_row["id"])),
                 flush=True
             )
+
         else:
             admin_username = admin_email.split("@", 1)[0]
+
             admin_username = "".join(
                 ch if ch.isalnum() or ch == "_" else "_"
                 for ch in admin_username.lower()
@@ -474,15 +490,17 @@ def init():
                 """
                 SELECT 1
                 FROM users
-                WHERE lower(username)=lower(?)
+                WHERE lower(username)=lower(%s)
                 """,
                 (candidate,)
             ).fetchone():
                 suffix_text = "_" + str(suffix)
+
                 candidate = (
                     admin_username[:30 - len(suffix_text)]
                     + suffix_text
                 )
+
                 suffix += 1
 
             admin_referral_code = code(c)
@@ -502,7 +520,7 @@ def init():
                     language,
                     notifications
                 )
-                VALUES(?,?,?,?,?,?,?,?,?,?,?)
+                VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
                 """,
                 (
                     admin_email,
@@ -525,6 +543,7 @@ def init():
                 "user_id=" + str(int(cursor.lastrowid)),
                 flush=True
             )
+
     elif admin_email:
         print(
             "ADMIN BOOTSTRAP: password missing or too short",
@@ -533,6 +552,8 @@ def init():
 
     c.commit()
     c.close()
+
+
 def startup():init()
 
 
