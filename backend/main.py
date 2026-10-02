@@ -7,6 +7,8 @@ from services.provider_core import (
     get_surveys,
     get_games,
     get_inventory_counts,
+    verify_bitlabs_callback_hash,
+    process_bitlabs_callback,
 )
 from services.offerwall_gg import OfferwallGG
 
@@ -5044,79 +5046,101 @@ def earn(r:Request):
     if not u:
         return RedirectResponse('/login',303)
 
-    c=db()
+    offerwall_url = None
+    offerwall_error = None
 
-    tasks=c.execute(
-        """
-        SELECT t.*
-        FROM tasks t
-        WHERE t.active=1
-        AND t.spent+t.reward<=t.budget
-        AND NOT EXISTS(
-            SELECT 1
-            FROM attempts a
-            WHERE a.user_id=?
-            AND a.task_id=t.id
-            AND a.rewarded=1
-        )
-        ORDER BY t.id DESC
-        """,
-        (u["id"],)
-    ).fetchall()
+    try:
+        if OfferwallGG.configured():
+            offerwall_url = OfferwallGG.build_wall_url(
+                u["id"]
+            )
+        else:
+            offerwall_error = (
+                "Offerwall.GG is not configured yet."
+            )
 
-    c.close()
+    except Exception as exc:
+        offerwall_error = str(exc)
 
-    cards="".join(
-        f"""
-        <div class="card earn-card" style="min-height:205px;">
-            <div>
-                <div class="earn-icon" style="font-size:34px;">🌐</div>
+    if offerwall_url:
+        offerwall_section = f"""
+        <section id="offerwall" style="margin-top:30px;">
+            <div style="display:flex;align-items:end;justify-content:space-between;gap:15px;flex-wrap:wrap;margin-bottom:15px;">
+                <div>
+                    <div class="muted" style="font-size:12px;text-transform:uppercase;letter-spacing:.08em;">
+                        {tr('Available now', u)}
+                    </div>
 
-                <div style="display:inline-flex;align-items:center;padding:5px 9px;border-radius:999px;background:rgba(59,130,246,.10);color:#93c5fd;font-size:11px;margin-bottom:8px;">
-                    Website Task
+                    <h2 style="margin:5px 0 0;">
+                        Offerwall.GG
+                    </h2>
                 </div>
 
-                <h3 style="margin:4px 0 8px;">{escape(x["title"])}</h3>
-
-                <div style="display:flex;gap:8px;flex-wrap:wrap;font-size:13px;">
-                    <span style="padding:5px 9px;border-radius:8px;background:rgba(148,163,184,.08);">
-                        вЏ± {x["seconds"]} sec
-                    </span>
-                    <span style="padding:5px 9px;border-radius:8px;background:rgba(34,197,94,.09);color:#86efac;">
-                        💰 {money(x["reward"])}
+                <div style="display:flex;align-items:center;gap:8px;font-size:13px;">
+                    <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;"></span>
+                    <span class="muted">
+                        Real offers
                     </span>
                 </div>
             </div>
 
-            <a class="btn" href="/task/{x["id"]}">
-                Start task →
-            </a>
-        </div>
-        """
-        for x in tasks
-    )
-
-    if not cards:
-        cards="""
-        <div class="card empty" style="grid-column:1/-1;text-align:center;padding:42px;">
-            <div class="earn-icon" style="font-size:42px;">🔎</div>
-            <h3>{tr('No website tasks available right now', u)}</h3>
-            <p class="muted" style="max-width:560px;margin:8px auto 20px;">
-                {tr('There are currently no available website tasks for your account.', u)}
-                Check back later or explore another earning category.
-            </p>
-            <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;">
-                <a class="btn" href="/earn">Refresh</a>
-                <a class="btn secondary" href="/surveys">Explore surveys</a>
+            <div class="card" style="padding:0;overflow:hidden;">
+                <iframe
+                    src="{escape(offerwall_url)}"
+                    style="width:100%;height:850px;border:0;display:block;"
+                    title="EasySurf Offers"
+                    loading="lazy"
+                    allow="clipboard-write">
+                </iframe>
             </div>
-        </div>
+
+            <div class="card" style="margin-top:15px;">
+                <div style="display:flex;gap:12px;align-items:flex-start;">
+                    <div style="font-size:24px;">??</div>
+
+                    <div>
+                        <h3 style="margin:0 0 7px;">
+                            Complete offers and earn
+                        </h3>
+
+                        <p class="muted" style="margin:0;line-height:1.7;">
+                            Complete an offer according to its requirements.
+                            Rewards are credited after Offerwall.GG confirms
+                            the conversion.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        """
+
+    else:
+        offerwall_section = f"""
+        <section id="offerwall" style="margin-top:30px;">
+            <div class="card" style="padding:30px;">
+                <div class="earn-icon" style="font-size:42px;">
+                    ??
+                </div>
+
+                <h2>
+                    Offerwall.GG
+                </h2>
+
+                <p class="muted">
+                    {escape(
+                        offerwall_error
+                        or "Offerwall.GG is temporarily unavailable."
+                    )}
+                </p>
+            </div>
+        </section>
         """
 
     body=f"""
     <section class="hero" style="position:relative;overflow:hidden;background-image:linear-gradient(90deg,rgba(15,23,42,.96) 0%,rgba(15,23,42,.82) 48%,rgba(15,23,42,.35) 100%),url('/static/images/hero-banner.png');background-size:cover;background-position:center;min-height:460px;display:flex;align-items:center;">
         <div style="position:relative;z-index:2;">
             <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border:1px solid rgba(96,165,250,.25);border-radius:999px;background:rgba(59,130,246,.10);font-size:12px;color:#93c5fd;margin-bottom:14px;">
-                ⚡ EasySurf Earning Center
+                ? EasySurf Earning Center
             </div>
 
             <h1 style="margin:0 0 10px;">
@@ -5125,16 +5149,22 @@ def earn(r:Request):
 
             <p class="muted" style="max-width:700px;font-size:16px;line-height:1.7;margin:0;">
                 {tr('Choose from available surveys, offers, games, apps, videos', u)}
-                {tr('and verified website tasks.', u)}
+                {tr('and verified earning opportunities.', u)}
             </p>
 
             <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:24px;">
-                <a class="btn" href="#tasks">🌐 {tr('Browse tasks', u)}</a>
-                <a class="btn secondary" href="/rewards">🎁 {tr('View rewards', u)}</a>
+                <a class="btn" href="#offerwall">
+                    ?? {tr('Browse offers', u)}
+                </a>
+
+                <a class="btn secondary" href="/rewards">
+                    ?? {tr('View rewards', u)}
+                </a>
             </div>
         </div>
 
         <div style="position:absolute;right:-80px;top:-120px;width:350px;height:350px;border-radius:50%;background:rgba(59,130,246,.11);filter:blur(8px);"></div>
+
         <div style="position:absolute;right:120px;bottom:-190px;width:280px;height:280px;border-radius:50%;background:rgba(34,197,94,.07);filter:blur(14px);"></div>
     </section>
 
@@ -5144,7 +5174,10 @@ def earn(r:Request):
                 <div class="muted" style="font-size:12px;text-transform:uppercase;letter-spacing:.08em;">
                     Earning methods
                 </div>
-                <h2 style="margin:5px 0 0;">Choose an activity</h2>
+
+                <h2 style="margin:5px 0 0;">
+                    Choose an activity
+                </h2>
             </div>
 
             <div class="muted" style="font-size:13px;">
@@ -5156,92 +5189,117 @@ def earn(r:Request):
 
             <div class="card earn-card" style="min-height:185px;">
                 <div>
-                    <div class="earn-icon" style="font-size:34px;">📋</div>
-                    <h3>{tr('Surveys', u)}</h3>
+                    <div class="earn-icon" style="font-size:34px;">??</div>
+
+                    <h3>
+                        {tr('Offers', u)}
+                    </h3>
+
+                    <p class="muted">
+                        Complete real advertiser-approved activities
+                        through Offerwall.GG.
+                    </p>
+                </div>
+
+                <a href="#offerwall">
+                    {tr('Explore offers', u)} ?
+                </a>
+            </div>
+
+            <div class="card earn-card" style="min-height:185px;">
+                <div>
+                    <div class="earn-icon" style="font-size:34px;">??</div>
+
+                    <h3>
+                        {tr('Surveys', u)}
+                    </h3>
+
                     <p class="muted">
                         {tr('Share your opinion through paid research surveys when inventory is available.', u)}
                     </p>
                 </div>
-                <a href="/surveys">{tr('Explore surveys', u)} →</a>
+
+                <a href="/surveys">
+                    {tr('Explore surveys', u)} ?
+                </a>
             </div>
 
             <div class="card earn-card" style="min-height:185px;">
                 <div>
-                    <div class="earn-icon" style="font-size:34px;">🎁</div>
-                    <h3>{tr('Offers', u)}</h3>
-                    <p class="muted">
-                        {tr('Complete advertiser-approved activities and tracked offers.', u)}
-                    </p>
-                </div>
-                <a href="/offers">{tr('Explore offers', u)} →</a>
-            </div>
+                    <div class="earn-icon" style="font-size:34px;">??</div>
 
-            <div class="card earn-card" style="min-height:185px;">
-                <div>
-                    <div class="earn-icon" style="font-size:34px;">🎮</div>
-                    <h3>{tr('Games', u)}</h3>
+                    <h3>
+                        {tr('Games', u)}
+                    </h3>
+
                     <p class="muted">
                         Discover game-based opportunities and milestone rewards.
                     </p>
                 </div>
-                <a href="/games">{tr('Explore games', u)} →</a>
+
+                <a href="/games">
+                    {tr('Explore games', u)} ?
+                </a>
             </div>
 
             <div class="card earn-card" style="min-height:185px;">
                 <div>
-                    <div class="earn-icon" style="font-size:34px;">📱</div>
-                    <h3>{tr('Apps', u)}</h3>
+                    <div class="earn-icon" style="font-size:34px;">??</div>
+
+                    <h3>
+                        {tr('Apps', u)}
+                    </h3>
+
                     <p class="muted">
                         Find tracked app activities and approved earning opportunities.
                     </p>
                 </div>
-                <a href="/apps">{tr('Explore apps', u)} →</a>
+
+                <a href="/apps">
+                    {tr('Explore apps', u)} ?
+                </a>
             </div>
 
             <div class="card earn-card" style="min-height:185px;">
                 <div>
-                    <div class="earn-icon" style="font-size:34px;">▶️</div>
-                    <h3>{tr('Videos', u)}</h3>
+                    <div class="earn-icon" style="font-size:34px;">??</div>
+
+                    <h3>
+                        {tr('Videos', u)}
+                    </h3>
+
                     <p class="muted">
                         {tr('Watch approved video activities when available.', u)}
                     </p>
                 </div>
-                <a href="/videos">{tr('Explore videos', u)} →</a>
+
+                <a href="/videos">
+                    {tr('Explore videos', u)} ?
+                </a>
             </div>
 
             <div class="card earn-card" style="min-height:185px;">
                 <div>
-                    <div class="earn-icon" style="font-size:34px;">🧩</div>
-                    <h3>{tr('Micro Tasks', u)}</h3>
+                    <div class="earn-icon" style="font-size:34px;">??</div>
+
+                    <h3>
+                        {tr('Micro Tasks', u)}
+                    </h3>
+
                     <p class="muted">
                         Complete small verified activities and simple tasks.
                     </p>
                 </div>
-                <a href="/microtasks">Explore tasks →</a>
+
+                <a href="/microtasks">
+                    Explore tasks ?
+                </a>
             </div>
 
         </div>
     </section>
 
-    <section id="tasks" style="margin-top:30px;">
-        <div style="display:flex;align-items:end;justify-content:space-between;gap:15px;flex-wrap:wrap;margin-bottom:15px;">
-            <div>
-                <div class="muted" style="font-size:12px;text-transform:uppercase;letter-spacing:.08em;">
-                    {tr('Available now', u)}
-                </div>
-                <h2 style="margin:5px 0 0;">{tr('Website Tasks', u)}</h2>
-            </div>
-
-            <div style="display:flex;align-items:center;gap:8px;font-size:13px;">
-                <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;"></span>
-                <span class="muted">{len(tasks)} {tr('available', u)}</span>
-            </div>
-        </div>
-
-        <div class="grid">
-            {cards}
-        </div>
-    </section>
+    {offerwall_section}
 
     <section class="card" style="margin-top:25px;padding:25px;position:relative;overflow:hidden;">
         <div style="position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;">
@@ -5249,15 +5307,24 @@ def earn(r:Request):
                 <div style="font-size:12px;color:#60a5fa;text-transform:uppercase;letter-spacing:.08em;font-weight:700;">
                     Keep earning
                 </div>
-                <h2 style="margin:6px 0 7px;">Don't stop at one category</h2>
+
+                <h2 style="margin:6px 0 7px;">
+                    Don't stop at one category
+                </h2>
+
                 <p class="muted" style="margin:0;max-width:620px;">
                     {tr("Explore rewards, referrals and other earning sections to see what is currently available.", u)}
                 </p>
             </div>
 
             <div style="display:flex;gap:10px;flex-wrap:wrap;">
-                <a class="btn" href="/rewards">Rewards →</a>
-                <a class="btn secondary" href="/referrals">Referrals →</a>
+                <a class="btn" href="/rewards">
+                    Rewards ?
+                </a>
+
+                <a class="btn secondary" href="/referrals">
+                    Referrals ?
+                </a>
             </div>
         </div>
 
@@ -5266,6 +5333,8 @@ def earn(r:Request):
     """
 
     return layout("Earn",body,u)
+
+
 @app.get('/surveys',response_class=HTMLResponse)
 def surveys(r:Request):
     u=user(r)
@@ -7029,6 +7098,252 @@ async def _offerwall_params(r):
             pass
 
     return data
+
+
+
+
+# ============================================================
+# BITLABS CALLBACK V1
+# ============================================================
+
+@app.api_route(
+    "/bitlabs/callback",
+    methods=["GET", "POST"]
+)
+async def bitlabs_callback(request: Request):
+    """
+    BitLabs reward callback.
+
+    BitLabs signs the complete callback URL with the App Secret.
+    The hash parameter itself is excluded from the signed URL.
+
+    Supported parameters:
+        UID
+        VALUE:CURRENCY
+        VALUE:USD
+        TX
+        REF
+        hash
+
+    Lowercase parameter names are also accepted.
+    """
+
+    from urllib.parse import unquote
+
+    def first_value(*names):
+        for name in names:
+            value = request.query_params.get(name)
+            if value is not None:
+                return str(value).strip()
+        return ""
+
+    user_id_raw = first_value(
+        "UID",
+        "uid",
+        "USER:UID",
+        "user:uid",
+    )
+
+    transaction_id = first_value(
+        "TX",
+        "tx",
+    )
+
+    value_currency = first_value(
+        "VALUE:CURRENCY",
+        "value:currency",
+    )
+
+    value_usd = first_value(
+        "VALUE:USD",
+        "value:usd",
+    )
+
+    reference = first_value(
+        "REF",
+        "ref",
+    )
+
+    supplied_hash = first_value(
+        "hash",
+        "HASH",
+    )
+
+    if not user_id_raw:
+        return HTMLResponse(
+            "INVALID_USER",
+            status_code=400
+        )
+
+    if not transaction_id:
+        return HTMLResponse(
+            "INVALID_TRANSACTION",
+            status_code=400
+        )
+
+    if len(transaction_id) > 200:
+        return HTMLResponse(
+            "INVALID_TRANSACTION",
+            status_code=400
+        )
+
+    if not value_usd:
+        return HTMLResponse(
+            "INVALID_AMOUNT",
+            status_code=400
+        )
+
+    if not supplied_hash:
+        return HTMLResponse(
+            "FORBIDDEN",
+            status_code=403
+        )
+
+    # --------------------------------------------------------
+    # Build the exact callback URL without the hash parameter.
+    #
+    # We intentionally operate on the raw query string instead
+    # of parse_qsl/urlencode because re-encoding can change the
+    # bytes/string that BitLabs signed.
+    # --------------------------------------------------------
+
+    raw_query = request.scope.get(
+        "query_string",
+        b""
+    )
+
+    try:
+        raw_query_text = raw_query.decode("utf-8")
+    except UnicodeDecodeError:
+        return HTMLResponse(
+            "INVALID_QUERY",
+            status_code=400
+        )
+
+    query_parts = raw_query_text.split("&")
+    signed_parts = []
+
+    hash_removed = False
+
+    for part in query_parts:
+        key = part.split("=", 1)[0]
+
+        try:
+            decoded_key = unquote(key)
+        except Exception:
+            decoded_key = key
+
+        if decoded_key.lower() == "hash":
+            hash_removed = True
+            continue
+
+        signed_parts.append(part)
+
+    if not hash_removed:
+        return HTMLResponse(
+            "FORBIDDEN",
+            status_code=403
+        )
+
+    signed_query = "&".join(signed_parts)
+
+    # Render is behind a proxy. Starlette normally provides the
+    # external HTTPS scheme through forwarded headers. Use the
+    # request host and path while preserving the raw query.
+    scheme = request.url.scheme
+
+    host = request.headers.get(
+        "host",
+        request.url.netloc
+    )
+
+    path = request.url.path
+
+    signed_url = f"{scheme}://{host}{path}"
+
+    if signed_query:
+        signed_url += "?" + signed_query
+
+    # --------------------------------------------------------
+    # Verify BitLabs HMAC before touching the database.
+    # --------------------------------------------------------
+
+    try:
+        valid_hash = verify_bitlabs_callback_hash(
+            signed_url,
+            supplied_hash
+        )
+    except Exception:
+        valid_hash = False
+
+    if not valid_hash:
+        return HTMLResponse(
+            "FORBIDDEN",
+            status_code=403
+        )
+
+    # --------------------------------------------------------
+    # Optional BitLabs test callback.
+    # Hash is still verified before accepting it.
+    # --------------------------------------------------------
+
+    test_value = first_value(
+        "TEST",
+        "test"
+    ).lower()
+
+    if test_value in (
+        "1",
+        "true",
+        "yes",
+    ):
+        return HTMLResponse(
+            "OK",
+            status_code=200
+        )
+
+    # --------------------------------------------------------
+    # Process reward atomically.
+    # --------------------------------------------------------
+
+    result = process_bitlabs_callback(
+        user_id=user_id_raw,
+        transaction_id=transaction_id,
+        value_usd=value_usd,
+        value_currency=value_currency,
+        reference=reference,
+        callback_hash=supplied_hash,
+        raw_url=signed_url,
+    )
+
+    status = str(
+        result.get("status", "")
+    ).strip().lower()
+
+    if status in (
+        "credited",
+        "duplicate",
+        "zero",
+        "reconciliation",
+    ):
+        return HTMLResponse(
+            "OK",
+            status_code=200
+        )
+
+    if status == "invalid_user":
+        # The callback itself is valid, but the EasySurf user
+        # does not exist. Return 200 so BitLabs does not retry
+        # the same permanently invalid user forever.
+        return HTMLResponse(
+            "OK",
+            status_code=200
+        )
+
+    return HTMLResponse(
+        "ERROR",
+        status_code=500
+    )
 
 
 @app.api_route(

@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import hashlib
 import hmac
@@ -18,11 +18,11 @@ class OfferwallGG:
     """
     Offerwall.GG publisher API adapter.
 
-    Current official API model:
-      - public placement key: appId
-      - secret authentication: X-Api-Key
-      - offers endpoint: /api/v1/offers
-      - conversion confirmation: signed server-to-server postback
+    Supports:
+      - hosted Offerwall.GG wall
+      - signed wall entry links
+      - JSON offers API
+      - secure conversion postback verification
 
     This module does NOT:
       - create fake offers
@@ -56,8 +56,8 @@ class OfferwallGG:
     @classmethod
     def configured(cls) -> bool:
         return bool(
-            cls.PUBLIC_KEY and
-            cls.SECRET_KEY
+            cls.PUBLIC_KEY
+            and cls.SECRET_KEY
         )
 
     @classmethod
@@ -93,11 +93,8 @@ class OfferwallGG:
         """
         Fetch the offers available to one EasySurf user.
 
-        The provider documentation states that userId is used for
-        targeting and that the response contains a ready-to-use
-        clickUrl.
-
-        This method requires real provider credentials.
+        Offerwall.GG returns targeted offers and ready-to-use clickUrl
+        values when userId is supplied.
         """
 
         if not cls.configured():
@@ -117,9 +114,9 @@ class OfferwallGG:
         query = urlencode(params)
 
         url = (
-            cls.API_BASE +
-            "/api/v1/offers?" +
-            query
+            cls.API_BASE
+            + "/api/v1/offers?"
+            + query
         )
 
         request = Request(
@@ -178,6 +175,7 @@ class OfferwallGG:
 
         try:
             return json.loads(text)
+
         except json.JSONDecodeError as exc:
             raise OfferwallGGError(
                 "Offerwall.GG returned invalid JSON"
@@ -194,11 +192,11 @@ class OfferwallGG:
         """
         Verify the official Offerwall.GG callback signature.
 
-        Signature input is exactly:
+        Exact signed message:
 
             userId:transactionId:currencyAmount
 
-        using HMAC-SHA256 and the placement secret key.
+        HMAC-SHA256 using the placement secret.
         """
 
         if not cls.SECRET_KEY:
@@ -227,9 +225,15 @@ class OfferwallGG:
         user_id: int | str,
     ) -> str:
         """
-        Build the official hosted-wall URL.
+        Build a signed hosted Offerwall.GG URL.
 
-        The public key is safe to expose in the URL.
+        Offerwall.GG requires the signature to cover all URL
+        parameters except the signature itself.
+
+        Canonical form:
+            appId=PUBLIC_KEY&userId=USER_ID
+
+        Parameters are sorted by name before HMAC-SHA256.
         """
 
         if not cls.PUBLIC_KEY:
@@ -237,12 +241,35 @@ class OfferwallGG:
                 "OFFERWALL_GG_PUBLIC_KEY is not configured"
             )
 
+        if not cls.SECRET_KEY:
+            raise OfferwallGGError(
+                "OFFERWALL_GG_SECRET_KEY is not configured"
+            )
+
+        params = {
+            "appId": cls.PUBLIC_KEY,
+            "userId": str(user_id),
+        }
+
+        canonical = urlencode(
+            sorted(params.items())
+        )
+
+        signature = hmac.new(
+            cls.SECRET_KEY.encode("utf-8"),
+            canonical.encode("utf-8"),
+            hashlib.sha256,
+        ).hexdigest()
+
+        wall_params = {
+            "userId": str(user_id),
+            "signature": signature,
+        }
+
         return (
             f"{cls.API_BASE}/wall/"
             f"{cls.PUBLIC_KEY}?"
-            + urlencode({
-                "userId": str(user_id),
-            })
+            + urlencode(wall_params)
         )
 
 
