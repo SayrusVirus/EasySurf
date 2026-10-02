@@ -1368,24 +1368,217 @@ def simple_table_page(
     return page(title, body, request)
 
 
+
 @router.get("/admin/tasks", response_class=HTMLResponse)
 def admin_tasks(request: Request):
-    return simple_table_page(
-        request,
-        "Tasks",
-        "tasks",
-        [
-            "id",
-            "title",
-            "url",
-            "seconds",
-            "reward",
-            "active",
-            "task_type",
-            "budget",
-            "spent",
-            "created_at",
-        ],
+    u, redirect = require_admin(request)
+
+    if redirect:
+        return redirect
+
+    c = db()
+
+    try:
+        rows = c.execute(
+            """
+            SELECT
+                id,
+                title,
+                url,
+                seconds,
+                reward,
+                active,
+                task_type,
+                budget,
+                spent,
+                created_at
+            FROM tasks
+            ORDER BY id DESC
+            LIMIT 300
+            """
+        ).fetchall()
+    finally:
+        c.close()
+
+    body_rows = ""
+
+    for row in rows:
+        task_id = int(row["id"])
+        active = int(row["active"] or 0)
+
+        if active:
+            status_html = '<span class="badge">Active</span>'
+            action_html = f"""
+                <form method="post"
+                      action="/admin/tasks/{task_id}/toggle"
+                      style="display:inline;">
+                    <button type="submit"
+                            class="btn"
+                            style="background:#dc2626;">
+                        Disable
+                    </button>
+                </form>
+            """
+        else:
+            status_html = '<span class="badge">Disabled</span>'
+            action_html = f"""
+                <form method="post"
+                      action="/admin/tasks/{task_id}/toggle"
+                      style="display:inline;">
+                    <button type="submit"
+                            class="btn">
+                        Enable
+                    </button>
+                </form>
+            """
+
+        delete_html = f"""
+            <form method="post"
+                  action="/admin/tasks/{task_id}/delete"
+                  style="display:inline;"
+                  onsubmit="return confirm('Delete this task permanently?');">
+                <button type="submit"
+                        class="btn"
+                        style="background:#7f1d1d;">
+                    Delete
+                </button>
+            </form>
+        """
+
+        body_rows += f"""
+        <tr>
+            <td>{task_id}</td>
+            <td>{esc(row["title"])}</td>
+            <td>{esc(row["url"])}</td>
+            <td>{row["seconds"]}</td>
+            <td>{money(row["reward"])}</td>
+            <td>{status_html}</td>
+            <td>{esc(row["task_type"])}</td>
+            <td>{money(row["budget"])}</td>
+            <td>{money(row["spent"])}</td>
+            <td>{row["created_at"]}</td>
+            <td>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    {action_html}
+                    {delete_html}
+                </div>
+            </td>
+        </tr>
+        """
+
+    body = f"""
+    <h1>Tasks</h1>
+
+    <div class="card">
+        <p class="small">
+            Manage website tasks. Disabled tasks are hidden from users
+            but remain stored in the database.
+        </p>
+
+        <div style="overflow-x:auto;">
+            <table>
+                <tr>
+                    <th>ID</th>
+                    <th>Title</th>
+                    <th>URL</th>
+                    <th>Seconds</th>
+                    <th>Reward</th>
+                    <th>Status</th>
+                    <th>Type</th>
+                    <th>Budget</th>
+                    <th>Spent</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                </tr>
+
+                {body_rows or '<tr><td colspan="11">No tasks.</td></tr>'}
+            </table>
+        </div>
+    </div>
+    """
+
+    return page("Tasks", body, request)
+
+
+@router.post("/admin/tasks/{task_id}/toggle")
+async def admin_task_toggle(request: Request, task_id: int):
+    u, redirect = require_admin(request)
+
+    if redirect:
+        return redirect
+
+    c = db()
+
+    try:
+        row = c.execute(
+            "SELECT id, active FROM tasks WHERE id=?",
+            (task_id,),
+        ).fetchone()
+
+        if not row:
+            c.close()
+            return redirect_admin()
+
+        new_active = 0 if int(row["active"] or 0) else 1
+
+        c.execute(
+            "UPDATE tasks SET active=? WHERE id=?",
+            (new_active, task_id),
+        )
+
+        c.commit()
+    except Exception:
+        try:
+            c.rollback()
+        except Exception:
+            pass
+        raise
+    finally:
+        c.close()
+
+    return RedirectResponse(
+        "/admin/tasks",
+        status_code=303,
+    )
+
+
+@router.post("/admin/tasks/{task_id}/delete")
+async def admin_task_delete(request: Request, task_id: int):
+    u, redirect = require_admin(request)
+
+    if redirect:
+        return redirect
+
+    c = db()
+
+    try:
+        row = c.execute(
+            "SELECT id FROM tasks WHERE id=?",
+            (task_id,),
+        ).fetchone()
+
+        if not row:
+            c.close()
+            return redirect_admin()
+
+        c.execute(
+            "DELETE FROM tasks WHERE id=?",
+            (task_id,),
+        )
+
+        c.commit()
+    except Exception:
+        try:
+            c.rollback()
+        except Exception:
+            pass
+        raise
+    finally:
+        c.close()
+
+    return RedirectResponse(
+        "/admin/tasks",
+        status_code=303,
     )
 
 
