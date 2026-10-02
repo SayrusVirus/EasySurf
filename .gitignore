@@ -1,4 +1,4 @@
-﻿# Environment / secrets
+# Environment / secrets
 .env
 .env.*
 !.env.example
@@ -62,3 +62,11 @@ backend/main_corrupted_*.py
 
 # Database path migration recovery copies
 backend/services/*.before_db_path_*.py
+
+# EasySurf local development reports / provider work files
+admin_check.txt
+database_tables.txt
+sqlite_schema.txt
+backend/provider_core_current.txt
+backend/provider_core_replacement.txt
+backend/replace_provider_core.py
